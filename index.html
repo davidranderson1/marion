@@ -297,6 +297,7 @@
         <button class="chip" data-q="I'm looking for a wiper for a cold-climate excavator, down to -45C.">Cold-climate wiper</button>
         <button class="chip" data-q="Tell me about Clipper oil seals.">Clipper oil seals</button>
         <button class="chip" data-q="DK101">Cross-ref DK101</button>
+        <button class="chip" data-q="B7">Cross-ref Parker B7</button>
       </div>
       <div class="input-row">
         <textarea id="input" rows="1" placeholder="Describe your application — equipment, rod/bore size, pressure, temp, media…"></textarea>
@@ -336,9 +337,9 @@
     <div class="panel">
       <div class="panel-h">Cross-Reference <span class="k" id="xrefK">part&nbsp;#&nbsp;&rarr;&nbsp;Fluidseal</span></div>
       <div class="panel-b">
-        <p class="mini-note">Enter any competitor or vendor part number / profile — Parker, Hallite, DMH, Fluidseal Xpress, or a parent profile — and Marion finds the Fluidseal/SSG equivalent.</p>
+        <p class="mini-note">Enter any competitor or vendor part number / profile — Parker, Hallite, Simrit/Freudenberg, Trelleborg, Eriks, Dichtomatik, DMH, Fluidseal Xpress, Anyseals, or a parent profile — and Marion finds the Fluidseal/SSG equivalent.</p>
         <div class="input-row" style="gap:7px">
-          <input class="key-input" id="xrefInput" type="text" placeholder="e.g. DK101, RS117, CR0" autocomplete="off" spellcheck="false" style="margin-bottom:0;font-family:var(--mono)">
+          <input class="key-input" id="xrefInput" type="text" placeholder="e.g. DK101, RS117, B7, TRA" autocomplete="off" spellcheck="false" style="margin-bottom:0;font-family:var(--mono)">
           <button class="send" id="xrefBtn" aria-label="Look up" style="width:42px;height:42px">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
           </button>
@@ -395,7 +396,7 @@
    ============================================================ */
 
 const MARION = {
-  knowledge: { company:null, groups:[], profiles:[], products:[], manifest:null, parents:[], xrefIndex:null },
+  knowledge: { company:null, groups:[], profiles:[], products:[], manifest:null, parents:[], xrefIndex:null, anyseals:[] },
   apiKey: null,
   history: [],          // {role, content} for API continuity
   ready: false
@@ -413,7 +414,7 @@ HOW YOU HELP
 4. Quotes (later phase): gather parts, quantity, contact details and hand off.
 
 CROSS-REFERENCE / NORMALIZATION
-Fluidseal normalizes every manufacturer into its own parent profiles. The PARENT PROFILES knowledge maps a canonical parent_profile (e.g. PS101, RS117) to the Fluidseal/SSG profile (with URL), plus equivalent codes from Fluidseal Xpress, DMH, Parker, Hallite, Freudenberg and Maxspare. When a customer gives any competitor or vendor part number or profile, translate it: find the parent profile it belongs to, then give the Fluidseal/SSG equivalent and its page. SSG and Fluidseal share profiles — treat them as the same. If a parent has no Fluidseal profile mapped yet, say so plainly. Never invent an equivalence that isn't in the knowledge.
+Fluidseal normalizes every manufacturer into its own parent profiles. The PARENT PROFILES knowledge maps a canonical parent_profile (e.g. PS101, RS117) to the Fluidseal/SSG profile (with URL), plus equivalent codes from Fluidseal Xpress, DMH, Parker, Hallite, Freudenberg and Maxspare. The ANYSEALS CROSSREF knowledge is a brand-to-brand table from the distributor Anyseals, mapping Anyseals design codes (OS-/PS-/RS-/WS-/GS-) to Simrit (=Freudenberg), Trelleborg, Forsheda/Stefa, Eriks, Dichtomatik, Parker and Taiwan/China equivalents; some records carry a fluidseal_bridge linking them to a Fluidseal parent_profile via a shared OEM code. When a customer gives any competitor or vendor part number or profile, translate it: find the parent profile and give the Fluidseal/SSG equivalent and its page; if it only appears in the Anyseals table, give the brand equivalents and say a direct Fluidseal link will follow once that brand's comparable list is loaded. Treat Simrit and Freudenberg as the same brand. SSG and Fluidseal share profiles. Anyseals equivalences are orientation-only — tell the customer to verify before quoting. Never invent an equivalence that isn't in the knowledge.
 
 HARD RULES
 - Never invent a product, profile code, specification, or URL. If it isn't in the knowledge below, say so and point to the right category page or offer a human.
@@ -458,9 +459,16 @@ async function loadKnowledge(){
       try{
         const pp = await fetchJSON(base+manifest.shared.parent_profiles);
         MARION.knowledge.parents = pp.parent_profiles || [];
-        MARION.knowledge.xrefIndex = buildXrefIndex(MARION.knowledge.parents);
-      }catch(e){ MARION.knowledge.parents=[]; MARION.knowledge.xrefIndex=buildXrefIndex([]); }
-    } else { MARION.knowledge.xrefIndex = buildXrefIndex([]); }
+      }catch(e){ MARION.knowledge.parents=[]; }
+    }
+    // Anyseals brand-to-brand cross-reference layer
+    if(manifest.shared && manifest.shared.anyseals_crossref){
+      try{
+        const an = await fetchJSON(base+manifest.shared.anyseals_crossref);
+        MARION.knowledge.anyseals = an.crossrefs || [];
+      }catch(e){ MARION.knowledge.anyseals=[]; }
+    }
+    MARION.knowledge.xrefIndex = buildXrefIndex(MARION.knowledge.parents, MARION.knowledge.anyseals);
 
     MARION.ready = true;
     renderKnowledgePanel(loaded, manifest);
@@ -500,14 +508,15 @@ function fetchJSON(url){return fetch(url,{cache:'no-store'}).then(r=>{if(!r.ok)t
    ============================================================ */
 function normCode(s){return String(s||'').toUpperCase().replace(/[\s.\-_/]/g,'');}
 
-function buildXrefIndex(parents){
-  // map normalized code -> array of {parent, via, vendor, raw}
+function buildXrefIndex(parents, anyseals){
+  // map normalized code -> array of {parent, via, vendor, raw} (Fluidseal parent layer)
+  // and a parallel anyseals index entry {anyseals:designCode}
   const idx=new Map();
   const add=(code,entry)=>{
     if(!code)return; const k=normCode(code); if(!k)return;
     if(!idx.has(k)) idx.set(k,[]);
     const arr=idx.get(k);
-    if(!arr.some(e=>e.parent===entry.parent && e.via===entry.via && e.vendor===entry.vendor)) arr.push(entry);
+    if(!arr.some(e=>JSON.stringify(e)===JSON.stringify(entry))) arr.push(entry);
   };
   (parents||[]).forEach(p=>{
     const parent=p.parent_profile;
@@ -521,31 +530,51 @@ function buildXrefIndex(parents){
       if(v[vendorName].raw) add(v[vendorName].raw,{parent,via:'vendor',vendor:vendorName,raw:v[vendorName].raw});
     });
   });
+  // Anyseals layer: index the design code and every brand code, pointing to the anyseals record
+  (anyseals||[]).forEach(r=>{
+    add(r.anyseals,{anyseals:r.anyseals,via:'anyseals',vendor:'Anyseals',raw:r.anyseals});
+    const b=r.brands||{};
+    Object.keys(b).forEach(brand=>{
+      (b[brand]||[]).forEach(c=>add(c.code,{anyseals:r.anyseals,via:'brand',vendor:brand,raw:c.code,approx:!!c.approx}));
+    });
+  });
   return idx;
 }
 
 function parentByCode(code){
   return (MARION.knowledge.parents||[]).find(p=>normCode(p.parent_profile)===normCode(code));
 }
+function anysealsByCode(code){
+  return (MARION.knowledge.anyseals||[]).find(r=>normCode(r.anyseals)===normCode(code));
+}
 
-/* Resolve a free-text part# / profile into matching parent records. */
+/* Resolve a free-text part# / profile into matching parent records + anyseals records. */
 function xrefLookup(query){
-  const idx=MARION.knowledge.xrefIndex; if(!idx) return [];
+  const idx=MARION.knowledge.xrefIndex; if(!idx) return {parents:[], anyseals:[], total:0};
   const q=normCode(query);
-  if(!q) return [];
+  if(!q) return {parents:[], anyseals:[], total:0};
   let hits = idx.get(q) || [];
   if(!hits.length){
     for(const [k,entries] of idx){
       if(k.includes(q) && q.length>=3){ hits=hits.concat(entries); }
     }
   }
+  // Fluidseal parent matches
   const byParent=new Map();
-  hits.forEach(h=>{
+  hits.filter(h=>h.parent).forEach(h=>{
     const rec=parentByCode(h.parent); if(!rec)return;
     const prev=byParent.get(h.parent);
     if(!prev || (prev.hit.via==='parent' && h.via!=='parent')) byParent.set(h.parent,{hit:h,record:rec});
   });
-  return [...byParent.values()];
+  // Anyseals matches
+  const byAny=new Map();
+  hits.filter(h=>h.anyseals).forEach(h=>{
+    const rec=anysealsByCode(h.anyseals); if(!rec)return;
+    const prev=byAny.get(h.anyseals);
+    if(!prev || (prev.hit.via==='anyseals' && h.via!=='anyseals')) byAny.set(h.anyseals,{hit:h,record:rec});
+  });
+  const parents=[...byParent.values()], anyseals=[...byAny.values()];
+  return {parents, anyseals, total:parents.length+anyseals.length};
 }
 
 /* Looks like a part-number lookup rather than an application question? */
@@ -563,7 +592,7 @@ function shouldXref(text){
   const t=text.trim();
   if(t.length>42) return false;
   if(/\b(bar|psi|°|temp|pressure|cylinder|application|need a|looking for|recommend|seal for)\b/i.test(t)) return false;
-  return xrefLookup(t).length>0;
+  return xrefLookup(t).total>0;
 }
 
 /* Render one parent-profile cross-reference card */
@@ -608,19 +637,65 @@ function xrefCard(item){
   </div>`;
 }
 
+/* Render one Anyseals brand-to-brand cross-reference card */
+function anysealsCard(item){
+  const r=item.record, hit=item.hit;
+  const b=r.brands||{};
+  const brandRows=Object.keys(b).map(brand=>{
+    const codes=(b[brand]||[]).map(c=>esc(c.code)+(c.approx?' <span style="color:var(--rust)" title="approximate / unverified in source">≈</span>':'')).join(', ');
+    const isHit = hit.via==='brand' && hit.vendor===brand;
+    return `<span class="spec"${isHit?' style="border-color:var(--amber-deep);background:var(--paper-2)"':''}><b>${esc(brand)}</b> ${codes}</span>`;
+  }).join('');
+  // Fluidseal bridge, if any
+  let bridgeLine='';
+  if(r.fluidseal_bridge && r.fluidseal_bridge.length){
+    const links=r.fluidseal_bridge.map(br=>{
+      const par=parentByCode(br.parent_profile);
+      const fs=par?(par.fluidseal_ssg||[]).filter(s=>s.fluidseal_url):[];
+      const fsLinks=fs.length?fs.map(s=>`<a href="${esc(s.fluidseal_url)}" target="_blank" rel="noopener">${esc(s.profile)}</a>`).join(', '):'';
+      return `<b>${esc(br.parent_profile)}</b>${fsLinks?' → '+fsLinks:''} <span class="rec-cat">via ${esc(br.via_brand)} ${esc(br.via_code)}</span>`;
+    }).join(' &nbsp;·&nbsp; ');
+    bridgeLine=`<div class="rec-specs" style="border-top:1.2px dashed var(--line)">
+      <span class="spec" style="background:var(--amber);border-color:var(--ink)"><b>Fluidseal parent</b></span>
+      <span style="font-size:13px;align-self:center">${links}</span></div>`;
+  }
+  let matchedOn;
+  if(hit.via==='anyseals') matchedOn=`Anyseals design <b>${esc(hit.raw)}</b>`;
+  else matchedOn=`<b>${esc(hit.vendor)}</b> code <b>${esc(hit.raw)}</b>${hit.approx?' <span style="color:var(--rust)">(approx)</span>':''}`;
+  return `<div class="rec">
+    <div class="rec-top">
+      <span class="rec-code">${esc(r.anyseals)}</span>
+      <span class="rec-mfr">Anyseals · ${esc(r.family||'')}</span>
+      <span class="rec-cat">matched on ${matchedOn}</span>
+    </div>
+    <div class="rec-specs">${brandRows}</div>
+    ${bridgeLine}
+  </div>`;
+}
+
 /* Full cross-reference answer (used by both engines) */
 function answerXref(query){
-  const items=xrefLookup(query);
-  if(!items.length){
-    return `<p>I don't have <strong>${esc(query)}</strong> in the cross-reference master yet. That table currently covers Fluidseal/SSG, Fluidseal Xpress and DMH profiles, with OEM columns (Parker, Hallite, Freudenberg, Maxspare) filling in as we load comparable lists. You can also browse the catalog at <a href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">sealsonline.com</a> or tell me the application and I'll match by spec.</p>`;
+  const res=xrefLookup(query);
+  if(!res.total){
+    return `<p>I don't have <strong>${esc(query)}</strong> in the cross-reference master yet. It covers Fluidseal/SSG, Fluidseal Xpress and DMH profiles, plus the Anyseals brand table (Simrit/Freudenberg, Trelleborg, Parker, Eriks, Dichtomatik, Forsheda/Stefa). You can also browse the catalog at <a href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">sealsonline.com</a> or tell me the application and I'll match by spec.</p>`;
   }
-  const head = items.length===1
-    ? `<p>Here's the Fluidseal cross-reference for <strong>${esc(query)}</strong>:</p>`
-    : `<p>Found <strong>${items.length}</strong> parent profiles matching <strong>${esc(query)}</strong>:</p>`;
-  const cards=items.slice(0,6).map(xrefCard).join('');
-  const more = items.length>6?`<p style="font-size:12.5px;color:var(--muted-ink)">…and ${items.length-6} more. Narrow it down with the exact code.</p>`:'';
-  const tail=`<p style="margin-top:8px;font-size:13px;color:var(--muted-ink)">Every part traces back to a <strong>parent profile</strong> — that's the key Fluidseal normalizes all manufacturers into. Click a Fluidseal/SSG profile to open its page.</p>`;
-  return head+cards+more+tail;
+  let out='';
+  if(res.parents.length){
+    out += res.parents.length===1
+      ? `<p>Here's the Fluidseal cross-reference for <strong>${esc(query)}</strong>:</p>`
+      : `<p>Found <strong>${res.parents.length}</strong> Fluidseal parent profiles matching <strong>${esc(query)}</strong>:</p>`;
+    out += res.parents.slice(0,6).map(xrefCard).join('');
+  }
+  if(res.anyseals.length){
+    out += res.parents.length
+      ? `<p style="margin-top:6px">And in the <strong>Anyseals</strong> brand table:</p>`
+      : `<p><strong>${esc(query)}</strong> in the <strong>Anyseals</strong> brand cross-reference:</p>`;
+    out += res.anyseals.slice(0,6).map(anysealsCard).join('');
+  }
+  const tail = res.parents.length
+    ? `<p style="margin-top:8px;font-size:13px;color:var(--muted-ink)">Every part traces back to a <strong>parent profile</strong> — the key Fluidseal normalizes all manufacturers into. Click a Fluidseal/SSG profile to open its page.</p>`
+    : `<p style="margin-top:8px;font-size:13px;color:var(--muted-ink)">This is a brand-to-brand equivalence (orientation only — verify before quoting). A direct Fluidseal link appears once that brand's comparable list is loaded into the parent profiles.</p>`;
+  return out+tail;
 }
 
 /* ---------------- Knowledge panel (signature) ---------------- */
@@ -798,7 +873,8 @@ async function answerViaAPI(userText){
     product_groups: MARION.knowledge.groups,
     profile_links: MARION.knowledge.profiles,
     products: MARION.knowledge.products,
-    parent_profiles: MARION.knowledge.parents
+    parent_profiles: MARION.knowledge.parents,
+    anyseals_crossref: MARION.knowledge.anyseals
   };
   const sys = SYSTEM_PROMPT + "\n\n=== KNOWLEDGE BASE (your only source of truth) ===\n" + JSON.stringify(kb);
   MARION.history.push({role:'user',content:userText});
@@ -929,8 +1005,9 @@ const xrefInput=document.getElementById('xrefInput');
 const xrefBtn=document.getElementById('xrefBtn');
 function fireXref(){
   const v=(xrefInput.value||'').trim(); if(!v||!MARION.ready)return;
-  const n=xrefLookup(v).length;
-  document.getElementById('xrefStat').textContent = n? `${n} parent profile${n>1?'s':''} matched` : 'no match in the cross-reference master';
+  const res=xrefLookup(v);
+  const n=res.total;
+  document.getElementById('xrefStat').textContent = n? `${res.parents.length} Fluidseal · ${res.anyseals.length} Anyseals matched` : 'no match in the cross-reference master';
   xrefInput.value='';
   handleSend(v);
 }
