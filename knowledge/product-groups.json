@@ -1,0 +1,19 @@
+{
+  "_note": "Fluidseal product groups and their sealsonline.com category URLs.",
+  "count": 13,
+  "groups": [
+    { "group": "Rod Wipers", "slug": "rod-wipers", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/rod-wipers", "metric_url": "https://www.sealsonline.com/en/flabed/categories/metric/rod-wipers" },
+    { "group": "Rod Seals", "slug": "rod-seals", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/rod-seals", "metric_url": "https://www.sealsonline.com/en/flabed/categories/metric/rod-seals" },
+    { "group": "Symmetrical Seals", "slug": "symmetrical-seals", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/symmetrical-seals", "metric_url": "https://www.sealsonline.com/en/flabed/categories/metric/symmetrical-seals" },
+    { "group": "Piston Seals", "slug": "piston-seals", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/piston-seals", "metric_url": "https://www.sealsonline.com/en/flabed/categories/metric/piston-seals" },
+    { "group": "Vee Packings", "slug": "vee-packings", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/vee-packings", "metric_url": "https://www.sealsonline.com/en/flabed/categories/metric/vee-packings" },
+    { "group": "Guiding Elements", "slug": "guiding-elements", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/guiding-elements", "metric_url": "https://www.sealsonline.com/en/flabed/categories/metric/guiding-elements" },
+    { "group": "O'Rings", "slug": "o-rings", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/o-rings", "metric_url": null },
+    { "group": "O'Rings Others", "slug": "orings-others", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/orings-others", "metric_url": null },
+    { "group": "Shaft Seals", "slug": "shaft-seals", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/shaft-seals", "metric_url": "https://www.sealsonline.com/en/flabed/categories/metric/shaft-seals" },
+    { "group": "V-Rings", "slug": "v-rings", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/v-rings", "metric_url": null },
+    { "group": "O'Ring Kits", "slug": "o-ring-kits", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/o-ring-kits", "metric_url": null },
+    { "group": "Mechanical Seals", "slug": "mechanical-seals", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/mechanical-seals", "metric_url": null },
+    { "group": "Flange Seals", "slug": "flange-seals", "inch_url": "https://www.sealsonline.com/en/flabed/categories/inch/flange-seals", "metric_url": null }
+  ]
+}

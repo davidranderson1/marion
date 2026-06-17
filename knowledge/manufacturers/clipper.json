@@ -1,0 +1,109 @@
+{
+  "_note": "Clipper sealing profiles with operating limits, in Marion's shared schema. Marion loads this via manifest.json and merges it with other manufacturers.",
+  "manufacturer": "Clipper",
+  "version": "1.0",
+  "updated": "2026-06-16",
+  "count": 5,
+  "products": [
+    {
+      "manufacturer": "Clipper",
+      "profile": "LUP",
+      "family": "Clipper Oil Seal",
+      "category": "oil-seals",
+      "description": "General purpose spring-loaded single lip; nonmetallic composite OD",
+      "materials": "NBR/HNBR/XNBR/FKM",
+      "lip_config": "single lip spring-loaded",
+      "operating_limits": {
+        "pressure_psi": 7,
+        "pressure_bar": 0.48,
+        "temp_F": [-20, 250],
+        "temp_C": [-29, 121],
+        "fkm_temp_F": [-40, 400],
+        "speed_fpm": 3200,
+        "speed_mps": 16.25,
+        "size_in": [0.375, 65],
+        "size_mm": [10, 1651]
+      }
+    },
+    {
+      "manufacturer": "Clipper",
+      "profile": "LPD",
+      "family": "Clipper Oil Seal",
+      "category": "oil-seals",
+      "description": "General purpose spring-loaded single lip; with/without spring retainer",
+      "materials": "NBR/HNBR/XNBR/FKM",
+      "lip_config": "single lip spring-loaded",
+      "operating_limits": {
+        "pressure_psi": 7,
+        "pressure_bar": 0.48,
+        "temp_F": [-20, 250],
+        "temp_C": [-29, 121],
+        "fkm_temp_F": [-40, 400],
+        "speed_fpm": 3200,
+        "speed_mps": 16.25,
+        "size_in": [0.375, 65],
+        "size_mm": [10, 1651]
+      }
+    },
+    {
+      "manufacturer": "Clipper",
+      "profile": "LDS",
+      "family": "Clipper Oil Seal",
+      "category": "oil-seals",
+      "description": "General purpose double lip; nonmetallic composite OD; primary spring lip + secondary dust lip",
+      "materials": "NBR/HNBR/XNBR/FKM",
+      "lip_config": "double lip (primary spring + secondary)",
+      "operating_limits": {
+        "pressure_psi": 7,
+        "pressure_bar": 0.48,
+        "temp_F": [-20, 250],
+        "temp_C": [-29, 121],
+        "fkm_temp_F": [-40, 400],
+        "speed_fpm": 2500,
+        "speed_mps": 12.7,
+        "size_in": [0.375, 65],
+        "size_mm": [10, 1651]
+      }
+    },
+    {
+      "manufacturer": "Clipper",
+      "profile": "RUP",
+      "family": "Clipper Oil Seal",
+      "category": "oil-seals",
+      "description": "General purpose spring-loaded single lip; solid or split; nonmetallic OD",
+      "materials": "NBR/HNBR/XNBR/FKM",
+      "lip_config": "single lip spring-loaded",
+      "operating_limits": {
+        "pressure_psi": 3,
+        "pressure_bar": 0.2,
+        "temp_F": [-20, 250],
+        "temp_C": [-29, 121],
+        "fkm_temp_F": [-40, 400],
+        "speed_fpm": 2000,
+        "speed_mps": 10.2,
+        "size_in": [0.5, 65],
+        "size_mm": [13, 1651]
+      }
+    },
+    {
+      "manufacturer": "Clipper",
+      "profile": "RPD",
+      "family": "Clipper Oil Seal",
+      "category": "oil-seals",
+      "description": "General purpose spring-loaded single lip; solid or split",
+      "materials": "NBR/HNBR/XNBR/FKM",
+      "lip_config": "single lip spring-loaded",
+      "operating_limits": {
+        "pressure_psi": 3,
+        "pressure_bar": 0.2,
+        "temp_F": [-20, 250],
+        "temp_C": [-29, 121],
+        "fkm_temp_F": [-40, 400],
+        "speed_fpm": 2000,
+        "speed_mps": 10.2,
+        "size_in": [0.5, 65],
+        "size_mm": [13, 1651]
+      }
+    }
+  ]
+}
