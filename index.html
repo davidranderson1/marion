@@ -296,6 +296,7 @@
         <button class="chip" data-q="What seals do you have that handle 10,000 psi?">Handles 10,000 psi</button>
         <button class="chip" data-q="I'm looking for a wiper for a cold-climate excavator, down to -45C.">Cold-climate wiper</button>
         <button class="chip" data-q="Tell me about Clipper oil seals.">Clipper oil seals</button>
+        <button class="chip" data-q="DK101">Cross-ref DK101</button>
       </div>
       <div class="input-row">
         <textarea id="input" rows="1" placeholder="Describe your application — equipment, rod/bore size, pressure, temp, media…"></textarea>
@@ -328,6 +329,21 @@
         <div class="conn-state conn-off" id="connState"><span class="d"></span><span id="connLbl">Offline recommender</span></div>
         <p class="mini-note" id="connNote">Marion is running as a structured recommender over the catalog — no AI key needed. For full conversational answers, connect Claude.</p>
         <button class="btn" id="connectBtn">Connect Claude (best quality)</button>
+      </div>
+    </div>
+
+    <!-- Cross-reference lookup -->
+    <div class="panel">
+      <div class="panel-h">Cross-Reference <span class="k" id="xrefK">part&nbsp;#&nbsp;&rarr;&nbsp;Fluidseal</span></div>
+      <div class="panel-b">
+        <p class="mini-note">Enter any competitor or vendor part number / profile — Parker, Hallite, DMH, Fluidseal Xpress, or a parent profile — and Marion finds the Fluidseal/SSG equivalent.</p>
+        <div class="input-row" style="gap:7px">
+          <input class="key-input" id="xrefInput" type="text" placeholder="e.g. DK101, RS117, CR0" autocomplete="off" spellcheck="false" style="margin-bottom:0;font-family:var(--mono)">
+          <button class="send" id="xrefBtn" aria-label="Look up" style="width:42px;height:42px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </div>
+        <div id="xrefStat" style="font-size:11px;color:var(--muted-ink);font-family:var(--mono);margin-top:8px"></div>
       </div>
     </div>
 
@@ -379,7 +395,7 @@
    ============================================================ */
 
 const MARION = {
-  knowledge: { company:null, groups:[], profiles:[], products:[], manifest:null },
+  knowledge: { company:null, groups:[], profiles:[], products:[], manifest:null, parents:[], xrefIndex:null },
   apiKey: null,
   history: [],          // {role, content} for API continuity
   ready: false
@@ -395,6 +411,9 @@ HOW YOU HELP
 2. Match to real products from the PRODUCTS knowledge below. Compare the customer's pressure, temperature and speed against each profile's operating limits. Recommend profiles that fit; say plainly when a requirement exceeds a product's rating.
 3. Give direct links from the PRODUCT GROUPS / PROFILE LINKS knowledge when you name something.
 4. Quotes (later phase): gather parts, quantity, contact details and hand off.
+
+CROSS-REFERENCE / NORMALIZATION
+Fluidseal normalizes every manufacturer into its own parent profiles. The PARENT PROFILES knowledge maps a canonical parent_profile (e.g. PS101, RS117) to the Fluidseal/SSG profile (with URL), plus equivalent codes from Fluidseal Xpress, DMH, Parker, Hallite, Freudenberg and Maxspare. When a customer gives any competitor or vendor part number or profile, translate it: find the parent profile it belongs to, then give the Fluidseal/SSG equivalent and its page. SSG and Fluidseal share profiles — treat them as the same. If a parent has no Fluidseal profile mapped yet, say so plainly. Never invent an equivalence that isn't in the knowledge.
 
 HARD RULES
 - Never invent a product, profile code, specification, or URL. If it isn't in the knowledge below, say so and point to the right category page or offer a human.
@@ -434,6 +453,15 @@ async function loadKnowledge(){
     loaded.forEach(l => all = all.concat(l.products));
     MARION.knowledge.products = all;
 
+    // cross-reference parent-profile master (canonical join layer)
+    if(manifest.shared && manifest.shared.parent_profiles){
+      try{
+        const pp = await fetchJSON(base+manifest.shared.parent_profiles);
+        MARION.knowledge.parents = pp.parent_profiles || [];
+        MARION.knowledge.xrefIndex = buildXrefIndex(MARION.knowledge.parents);
+      }catch(e){ MARION.knowledge.parents=[]; MARION.knowledge.xrefIndex=buildXrefIndex([]); }
+    } else { MARION.knowledge.xrefIndex = buildXrefIndex([]); }
+
     MARION.ready = true;
     renderKnowledgePanel(loaded, manifest);
     return true;
@@ -464,6 +492,137 @@ async function loadKnowledge(){
 }
 function fetchJSON(url){return fetch(url,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json();});}
 
+/* ============================================================
+   CROSS-REFERENCE ENGINE
+   parent_profile is the canonical hub key. Any vendor code,
+   any Fluidseal/SSG profile, or a parent code itself resolves
+   to the parent record, and from there to the Fluidseal part.
+   ============================================================ */
+function normCode(s){return String(s||'').toUpperCase().replace(/[\s.\-_/]/g,'');}
+
+function buildXrefIndex(parents){
+  // map normalized code -> array of {parent, via, vendor, raw}
+  const idx=new Map();
+  const add=(code,entry)=>{
+    if(!code)return; const k=normCode(code); if(!k)return;
+    if(!idx.has(k)) idx.set(k,[]);
+    const arr=idx.get(k);
+    if(!arr.some(e=>e.parent===entry.parent && e.via===entry.via && e.vendor===entry.vendor)) arr.push(entry);
+  };
+  (parents||[]).forEach(p=>{
+    const parent=p.parent_profile;
+    add(parent,{parent,via:'parent',vendor:'Parent profile',raw:parent});
+    (p.fluidseal_ssg||[]).forEach(s=>{
+      if(s.profile) add(s.profile,{parent,via:'fluidseal',vendor:'Fluidseal / SSG',raw:s.profile});
+    });
+    const v=p.vendors||{};
+    Object.keys(v).forEach(vendorName=>{
+      (v[vendorName].codes||[]).forEach(code=>add(code,{parent,via:'vendor',vendor:vendorName,raw:code}));
+      if(v[vendorName].raw) add(v[vendorName].raw,{parent,via:'vendor',vendor:vendorName,raw:v[vendorName].raw});
+    });
+  });
+  return idx;
+}
+
+function parentByCode(code){
+  return (MARION.knowledge.parents||[]).find(p=>normCode(p.parent_profile)===normCode(code));
+}
+
+/* Resolve a free-text part# / profile into matching parent records. */
+function xrefLookup(query){
+  const idx=MARION.knowledge.xrefIndex; if(!idx) return [];
+  const q=normCode(query);
+  if(!q) return [];
+  let hits = idx.get(q) || [];
+  if(!hits.length){
+    for(const [k,entries] of idx){
+      if(k.includes(q) && q.length>=3){ hits=hits.concat(entries); }
+    }
+  }
+  const byParent=new Map();
+  hits.forEach(h=>{
+    const rec=parentByCode(h.parent); if(!rec)return;
+    const prev=byParent.get(h.parent);
+    if(!prev || (prev.hit.via==='parent' && h.via!=='parent')) byParent.set(h.parent,{hit:h,record:rec});
+  });
+  return [...byParent.values()];
+}
+
+/* Looks like a part-number lookup rather than an application question? */
+function looksLikeXref(text){
+  const t=text.trim();
+  if(t.length>42) return false;
+  if(/\b(bar|psi|°|temp|pressure|cylinder|application|need a|looking for|recommend)\b/i.test(t)) return false;
+  const tokens=t.split(/[\s,]+/).filter(Boolean);
+  if(tokens.length>4) return false;
+  return tokens.some(tok=>/^[A-Za-z]{1,12}[-/]?\d{1,5}[A-Za-z0-9\-/]*$/.test(tok) || /^[A-Za-z]{2}\d/.test(tok) || /^(OR|BU|PS|RS|RW|WR|RT|GS)\d/i.test(tok));
+}
+
+/* Decide whether to route a message to the cross-reference engine. */
+function shouldXref(text){
+  const t=text.trim();
+  if(t.length>42) return false;
+  if(/\b(bar|psi|°|temp|pressure|cylinder|application|need a|looking for|recommend|seal for)\b/i.test(t)) return false;
+  return xrefLookup(t).length>0;
+}
+
+/* Render one parent-profile cross-reference card */
+function xrefCard(item){
+  const p=item.record, hit=item.hit;
+  const fs=(p.fluidseal_ssg||[]);
+  const resolved=fs.filter(s=>s.fluidseal_url);
+  let fsLine;
+  if(resolved.length){
+    fsLine=resolved.map(s=>{
+      const sc=s.scope?` <span class="rec-cat">${esc(s.scope)}</span>`:'';
+      const ann=s.annotation?` <span class="rec-cat" title="note">${esc(s.annotation)}</span>`:'';
+      return `<a href="${esc(s.fluidseal_url)}" target="_blank" rel="noopener">${esc(s.profile)}</a>${sc}${ann}`;
+    }).join(' &nbsp;·&nbsp; ');
+  } else {
+    const notes=fs.map(s=>esc(s.note||s.profile||'')).filter(Boolean);
+    fsLine = notes.length
+      ? `<span style="color:var(--muted-ink)">${notes.join(', ')} <em>(not yet a linked profile)</em></span>`
+      : `<span style="color:var(--muted-ink)"><em>No Fluidseal/SSG profile mapped yet</em></span>`;
+  }
+  const v=p.vendors||{};
+  const vendorRows=Object.keys(v).map(name=>{
+    const codes=(v[name].codes&&v[name].codes.length)?v[name].codes.join(', '):v[name].raw;
+    const isHit = hit.via==='vendor' && hit.vendor===name;
+    return `<span class="spec"${isHit?' style="border-color:var(--amber-deep);background:var(--paper-2)"':''}><b>${esc(name)}</b> ${esc(codes)}</span>`;
+  }).join('');
+  let matchedOn;
+  if(hit.via==='parent') matchedOn=`parent profile <b>${esc(hit.raw)}</b>`;
+  else if(hit.via==='fluidseal') matchedOn=`Fluidseal/SSG profile <b>${esc(hit.raw)}</b>`;
+  else matchedOn=`<b>${esc(hit.vendor)}</b> code <b>${esc(hit.raw)}</b>`;
+  return `<div class="rec">
+    <div class="rec-top">
+      <span class="rec-code">${esc(p.parent_profile)}</span>
+      <span class="rec-mfr">${esc(p.family||'')}</span>
+      <span class="rec-cat">matched on ${matchedOn}</span>
+    </div>
+    <div class="rec-specs" style="border-bottom:1.2px dashed var(--line)">
+      <span class="spec" style="background:var(--amber);border-color:var(--ink)"><b>Fluidseal / SSG</b></span>
+      <span style="font-size:13px;align-self:center">${fsLine}</span>
+    </div>
+    ${vendorRows?`<div class="rec-specs">${vendorRows}</div>`:''}
+  </div>`;
+}
+
+/* Full cross-reference answer (used by both engines) */
+function answerXref(query){
+  const items=xrefLookup(query);
+  if(!items.length){
+    return `<p>I don't have <strong>${esc(query)}</strong> in the cross-reference master yet. That table currently covers Fluidseal/SSG, Fluidseal Xpress and DMH profiles, with OEM columns (Parker, Hallite, Freudenberg, Maxspare) filling in as we load comparable lists. You can also browse the catalog at <a href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">sealsonline.com</a> or tell me the application and I'll match by spec.</p>`;
+  }
+  const head = items.length===1
+    ? `<p>Here's the Fluidseal cross-reference for <strong>${esc(query)}</strong>:</p>`
+    : `<p>Found <strong>${items.length}</strong> parent profiles matching <strong>${esc(query)}</strong>:</p>`;
+  const cards=items.slice(0,6).map(xrefCard).join('');
+  const more = items.length>6?`<p style="font-size:12.5px;color:var(--muted-ink)">…and ${items.length-6} more. Narrow it down with the exact code.</p>`:'';
+  const tail=`<p style="margin-top:8px;font-size:13px;color:var(--muted-ink)">Every part traces back to a <strong>parent profile</strong> — that's the key Fluidseal normalizes all manufacturers into. Click a Fluidseal/SSG profile to open its page.</p>`;
+  return head+cards+more+tail;
+}
+
 /* ---------------- Knowledge panel (signature) ---------------- */
 function renderKnowledgePanel(loaded, manifest){
   document.getElementById('kbCount').textContent = MARION.knowledge.products.length;
@@ -481,8 +640,9 @@ function renderKnowledgePanel(loaded, manifest){
     list.appendChild(row);
   });
   const upd = manifest.updated ? ' · updated '+manifest.updated : '';
+  const pc = (MARION.knowledge.parents||[]).length;
   document.getElementById('kbFoot').innerHTML =
-    `${MARION.knowledge.groups.length} product groups · ${MARION.knowledge.profiles.length} profile links${upd}`;
+    `${MARION.knowledge.groups.length} product groups · ${MARION.knowledge.profiles.length} profile links${pc?` · ${pc} parent profiles`:''}${upd}`;
 }
 
 /* ---------------- Spec helpers ---------------- */
@@ -637,7 +797,8 @@ async function answerViaAPI(userText){
     company: MARION.knowledge.company,
     product_groups: MARION.knowledge.groups,
     profile_links: MARION.knowledge.profiles,
-    products: MARION.knowledge.products
+    products: MARION.knowledge.products,
+    parent_profiles: MARION.knowledge.parents
   };
   const sys = SYSTEM_PROMPT + "\n\n=== KNOWLEDGE BASE (your only source of truth) ===\n" + JSON.stringify(kb);
   MARION.history.push({role:'user',content:userText});
@@ -673,6 +834,10 @@ function answerViaRecommender(userText){
     const names=[...new Set(MARION.knowledge.products.map(p=>p.manufacturer))];
     return {html:`<p>Right now I've got live spec data for <strong>${names.join('</strong> and <strong>')}</strong> — ${MARION.knowledge.products.length} profiles in all. More manufacturers (Freudenberg, SKF, Trelleborg, Parker) are being added.</p>`,codes:[]};
   }
+  // part-number / profile cross-reference lookup
+  if(shouldXref(userText)){
+    return {html:answerXref(userText.trim()),codes:[]};
+  }
   const req=parseReq(userText);
   const recs=recommend(req,3);
   if(!recs.length){
@@ -701,6 +866,13 @@ async function handleSend(text){
   showTyping();
   try{
     if(MARION.apiKey){
+      // exact cross-reference hits are answered from the master directly — fast and exact
+      if(shouldXref(text)){
+        clearTyping();
+        pushMarion(answerXref(text.trim()));
+        setSending(false);
+        return;
+      }
       const raw=await answerViaAPI(text);
       clearTyping();
       const {clean,codes}=extractRecs(raw);
@@ -751,6 +923,19 @@ document.getElementById('suggest').addEventListener('click',e=>{
   const b=e.target.closest('.chip');if(!b)return;
   handleSend(b.dataset.q);
 });
+
+/* side-rail cross-reference lookup -> runs in chat */
+const xrefInput=document.getElementById('xrefInput');
+const xrefBtn=document.getElementById('xrefBtn');
+function fireXref(){
+  const v=(xrefInput.value||'').trim(); if(!v||!MARION.ready)return;
+  const n=xrefLookup(v).length;
+  document.getElementById('xrefStat').textContent = n? `${n} parent profile${n>1?'s':''} matched` : 'no match in the cross-reference master';
+  xrefInput.value='';
+  handleSend(v);
+}
+if(xrefBtn) xrefBtn.addEventListener('click',fireXref);
+if(xrefInput) xrefInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fireXref();}});
 
 /* connect modal */
 const modal=document.getElementById('modalBg');

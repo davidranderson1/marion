@@ -1,13 +1,25 @@
 {
   "_note": "Marion's knowledge manifest. Marion reads this FIRST, then loads every file listed under 'manufacturers' and merges their products into one catalog. To add a manufacturer: drop its file in /knowledge/manufacturers/ and add a line here. To temporarily disable one: set active=false. Bump 'knowledge_version' whenever you publish a change.",
-  "knowledge_version": "2.0",
+  "knowledge_version": "2.2",
   "updated": "2026-06-16",
   "shared": {
     "company": "company.json",
     "product_groups": "product-groups.json",
-    "profile_links": "profiles.json"
+    "profile_links": "profiles.json",
+    "crossref": "crossref.json",
+    "parent_profiles": "parent-profiles.json"
   },
+  "crossref_note": "parent-profiles.json is the canonical join layer: every vendor/manufacturer profile (Fluidseal/SSG, Fluidseal Xpress, DMH, Parker, Hallite, Freudenberg, Maxspare) maps to a parent_profile, which resolves to the Fluidseal/SSG equivalent. crossref.json is the older category-bridge for Hallite/Clipper and is superseded by parent-profiles for any part with an explicit parent.",
+  "vendors_tracked": ["Fluidseal/SSG", "Fluidseal Xpress", "DMH", "Parker", "Hallite", "Freudenberg", "Maxspare"],
   "manufacturers": [
+    {
+      "name": "Fluidseal",
+      "file": "manufacturers/fluidseal.json",
+      "active": true,
+      "role": "normalizer",
+      "products": 169,
+      "note": "Fluidseal's own normalized profile namespace — the translation layer other manufacturers map into. Each profile carries a verified sealsonline.com leaf URL."
+    },
     {
       "name": "Clipper",
       "file": "manufacturers/clipper.json",
