@@ -1,6 +1,6 @@
 {
   "_note": "Marion's knowledge manifest. Marion reads this FIRST, then loads every file listed under 'manufacturers' and merges their products into one catalog. To add a manufacturer: drop its file in /knowledge/manufacturers/ and add a line here. To temporarily disable one: set active=false. Bump 'knowledge_version' whenever you publish a change.",
-  "knowledge_version": "2.3",
+  "knowledge_version": "2.6",
   "updated": "2026-06-17",
   "shared": {
     "company": "company.json",
@@ -26,19 +26,45 @@
       "name": "Clipper",
       "file": "manufacturers/clipper.json",
       "active": true,
-      "products": 5
+      "products": 5,
+      "note": "Detailed-data subset of Clipper oil seals (full spec/dimensional data). The complete Parker-published Clipper profile index is in parker-rotary.json under the 'Clipper Oil Seals & Parker Oil Seals' family."
     },
     {
       "name": "Hallite",
       "file": "manufacturers/hallite.json",
       "active": true,
       "products": 82
+    },
+    {
+      "name": "Parker",
+      "file": "manufacturers/parker.json",
+      "active": true,
+      "products": 64,
+      "seal_type": "reciprocating (fluid power)",
+      "source": "sources/Parker_-_5370.pdf",
+      "note": "Fluid Power Seal Design Guide EPS 5370 (Engineered Polymer Systems Division). 64 profiles across 8 groups extracted from the catalog profile-selector tables. parent_profile and fluidseal_equivalent are null pending David's Parker comparable list; once supplied, wire these into parent-profiles.json (Parker column currently scaffolded/empty)."
+    },
+    {
+      "name": "Parker Rotary",
+      "file": "manufacturers/parker-rotary.json",
+      "active": true,
+      "products": 217,
+      "seal_type": "rotary",
+      "source": "sources/Parker - Rotary seal Catalog - 5350.pdf",
+      "note": "Rotary Seal Design Guide EPS 5350. 217 profiles across 4 families (160 Clipper/Parker Oil Seals, 40 FlexiSeal PTFE, 14 ProTech Bearing Isolators, 3 Shaft Sleeves). Stored as profiles_by_family code lists; expand to per-profile objects when comparable mappings are added. Distinct from parker.json (reciprocating). SB and SM appear in two families as distinct profiles — disambiguate by family."
+    },
+    {
+      "name": "Freudenberg",
+      "file": "manufacturers/freudenberg.json",
+      "active": true,
+      "products": 118,
+      "seal_type": "rotary + fluid power + static (general industry)",
+      "source": "sources/FST_Productoverview_2019_EN.pdf",
+      "note": "Freudenberg Sealing Technologies (FST) — Merkel / Simmerring brands. 118 profiles across 17 categories extracted from the FST Product Overview 2019. Primary (leftmost) spec column captured per profile; multi-variant material/limit columns not yet split out. parent_profile and fluidseal_equivalent are null pending David's Freudenberg comparable list (Freudenberg column in parent-profiles.json currently scaffolded/empty). Simrit/Freudenberg OEM crossref is also tracked via anyseals.json. ~41 source spec blocks were intentionally dropped where heading-to-spec attribution was positionally ambiguous (PDF column reflow); recoverable from the Simmerring + Fluidpower global catalogs which present cleaner single-column tables."
     }
   ],
   "planned_manufacturers": [
-    "Freudenberg",
     "SKF",
-    "Trelleborg",
-    "Parker"
+    "Trelleborg"
   ]
 }

@@ -1,0 +1,662 @@
+{
+  "manufacturer": "Parker Hannifin",
+  "division": "Engineered Polymer Systems (EPS)",
+  "source_catalog": "EPS 5370 - Fluid Power Seal Design Guide",
+  "catalog_revision": "06/2014 (mod 2021)",
+  "source_file": "sources/Parker_-_5370.pdf",
+  "extracted": "2026-06-17",
+  "note": "Profile selector knowledge extracted from Parker EPS 5370 intro tables (pp.1-4 to 1-8). parent_profile and fluidseal_equivalent are null pending David's Parker comparable list; populate to wire these into parent-profiles.json (Parker column is currently scaffolded/empty).",
+  "groups": [
+    "Rod Seals",
+    "Symmetrical Seals",
+    "Piston Seals",
+    "Wipers",
+    "Wear Rings / Bearings",
+    "Back-ups",
+    "O-Rings / D-Rings / Head Seals",
+    "Metric Seals"
+  ],
+  "profile_count": 64,
+  "profiles": [
+    {
+      "profile": "BD",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Premium non-symmetrical o-ring energized rod seal, knife trimmed primary lip, molded secondary lip.",
+      "preferred_materials": ["4300", "4301", "5065"],
+      "catalog_page": "5-5",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "BD-PAB",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "BD profile with positively actuated back-up.",
+      "preferred_materials": ["5065", "4655"],
+      "catalog_page": "5-9",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "BT",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Premium non-symmetrical u-cup rod seal, knife trimmed primary lip and molded secondary lip.",
+      "preferred_materials": ["4300"],
+      "catalog_page": "5-13",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "BR",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Premium knife trimmed buffer / secondary seal for heavy duty or zero-leak systems.",
+      "preferred_materials": ["4300"],
+      "catalog_page": "5-17",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "B3",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Non-symmetrical u-cup with knife trimmed lip.",
+      "preferred_materials": ["4300", "4700", "5065"],
+      "catalog_page": "5-21",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "BS",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Non-symmetrical u-cup rod seal, knife trimmed primary lip and molded secondary lip.",
+      "preferred_materials": ["4300", "4700", "5065"],
+      "catalog_page": "5-23",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "UR",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Standard non-symmetrical u-cup with trimmed lip.",
+      "preferred_materials": ["4615"],
+      "catalog_page": "5-25",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "E5",
+      "group": "Rod Seals",
+      "duty": "pneumatic",
+      "description": "Non-symmetrical low friction rounded lip pneumatic rod seal.",
+      "preferred_materials": ["4274", "4180", "4208", "5065"],
+      "catalog_page": "5-27",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "TR",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Bi-directional rod T-seal, no/single/two back-up o-ring groove sizes.",
+      "preferred_materials": ["4115", "4274", "4205", "4259"],
+      "catalog_page": "5-29",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "ON",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Bi-directional rubber energized PTFE cap rod seal.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "5-32",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "CR",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Bi-directional low profile rubber energized PTFE cap rod seal for standard o-ring glands.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "5-34",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "OC",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Standard bi-directional rubber energized rectangular PTFE cap rod seal.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "5-36",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "OD",
+      "group": "Rod Seals",
+      "duty": "hydraulic",
+      "description": "Uni-directional rubber energized PTFE rod seal, buffer/secondary.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "5-38",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "V6",
+      "group": "Rod Seals",
+      "duty": "pneumatic",
+      "description": "Pneumatic cushion / check valve rod seal.",
+      "preferred_materials": ["4622", "4180", "4181", "4208"],
+      "catalog_page": "5-40",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "OR",
+      "group": "Rod Seals",
+      "duty": "rotary",
+      "description": "Bi-directional rubber energized PTFE rod seal for rotary / oscillating.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "5-42",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "SPP",
+      "group": "Symmetrical Seals",
+      "duty": "hydraulic",
+      "description": "Standard PolyPak. Square symmetrical squeeze seal, knife trimmed scraper lip.",
+      "preferred_materials": ["4615", "4622", "4651", "4263", "4207", "4266"],
+      "catalog_page": "6-6",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "DPP",
+      "group": "Symmetrical Seals",
+      "duty": "hydraulic",
+      "description": "Deep PolyPak. Rectangular symmetrical squeeze seal, knife trimmed scraper lip.",
+      "preferred_materials": ["4615", "4622", "4651", "4263", "4207", "4266"],
+      "catalog_page": "6-10",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "BPP",
+      "group": "Symmetrical Seals",
+      "duty": "hydraulic",
+      "description": "Type B PolyPak. Rectangular symmetrical squeeze seal, knife trimmed beveled lip.",
+      "preferred_materials": ["4615", "4622", "4651", "4263", "4207", "4266"],
+      "catalog_page": "6-14",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "8400/8500",
+      "group": "Symmetrical Seals",
+      "duty": "pneumatic",
+      "description": "Symmetrical rubber u-cups for pneumatics. 8400 beveled lip, 8500 straight cut scraper lip.",
+      "preferred_materials": ["4180", "4274", "4208"],
+      "catalog_page": "6-18",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "SL",
+      "group": "Symmetrical Seals",
+      "duty": "hydraulic",
+      "description": "Dual lip seal: square PolyPak shell + rubber lip seal/energizer. AKA SCL-Pak.",
+      "preferred_materials": ["4615", "4180"],
+      "catalog_page": "6-24",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "US",
+      "group": "Symmetrical Seals",
+      "duty": "hydraulic",
+      "description": "Standard symmetrical u-cup, trimmed beveled lips.",
+      "preferred_materials": ["4615"],
+      "catalog_page": "6-27",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "AN/6226",
+      "group": "Symmetrical Seals",
+      "duty": "hydraulic",
+      "description": "Industry standard symmetrical u-cups per old Army/Navy (AN) spec.",
+      "preferred_materials": ["4295"],
+      "catalog_page": "6-30",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "BP",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Premium bi-directional rubber energized urethane cap piston seal.",
+      "preferred_materials": ["4304"],
+      "catalog_page": "7-5",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "PSP",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Standard bi-directional rubber energized urethane cap piston seal.",
+      "preferred_materials": ["4622", "4300"],
+      "catalog_page": "7-8",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "CT",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Four piece capped T-seal: molded rubber energizer, PTFE cap, 4655 back-ups.",
+      "preferred_materials": ["4655"],
+      "catalog_page": "7-11",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "OK",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Bi-directional rubber energized step-cut nylon cap piston seal.",
+      "preferred_materials": [],
+      "catalog_page": "7-13",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "PIP",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Bi-directional: PIP Ring pressure inverting pedestal back-up + Type B PolyPak.",
+      "preferred_materials": ["4615", "4617"],
+      "catalog_page": "7-15",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "B7",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Premium non-symmetrical u-cup, knife trimmed lip piston seal.",
+      "preferred_materials": ["4300", "4700", "5065"],
+      "catalog_page": "7-17",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "UP",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Standard non-symmetrical u-cup, trimmed beveled lip piston seal.",
+      "preferred_materials": ["4615"],
+      "catalog_page": "7-19",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "E4",
+      "group": "Piston Seals",
+      "duty": "pneumatic",
+      "description": "Non-symmetrical low friction rounded lip pneumatic piston seal.",
+      "preferred_materials": ["4274", "4180", "4208", "5065"],
+      "catalog_page": "7-21",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "BMP",
+      "group": "Piston Seals",
+      "duty": "pneumatic",
+      "description": "Low friction bumper and round lip seal profile for pneumatics.",
+      "preferred_materials": ["4283", "4274", "4208"],
+      "catalog_page": "7-23",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "TP",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Bi-directional piston T-seal, no/single/two back-up o-ring groove sizes.",
+      "preferred_materials": ["4115", "4274", "4205", "4259"],
+      "catalog_page": "7-25",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "S5",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Economical medium duty bi-directional o-ring energized PTFE piston seal. Split option.",
+      "preferred_materials": ["0203 15% fiberglass-filled PTFE", "nitrile energizer"],
+      "catalog_page": "7-28",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "R5",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Medium-heavy duty bi-directional lathe cut energized PTFE piston seal. Split option.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "7-30",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "CQ",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Bi-directional three piece lathe cut energized PTFE cap piston seal, integrated quad seal for zero drift.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "7-32",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "OE",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Bi-directional rubber energized PTFE cap piston seal.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "7-34",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "OG",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Uni-directional rubber energized PTFE piston seal, buffer/secondary.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "7-36",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "CP",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Bi-directional low profile rubber energized PTFE cap piston seal for standard o-ring glands.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "7-38",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "OA",
+      "group": "Piston Seals",
+      "duty": "hydraulic",
+      "description": "Standard bi-directional rubber energized rectangular PTFE cap piston seal.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "7-40",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "OQ",
+      "group": "Piston Seals",
+      "duty": "rotary",
+      "description": "Bi-directional rubber energized PTFE piston seal for rotary / oscillating.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "7-42",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "YD",
+      "group": "Wipers",
+      "duty": "hydraulic",
+      "description": "Premium snap-in wiper, OD exclusion lip, knife trimmed wiping lip.",
+      "preferred_materials": ["4300", "4301"],
+      "catalog_page": "8-5",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "SHD",
+      "group": "Wipers",
+      "duty": "hydraulic",
+      "description": "Slotted heel snap-in wiper for pneumatics and light-medium hydraulics.",
+      "preferred_materials": ["4615", "5065", "4263", "4208", "4207"],
+      "catalog_page": "8-9",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "SH959",
+      "group": "Wipers",
+      "duty": "hydraulic",
+      "description": "Industry standard slotted heel Army/Navy (AN) wiper for MS-28776 (MS-33675) grooves.",
+      "preferred_materials": ["4615", "5065"],
+      "catalog_page": "8-13",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "AH",
+      "group": "Wipers",
+      "duty": "hydraulic",
+      "description": "Double-lip press-in metal canned wiper, knife trimmed sealing lip, heavy duty.",
+      "preferred_materials": ["4300", "4700", "4615"],
+      "catalog_page": "8-15",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "J",
+      "group": "Wipers",
+      "duty": "hydraulic",
+      "description": "Standard single-lip press-in metal canned wiper, knife trimmed lip.",
+      "preferred_materials": ["4700", "4300", "4615"],
+      "catalog_page": "8-17",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "AY",
+      "group": "Wipers",
+      "duty": "hydraulic",
+      "description": "Premium snap-in double-lip wiper for hydraulics.",
+      "preferred_materials": ["4300", "4301", "4700"],
+      "catalog_page": "8-19",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "H/8600",
+      "group": "Wipers",
+      "duty": "hydraulic",
+      "description": "Standard snap-in double-lip wiper. H: 4615/5065. 8600: 4181.",
+      "preferred_materials": ["4615", "5065", "4181"],
+      "catalog_page": "8-22",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "AD",
+      "group": "Wipers",
+      "duty": "hydraulic",
+      "description": "Double acting double-lip rubber energized PTFE wiper.",
+      "preferred_materials": ["full energizer + PTFE range"],
+      "catalog_page": "8-24",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "WPT",
+      "group": "Wear Rings / Bearings",
+      "duty": "hydraulic",
+      "description": "Tight tolerance piston wear ring with chamfered corners.",
+      "preferred_materials": ["4733 WearGard"],
+      "catalog_page": "9-8",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "WRT",
+      "group": "Wear Rings / Bearings",
+      "duty": "hydraulic",
+      "description": "Tight tolerance rod wear ring with chamfered corners.",
+      "preferred_materials": ["4733 WearGard"],
+      "catalog_page": "9-12",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "PDT",
+      "group": "Wear Rings / Bearings",
+      "duty": "hydraulic",
+      "description": "PTFE wear strip/bearing, cut to length or bulk rolls.",
+      "preferred_materials": ["PTFE compounds"],
+      "catalog_page": "9-16",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "PDW",
+      "group": "Wear Rings / Bearings",
+      "duty": "hydraulic",
+      "description": "Precision cut wear ring/bearing machined from PTFE billet.",
+      "preferred_materials": ["PTFE billet"],
+      "catalog_page": "9-20",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "MB",
+      "group": "Back-ups",
+      "duty": "hydraulic",
+      "description": "Heavy cross-section modular back-up for PolyPak seals.",
+      "preferred_materials": ["4617", "4652"],
+      "catalog_page": "10-4",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "8700",
+      "group": "Back-ups",
+      "duty": "hydraulic",
+      "description": "Light cross-section back-up for PolyPak and u-cup seals.",
+      "preferred_materials": ["4651"],
+      "catalog_page": "10-6",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "5100",
+      "group": "Back-ups",
+      "duty": "hydraulic",
+      "description": "Back-up rings designed for o-ring grooves.",
+      "preferred_materials": ["4651"],
+      "catalog_page": "10-8",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "PAB",
+      "group": "Back-ups",
+      "duty": "hydraulic",
+      "description": "Positively actuated back-up ring incorporated into seal profiles; sold as assembly.",
+      "preferred_materials": [],
+      "catalog_page": "10-11",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "PDB",
+      "group": "Back-ups",
+      "duty": "hydraulic",
+      "description": "Anti-extrusion PTFE ring, solid and split configs.",
+      "preferred_materials": ["full PTFE range"],
+      "catalog_page": "10-12",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "WB",
+      "group": "Back-ups",
+      "duty": "hydraulic",
+      "description": "Anti-extrusion wedged back-up ring set for extreme high pressure/temperature.",
+      "preferred_materials": [],
+      "catalog_page": "10-14",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "568",
+      "group": "O-Rings / D-Rings / Head Seals",
+      "duty": "static",
+      "description": "High performance Resilon urethane o-ring, low compression set.",
+      "preferred_materials": ["Resilon 4300", "Resilon 4301"],
+      "catalog_page": "11-3",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "DG",
+      "group": "O-Rings / D-Rings / Head Seals",
+      "duty": "dynamic",
+      "description": "One-piece hydraulic valve sealing solution (D-ring) replacing o-ring + back-ups.",
+      "preferred_materials": ["Resilon 4300", "Resilon 4301"],
+      "catalog_page": "11-9",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "HS",
+      "group": "O-Rings / D-Rings / Head Seals",
+      "duty": "static",
+      "description": "Static head seals replacing o-rings and back-ups in static applications.",
+      "preferred_materials": ["4700"],
+      "catalog_page": "11-11",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "BT-metric",
+      "group": "Metric Seals",
+      "duty": "hydraulic",
+      "description": "Metric premium non-symmetrical u-cup rod seal, knife trimmed primary + molded secondary lip.",
+      "preferred_materials": ["4300"],
+      "catalog_page": "12-3",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "AY-metric",
+      "group": "Metric Seals",
+      "duty": "hydraulic",
+      "description": "Metric premium snap-in double-lip wiper for hydraulics.",
+      "preferred_materials": ["Resilon 4300"],
+      "catalog_page": "12-5",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    },
+    {
+      "profile": "BP-metric",
+      "group": "Metric Seals",
+      "duty": "hydraulic",
+      "description": "Metric premium bi-directional rubber energized urethane cap piston seal.",
+      "preferred_materials": ["4304"],
+      "catalog_page": "12-7",
+      "parent_profile": null,
+      "fluidseal_equivalent": null
+    }
+  ]
+}

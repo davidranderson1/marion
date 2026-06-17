@@ -1,0 +1,36 @@
+{
+  "manufacturer": "Parker Hannifin",
+  "division": "Engineered Polymer Systems (EPS)",
+  "source_catalog": "EPS 5350 - Rotary Seal Design Guide",
+  "catalog_revision": "2012 (mod 2023)",
+  "source_file": "sources/Parker - Rotary seal Catalog - 5350.pdf",
+  "extracted": "2026-06-17",
+  "seal_type": "rotary",
+  "note": "Rotary shaft seal profiles extracted from Parker EPS 5350 profile-diagram grids (pp.1-4 to 1-6, 1-9/1-10). Distinct from the EPS 5370 fluid-power (reciprocating) line in parker.json. Clipper is co-published here: clipper.json (5 profiles) is the detailed-data subset; this file is the full Parker-published rotary profile index. parent_profile and fluidseal_equivalent are null pending David's comparable list. Profiles are visual diagram codes; dimensional/material data lives in catalog body sections and appendix tables (B-E).",
+  "families": [
+    "Clipper Oil Seals & Parker Oil Seals (elastomeric radial lip)",
+    "Shaft Sleeves (Quick Sleeve / Wear Sleeve)",
+    "ProTech Bearing Isolators",
+    "FlexiLip / FlexiCase / FlexiSeal (PTFE)",
+    "V-Seals & Excluders"
+  ],
+  "hydrodynamic_lip_codes": {
+    "L": "CCW shaft rotation",
+    "R": "CW shaft rotation",
+    "W": "bi-directional shaft rotation"
+  },
+  "profile_count": 217,
+  "profiles_by_family": {
+    "Clipper Oil Seals & Parker Oil Seals": ["Style A","Style E","Style L","Style S","BDC","BDV","BSC","BSV","CAP","CB","CH","CL","Clipper Sliptite","DA","DB","DC","DC4","DL","DS","DM","H","HP","KA","KAP","KB","KBJ","KBP","KC","KC8","KCJ","KG","KM","LDS","LDSF","LDSW","LifeLine","LPD","LPD Spring Retainer","LPDW","LUP","LUPW","MP","MIST","NSC1","NSC3","NSC4","NTC1","NTC3","NTC4","OKA","OKB","OKC","OKM","OL","OSA","OSB","OSC","OSM","OTA","OTB","OTM","OTC","OUA","OUB","OUC","OUM","OVA","OVB","OVC","OVM","P","RPD","RPDT","RUP","RUPW","SA","SAE","SAP","SB","SBF","SBJ","SBP","SC","SCE","SCF","SCJ","SD","SD2","SEC","SEM","SDS","SG","SM","SME","SS","SSW","STLUP","STLUP w/Buttons","ST MIST","ST MIST w/Buttons","SXA","SXB","SXC","TA","TAP","TB","TBF","TBH2","TBH4","TBJ","TBP","TBV","TBY2","TBY3","TC","TC8","TC12","TCF","TCJ","TCV","TCK","TC9","TD","TD6","TDN3","TEA","TEC","TEM","TG","TG13","TM","TMAL","TMAS","TN","TSS","UA","UB","UC","VA","VAP","VB","VB1","VB3","VB4","VB6","VBJ","VBP","VC","VCJ","VG","VM","VM1","VM2","W","WPC","WPK","WPR","**L","**R","**W"],
+    "Shaft Sleeves": ["Quick Sleeve","Wear Sleeve - Flanged","Wear Sleeve - Non-flanged"],
+    "ProTech Bearing Isolators": ["LS","LN","WD","FS","FN","SB","LB","LM","LD","LW/LX","SL","ML","MN","SM"],
+    "FlexiLip / FlexiCase / FlexiSeal (PTFE)": ["LFN-N","LEN-N","LDN-N","LMN-N","LFE-N","LEE-N","LDE-N","LGN-N","LFN-S","LEN-S","LDN-S","LMN-S","LFE-S","LEE-S","LDE-S","LGN-S","CFN","CFE","CMN","CME","CEN","CEE","CDN","CDE","CGN","CGE","CJN","CJE","CHN","CHE","FCC-V","FCS-V","FCC-C","FCS-C","FHC-V","FHS-V","FHC-C","FHS-C","FFC-V","FFS-V"]
+  },
+  "_schema_note": "profiles_by_family lists every profile code per family. parent_profile and fluidseal_equivalent are null for all profiles until comparable lists are supplied; when mappings are added, expand the relevant codes into per-profile objects ({profile, family, parent_profile, fluidseal_equivalent}) the same shape parker.json uses. NOTE: SB and SM each appear in two families (Oil Seals and Bearing Isolators) as genuinely distinct profiles - disambiguate by family when wiring cross-references.",
+  "family_counts": {
+    "Clipper Oil Seals & Parker Oil Seals": 160,
+    "Shaft Sleeves": 3,
+    "ProTech Bearing Isolators": 14,
+    "FlexiLip / FlexiCase / FlexiSeal (PTFE)": 40
+  }
+}
