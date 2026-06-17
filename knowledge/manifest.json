@@ -1,6 +1,6 @@
 {
   "_note": "Marion's knowledge manifest. Marion reads this FIRST, then loads every file listed under 'manufacturers' and merges their products into one catalog. To add a manufacturer: drop its file in /knowledge/manufacturers/ and add a line here. To temporarily disable one: set active=false. Bump 'knowledge_version' whenever you publish a change.",
-  "knowledge_version": "2.6",
+  "knowledge_version": "2.7",
   "updated": "2026-06-17",
   "shared": {
     "company": "company.json",
@@ -57,10 +57,10 @@
       "name": "Freudenberg",
       "file": "manufacturers/freudenberg.json",
       "active": true,
-      "products": 118,
+      "products": 157,
       "seal_type": "rotary + fluid power + static (general industry)",
       "source": "sources/FST_Productoverview_2019_EN.pdf",
-      "note": "Freudenberg Sealing Technologies (FST) — Merkel / Simmerring brands. 118 profiles across 17 categories extracted from the FST Product Overview 2019. Primary (leftmost) spec column captured per profile; multi-variant material/limit columns not yet split out. parent_profile and fluidseal_equivalent are null pending David's Freudenberg comparable list (Freudenberg column in parent-profiles.json currently scaffolded/empty). Simrit/Freudenberg OEM crossref is also tracked via anyseals.json. ~41 source spec blocks were intentionally dropped where heading-to-spec attribution was positionally ambiguous (PDF column reflow); recoverable from the Simmerring + Fluidpower global catalogs which present cleaner single-column tables."
+      "note": "Freudenberg Sealing Technologies (FST) — Merkel / Simmerring brands. v1.1: 157 profiles across 17 categories from the FST Product Overview 2019. v1.0 captured 118; v1.1 recovered 39 additional profiles previously dropped to PDF column-reflow ambiguity (re-parsed by directed page-region matching and verified against page layout). Primary (leftmost) spec column captured per profile; multi-variant material/limit columns not yet split out. parent_profile and fluidseal_equivalent are null pending David's Freudenberg comparable list (Freudenberg column in parent-profiles.json currently scaffolded/empty). Simrit/Freudenberg OEM crossref is also tracked via anyseals.json. Remaining un-extracted FST items are the diaphragm/accumulator/boots/special-products families (pp. 85-96) which are descriptive product lines without pressure/temp/speed spec tables."
     }
   ],
   "planned_manufacturers": [
