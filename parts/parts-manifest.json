@@ -1,0 +1,61 @@
+{
+  "_note": "Tier-2 parts-interchange manifest. This catalogs the large PART-NUMBER interchange datasets that are NOT loaded in Marion's browser (unlike the Tier-1 profile knowledge in /knowledge). These normalize into one common schema and are destined for Supabase ingestion in Phase 3. The style-bridges link this tier back to the Tier-1 parent-profile model.",
+  "version": "1.0",
+  "updated": "2026-06-17",
+  "tier": 2,
+  "common_schema": {
+    "source_file": "provenance — original interchange filename",
+    "house_brand": "brand the cross maps INTO (e.g. Dichtomatik)",
+    "house_partno": "house part number offered as the equivalent",
+    "house_legacy_partno": "legacy/alternate house number",
+    "house_style": "house style/profile code — joins to the profile layer",
+    "house_material_codes": "house lip/case/spring material short code",
+    "competitor_brand": "brand being crossed FROM (SKF, National, Parker, Harwal...)",
+    "competitor_partno": "competitor part number / interchange item",
+    "competitor_style": "competitor style/profile code",
+    "product_line": "O-RING | OIL SEALS | Mechanical Seals | ...",
+    "shaft_in": "nominal shaft diameter (inch)",
+    "bore_in": "nominal bore diameter (inch)",
+    "width_in": "nominal seal width (inch)",
+    "lip_material": "lip material",
+    "case_material": "case material",
+    "spring_material": "spring material",
+    "material_desc": "free-text material description",
+    "fit_type": "direct | approx | no_interchange | unknown",
+    "fit_value": "numeric fit score where present (0 = exact)",
+    "fit_notes": "raw rationale text, preserved verbatim",
+    "description": "house description string"
+  },
+  "sources": [
+    {
+      "id": "dichtomatik_2022_01",
+      "source_file": "Dichtomatik_Interchange_1-2022.xlsb",
+      "house_brand": "Dichtomatik",
+      "house_family": "Freudenberg (Dichtomatik = Freudenberg 'red' line; Freudenberg 'blue' = premium tier)",
+      "format": "dichtomatik",
+      "row_count": 64234,
+      "competitor_brands": ["SKF", "NATIONAL", "HARWAL", "PARKER", "BOYD", "PARCO", "US Seal", "DIN 3771", "KALREZ", "BS 4518", "ISO 3601", "ISO 3601 G", "BS 1806", "JIS B 2401"],
+      "product_lines": ["OIL SEALS", "O-RING", "Mechanical Seals", "FASTENER SEAL"],
+      "fit_breakdown": {"direct": 36837, "no_interchange": 19973, "approx": 6387, "unknown": 1037},
+      "normalized": "normalized/dichtomatik_parts.jsonl.gz",
+      "sample": "normalized/dichtomatik_parts_sample.csv",
+      "style_bridge": "style-bridges/dichtomatik_style_bridge.json",
+      "raw_source": "sources/Dichtomatik_Interchange_1-2022.xlsb",
+      "notes": "PART# crossover, not profile crossover. Joins to Tier-1 at the style/profile level via the style-bridge, and at dimensions (shaft/bore/width). 'no_interchange' rows describe competitor parts Dichtomatik has no equivalent for — kept as gap data."
+    }
+  ],
+  "join_strategy": {
+    "to_tier1_profiles": "house_style (+ competitor_style) -> style-bridge -> Fluidseal parent_profile. Dichtomatik/Freudenberg styles seed the Freudenberg column on parent-profiles.json after human review.",
+    "by_dimensions": "shaft_in / bore_in / width_in let a competitor part resolve to a Fluidseal profile even when no exact part-number cross exists."
+  },
+  "supabase_plan": {
+    "status": "deferred to Phase 3 (Train First, Connect Later)",
+    "ingestion_source": "the *.jsonl.gz normalized files are the canonical ingestion artifacts",
+    "proposed_tables": ["parts_interchange (the common schema)", "style_bridge (reviewed mappings)", "material_code_map"]
+  },
+  "pipeline": {
+    "normalizer": "normalize_interchange.py — python normalize_interchange.py <src> <format> normalized",
+    "style_bridge_builder": "build_style_bridge.py — python build_style_bridge.py normalized/<fmt>_parts.jsonl <HouseBrand> style-bridges/<fmt>_style_bridge.json",
+    "requires": "pyxlsb (pip install pyxlsb)"
+  }
+}
