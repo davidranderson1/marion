@@ -1,6 +1,6 @@
 {
   "_note": "Marion's knowledge manifest. Marion reads this FIRST, then loads every file listed under 'manufacturers' and merges their products into one catalog. To add a manufacturer: drop its file in /knowledge/manufacturers/ and add a line here. To temporarily disable one: set active=false. Bump 'knowledge_version' whenever you publish a change.",
-  "knowledge_version": "2.7",
+  "knowledge_version": "2.8",
   "updated": "2026-06-17",
   "shared": {
     "company": "company.json",
@@ -8,9 +8,12 @@
     "profile_links": "profiles.json",
     "crossref": "crossref.json",
     "parent_profiles": "parent-profiles.json",
-    "anyseals_crossref": "anyseals.json"
+    "anyseals_crossref": "anyseals.json",
+    "markets": "markets/markets.json",
+    "materials_context": "markets/materials-context.json"
   },
   "crossref_note": "parent-profiles.json is the canonical join layer: every vendor/manufacturer profile (Fluidseal/SSG, Fluidseal Xpress, DMH, Parker, Hallite, Freudenberg, Maxspare) maps to a parent_profile, which resolves to the Fluidseal/SSG equivalent. crossref.json is the older category-bridge for Hallite/Clipper and is superseded by parent-profiles for any part with an explicit parent.",
+  "markets_note": "markets/ holds application & market-context knowledge (NOT profile/part-number data). markets.json maps 21 industries to their operating drivers, seal types, and a routing hint to Fluidseal product-group families; materials-context.json holds material operating envelopes referenced by market entries. Sourced from Freudenberg market/application brochures (raw PDFs archived in markets/freudenberg-brochures/ with _manifest.json). Use for 'where do seals go / why' reasoning; not a verified equivalent mapping.",
   "vendors_tracked": ["Fluidseal/SSG", "Fluidseal Xpress", "DMH", "Parker", "Hallite", "Freudenberg", "Maxspare"],
   "oem_brands_via_anyseals": ["Simrit/Freudenberg", "Trelleborg", "Forsheda/Stefa", "Eriks", "Dichtomatik", "Parker", "Taiwan/China"],
   "manufacturers": [
