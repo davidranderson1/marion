@@ -1,0 +1,70 @@
+{
+  "rod-wipers|inch|": {
+    "x": 6.67,
+    "y": 15.34
+  },
+  "rod-seals|inch|": {
+    "x": 17.07,
+    "y": 13.11
+  },
+  "symmetrical-seals|inch|": {
+    "x": 28.98,
+    "y": 13.5
+  },
+  "rod-buffer-seals|inch|": {
+    "x": 41.15,
+    "y": 17.43
+  },
+  "static-seals|inch|": {
+    "x": 52.56,
+    "y": 18.22
+  },
+  "guiding-elements|inch|": {
+    "x": 62.71,
+    "y": 12.19
+  },
+  "piston-seals|inch|": {
+    "x": 76.34,
+    "y": 39.07
+  },
+  "rod-wipers|metric|": {
+    "x": 10.78,
+    "y": 73.54
+  },
+  "symmetrical-seals|metric|": {
+    "x": 33.83,
+    "y": 75.88
+  },
+  "rod-buffer-seals|metric|": {
+    "x": 47.44,
+    "y": 76.16
+  },
+  "static-seals|metric|": {
+    "x": 58.6,
+    "y": 75.9
+  },
+  "guiding-elements|metric|": {
+    "x": 70.6,
+    "y": 79.83
+  },
+  "piston-seals|metric|": {
+    "x": 81,
+    "y": 75.37
+  },
+  "retaining-rings|inch|": {
+    "x": 5.19,
+    "y": 56.24
+  },
+  "bushings|inch|Spherical Ball Bushing": {
+    "x": 6.5,
+    "y": 63
+  },
+  "bushings|inch|Hardened Steel Bushing": {
+    "x": 93.33,
+    "y": 57.41
+  },
+  "pin-wipers|metric|": {
+    "x": 92.83,
+    "y": 64.23
+  }
+}

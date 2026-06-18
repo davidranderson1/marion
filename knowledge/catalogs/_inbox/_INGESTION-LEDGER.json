@@ -1,0 +1,14 @@
+{
+  "_note": "Catalog ingestion inbox + routing ledger for Marion's knowledge base. Drop ANY source document (Fluidseal AB catalogs, manufacturer catalogs, OEM kit/part lists, industry/technical PDFs) into knowledge/catalogs/_inbox/ — a mixture is fine. Each file is parsed and its EXTRACTED data is routed to the correct existing structure (manufacturers/, oem-parts/, anyseals.json, markets/). Raw source files are then archived under knowledge/catalogs/<source-slug>/ with their own _manifest.json. Marion does NOT read _inbox directly; it reads the routed/normalized JSON. This ledger records what each source was and where its data went.",
+  "schema_version": "1.0",
+  "updated": "2026-06-18",
+  "routing_targets": {
+    "seal_profiles_with_limits": "knowledge/manufacturers/<name>.json  (profile + operating_limits; merges into the main catalog via manifest.json)",
+    "oem_part_to_fluidseal": "knowledge/oem-parts/<oem>.json  (OEM part number -> Fluidseal part number + this part's own technical/dimensional detail; for OEMs like John Deere whose relationship is part->part, not profile->profile)",
+    "brand_profile_crossref": "knowledge/anyseals.json  (OEM/brand design-code -> equivalent codes, bridged to Fluidseal parent_profiles)",
+    "application_market_context": "knowledge/markets/  (where seals go / why; NOT verified equivalents)",
+    "canonical_join_layer": "knowledge/parent-profiles.json  (every vendor profile -> parent_profile -> Fluidseal/SSG equivalent)"
+  },
+  "ingestion_principle": "Direct reference (verified OEM->Fluidseal part maps, e.g. John Deere T187116 -> RJD-TD187116) is the highest-confidence path. Where no direct reference exists, Marion reasons from the part's REQUIRED DETAILS (type, dimensions, material, operating envelope) against the profile knowledge base to propose a best-fit Fluidseal equivalent, flagged with confidence. Both paths grow as catalogs + website data are loaded. Website (fluidsealab.com / sealsonline.com) is treated as MORE CURRENT than catalogs; catalogs add technical/dimensional data and older context the website omits. When they conflict, website wins for part numbers/availability, catalog wins for technical depth — note the divergence.",
+  "sources": []
+}

@@ -1,0 +1,508 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marion — Quote Intake</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --yellow:#FFD400;--dark:#1a1a1a;--grey:#a7a9ac;--greylt:#e6e7e8;
+  --red:#d0021b;--green:#0a8a3c;--amber:#b8860b;--ink:#1a1a1a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Roboto Condensed',Arial,sans-serif;color:var(--ink);background:#f2f2f0;line-height:1.3;}
+.mono{font-family:'JetBrains Mono',monospace;}
+
+/* HEADER */
+.top{background:var(--yellow);border-bottom:5px solid #000;padding:14px 22px;display:flex;align-items:center;gap:16px;}
+.top .logo{width:34px;height:34px;border-radius:50%;background:#000;flex:0 0 auto;position:relative;}
+.top .logo:after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--yellow);}
+.top h1{font-size:24px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.top h1 small{font-size:13px;font-weight:400;color:#555;letter-spacing:1px;display:block;margin-top:-3px;}
+.top .phase{margin-left:auto;font-size:12px;font-weight:700;background:#000;color:var(--yellow);
+  padding:5px 12px;border-radius:3px;letter-spacing:1px;}
+
+.wrap{max-width:1280px;margin:0 auto;padding:22px;}
+
+/* LAYOUT */
+.stage{display:grid;grid-template-columns:1fr;gap:22px;}
+.panel{background:#fff;border:1px solid #d4d4d2;border-radius:5px;overflow:hidden;}
+.panel-h{background:var(--ink);color:#fff;padding:10px 16px;font-weight:700;font-size:14px;
+  letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.panel-h .step{background:var(--yellow);color:#000;width:22px;height:22px;border-radius:3px;
+  display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto;}
+.panel-h .sub{margin-left:auto;font-weight:400;font-size:11px;color:var(--grey);letter-spacing:.5px;text-transform:none;}
+.panel-b{padding:16px;}
+
+/* INPUT */
+.dropzone{position:relative;}
+textarea#req{width:100%;min-height:190px;border:1px solid #cfcfcd;border-radius:4px;padding:12px;
+  font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.5;resize:vertical;background:#fafafa;}
+textarea#req:focus{outline:2px solid var(--yellow);background:#fff;}
+.dropzone.over textarea#req{border-color:var(--yellow);background:#fffdf0;}
+.drop-overlay{position:absolute;inset:0;border:2px dashed var(--yellow);border-radius:4px;
+  background:rgba(255,212,0,.10);display:none;align-items:center;justify-content:center;
+  pointer-events:none;z-index:5;}
+.dropzone.over .drop-overlay{display:flex;}
+.drop-overlay span{background:#000;color:var(--yellow);font-weight:700;font-size:14px;letter-spacing:.5px;
+  text-transform:uppercase;padding:8px 16px;border-radius:4px;}
+.drop-hint{font-size:11px;color:#888;margin-top:6px;}
+.drop-hint a{color:var(--red);font-weight:700;cursor:pointer;text-decoration:underline;}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#eef1f3;border:1px solid #d6dadd;
+  border-radius:14px;padding:3px 6px 3px 10px;font-size:11px;font-weight:700;margin:6px 6px 0 0;}
+.chip .x{cursor:pointer;color:#999;font-size:14px;line-height:1;}
+.chip .x:hover{color:var(--red);}
+.chip.img{background:#e9f3ff;border-color:#cfe2f7;}
+#attachRow{display:flex;flex-wrap:wrap;}
+.req-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px;}
+.req-meta label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#666;display:block;margin-bottom:3px;}
+.req-meta input{width:100%;border:1px solid #cfcfcd;border-radius:4px;padding:7px 9px;font-size:13px;font-family:inherit;}
+.actions{display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap;}
+.btn{border:none;border-radius:4px;padding:11px 22px;font-family:inherit;font-weight:700;font-size:14px;
+  letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:.12s;}
+.btn-go{background:var(--yellow);color:#000;}
+.btn-go:hover{background:#e6bf00;}
+.btn-go:disabled{background:#ddd;color:#999;cursor:not-allowed;}
+.btn-ghost{background:#fff;border:1px solid #cfcfcd;color:#333;}
+.btn-ghost:hover{background:#f4f4f2;}
+.samples{margin-left:auto;font-size:12px;color:#777;}
+.samples a{color:var(--red);font-weight:700;cursor:pointer;text-decoration:underline;}
+.status{font-size:13px;font-weight:700;}
+.status.work{color:var(--amber);}
+.status.err{color:var(--red);}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid #ddd;border-top-color:var(--amber);
+  border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+/* CART */
+.cart-tools{display:flex;gap:8px;align-items:center;padding:10px 16px;background:#fafafa;border-bottom:1px solid #e4e4e2;flex-wrap:wrap;}
+.cust-strip{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;}
+.cust-strip b{font-weight:700;}
+.cust-strip .ed{border:1px dashed #cfcfcd;border-radius:3px;padding:2px 7px;min-width:60px;display:inline-block;}
+.cust-strip .ed:focus{outline:2px solid var(--yellow);background:#fff;border-style:solid;}
+
+table.cart{width:100%;border-collapse:collapse;font-size:13px;}
+table.cart th{background:#2a2a2a;color:#fff;font-size:10px;letter-spacing:.5px;text-transform:uppercase;
+  padding:8px 6px;text-align:left;font-weight:700;border-right:1px solid #444;white-space:nowrap;}
+table.cart td{padding:4px 6px;border-bottom:1px solid #eee;border-right:1px solid #f0f0f0;vertical-align:middle;}
+table.cart tr:nth-child(even) td{background:#fafafa;}
+table.cart input,table.cart select{width:100%;border:1px solid transparent;border-radius:3px;padding:6px 5px;
+  font-family:inherit;font-size:13px;background:transparent;}
+table.cart input:hover,table.cart select:hover{border-color:#ddd;background:#fff;}
+table.cart input:focus,table.cart select:focus{outline:none;border-color:var(--yellow);background:#fffdf0;}
+table.cart input.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
+.conf{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.conf.high{background:#d6f5e0;color:var(--green);}
+.conf.med{background:#fdf0d0;color:var(--amber);}
+.conf.low{background:#fbdcdc;color:var(--red);}
+.row-del{cursor:pointer;color:#bbb;font-weight:700;font-size:16px;text-align:center;}
+.row-del:hover{color:var(--red);}
+.flag{font-size:11px;color:var(--amber);padding:2px 6px;display:block;}
+.flag:before{content:"\26A0 ";}
+.empty-cart{padding:40px;text-align:center;color:#999;font-size:14px;}
+
+/* QUOTE */
+.quote-tools{display:flex;gap:8px;padding:10px 16px;background:#fafafa;border-bottom:1px solid #e4e4e2;}
+#quoteOut{padding:0;}
+.estimate{background:#fff;color:#000;font-size:12px;padding:24px;max-width:1000px;margin:0 auto;}
+.est-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:12px;}
+.est-title{font-size:30px;font-weight:700;letter-spacing:1px;}
+.est-title .dot{display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--yellow);
+  border:3px solid #000;vertical-align:-3px;margin-right:6px;}
+.est-billship{display:flex;gap:50px;margin-top:14px;}
+.est-billship h4{font-size:11px;letter-spacing:1px;border-bottom:1px solid #000;margin-bottom:4px;}
+.est-billship div{font-size:12px;line-height:1.5;}
+.est-banner{text-align:center;font-weight:700;letter-spacing:2px;color:#888;margin:16px 0 8px;font-size:11px;overflow:hidden;}
+table.est{width:100%;border-collapse:collapse;margin-top:6px;}
+table.est th{background:#fff;border-bottom:2px solid #000;font-size:10px;text-transform:uppercase;
+  padding:6px 5px;text-align:left;letter-spacing:.5px;}
+table.est td{padding:7px 5px;border-bottom:1px solid #ddd;font-size:12px;}
+table.est td.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
+.est-price{color:var(--red);font-weight:700;}
+.est-totals{margin-top:8px;display:flex;justify-content:flex-end;}
+.est-totals table td{padding:4px 14px;font-size:12px;}
+.est-totals table td.lbl{font-weight:700;text-align:right;border-bottom:1px solid #eee;}
+.est-foot{margin-top:24px;border-top:3px solid var(--yellow);padding-top:8px;display:flex;justify-content:space-between;
+  font-size:10px;color:#333;}
+.est-foot b{color:#000;}
+
+.hint{font-size:12px;color:#888;padding:14px 16px;}
+.hidden{display:none;}
+
+@media print{
+  body{background:#fff;}
+  .top,.wrap>.stage>.panel:not(#quotePanel),.quote-tools,.panel-h{display:none!important;}
+  #quotePanel{border:none;}.estimate{padding:0;}
+}
+</style></head>
+<body>
+<div class="top">
+  <div class="logo"></div>
+  <h1>Marion<small>Quote Intake · Cross-Reference</small></h1>
+  <div class="phase">PHASE 1</div>
+</div>
+
+<div class="wrap"><div class="stage">
+
+  <!-- STEP 1: INPUT -->
+  <div class="panel">
+    <div class="panel-h"><span class="step">1</span>Customer Request<span class="sub">paste, or drag &amp; drop an email / screenshot / text file</span></div>
+    <div class="panel-b">
+      <div class="dropzone" id="dropzone">
+        <div class="drop-overlay"><span>Drop to load request</span></div>
+        <textarea id="req" placeholder="Paste the customer's request here — or drag a file onto this box…
+
+e.g.
+ATTN – SERGE   PHONE# 403-333-6741
+QTY: 4   HEIGHT = 1.220&quot;
+T187116: Plain Bushing | Shop.Deere.com
+QTY: 4   HEIGHT = 1.220&quot;
+T187117: Plain Bushing | Shop.Deere.com"></textarea>
+      </div>
+      <div class="drop-hint">Drop a <b>.txt / .eml / .csv</b> file to fill the box, or a <b>screenshot (.png / .jpg)</b> to read with vision — or <a onclick="document.getElementById('fileInput').click()">browse</a>.
+        <input type="file" id="fileInput" class="hidden" multiple accept=".txt,.eml,.csv,.md,.png,.jpg,.jpeg,.webp,.gif" onchange="handleFiles(this.files)">
+      </div>
+      <div id="attachRow"></div>
+      <div class="req-meta">
+        <div><label>Customer / Account</label><input id="mCust" placeholder="e.g. SERGE CONSTRUCTION"></div>
+        <div><label>Contact</label><input id="mContact" placeholder="name"></div>
+        <div><label>Phone</label><input id="mPhone" placeholder="phone"></div>
+        <div><label>PO #</label><input id="mPO" placeholder="optional"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-go" id="goBtn" onclick="analyze()">Analyze Request →</button>
+        <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+        <span id="status" class="status"></span>
+        <span class="samples">Load sample: <a onclick="loadSample()">Serge / Plain Bushing</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: CART -->
+  <div class="panel">
+    <div class="panel-h"><span class="step">2</span>Cart — Review &amp; Normalize<span class="sub">edit any field · confirm the agent's guesses before quoting</span></div>
+    <div class="cart-tools">
+      <div class="cust-strip">
+        <span>Account: <b class="ed" contenteditable id="cAcct">—</b></span>
+        <span>Contact: <b class="ed" contenteditable id="cContact">—</b></span>
+        <span>Phone: <b class="ed" contenteditable id="cPhone">—</b></span>
+        <span>Warehouse: <b class="ed" contenteditable id="cWh">6 - Edmonton</b></span>
+      </div>
+      <button class="btn btn-ghost" style="margin-left:auto;padding:7px 14px;font-size:12px" onclick="addRow()">+ Add line</button>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="cart"><thead><tr>
+      <th style="width:30px"></th><th style="width:55px">Conf.</th>
+      <th>OEM / Requested</th><th>Part Number (Fluidseal)</th><th>Description</th>
+      <th style="width:70px">Qty</th><th>Warehouse</th><th style="width:90px">Disposition</th>
+      <th style="width:110px">Notes</th>
+    </tr></thead><tbody id="cartBody">
+      <tr><td colspan="9" class="empty-cart">No lines yet — analyze a request above, or add a line manually.</td></tr>
+    </tbody></table>
+    </div>
+    <div class="hint" id="cartFlags"></div>
+  </div>
+
+  <!-- STEP 3: QUOTE -->
+  <div class="panel" id="quotePanel">
+    <div class="panel-h"><span class="step">3</span>Quote / Estimate<span class="sub">output form</span></div>
+    <div class="quote-tools">
+      <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="buildQuote()">Generate Quote</button>
+      <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="window.print()">Print / PDF</button>
+      <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="copyJSON()">Copy cart JSON</button>
+    </div>
+    <div id="quoteOut"><div class="hint">Generate a quote once the cart is reviewed.</div></div>
+  </div>
+
+</div></div>
+
+<script>
+/* ---------- Cross-reference knowledge (Phase 1 rules the agent applies) ---------- */
+/* These encode what's known so far. The API call carries the same logic so the
+   model can reason over unfamiliar requests; this JS handles the deterministic bits. */
+const OEM_PREFIX_MAP = {
+  // OEM/source brand -> Fluidseal part-number rule
+  // John Deere "T#######" bushings -> RJD-TD#######  (R=normalized, JD=John Deere, then OEM no.)
+  deere:   {brand:"John Deere", build:(oem)=> "RJD-TD"+oem.replace(/^T/i,"")  }
+};
+const DISPOSITIONS = ["B","S","T"]; // Buy / Stock / Transfer  (B = default per cart)
+
+/* ---------- State ---------- */
+let CART = [];      // [{conf, oem, pn, desc, qty, wh, disp, notes, flags:[]}]
+let CUST = {acct:"",contact:"",phone:"",po:"",wh:"6 - Edmonton"};
+let IMAGES = [];    // [{name, media_type, data(base64), url(objectURL)}]
+
+/* ---------- Drag & drop ---------- */
+const TEXT_EXT=/\.(txt|eml|csv|md|log|json)$/i;
+const IMG_TYPE=/^image\//;
+function initDnD(){
+  const dz=document.getElementById('dropzone');
+  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{
+    e.preventDefault();e.stopPropagation();dz.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{
+    e.preventDefault();e.stopPropagation();
+    if(ev==='dragleave'&&dz.contains(e.relatedTarget))return;
+    dz.classList.remove('over');}));
+  dz.addEventListener('drop',e=>handleFiles(e.dataTransfer.files));
+}
+function handleFiles(fileList){
+  const files=[...fileList];if(!files.length)return;
+  files.forEach(f=>{
+    if(IMG_TYPE.test(f.type)||/\.(png|jpe?g|webp|gif)$/i.test(f.name)){ stageImage(f); }
+    else if(TEXT_EXT.test(f.name)||f.type.startsWith('text/')){
+      const r=new FileReader();
+      r.onload=()=>{
+        const ta=document.getElementById('req');
+        ta.value=(ta.value.trim()?ta.value.trim()+"\n\n":"")+r.result.trim();
+        setStatus('Loaded '+f.name+'.','');
+      };
+      r.readAsText(f);
+    } else { setStatus('Skipped '+f.name+' (unsupported type).','err'); }
+  });
+}
+function stageImage(f){
+  const r=new FileReader();
+  r.onload=()=>{
+    const b64=r.result.split(',')[1];
+    const mt=f.type||'image/png';
+    IMAGES.push({name:f.name,media_type:mt,data:b64,url:r.result});
+    renderAttachments();
+    setStatus('Attached screenshot '+f.name+' — will be read on Analyze.','');
+  };
+  r.readAsDataURL(f);
+}
+function renderAttachments(){
+  const row=document.getElementById('attachRow');
+  row.innerHTML=IMAGES.map((im,i)=>`<span class="chip img"><img src="${im.url}" style="width:18px;height:18px;object-fit:cover;border-radius:2px">${esc(im.name)}<span class="x" onclick="rmImage(${i})">×</span></span>`).join('');
+}
+function rmImage(i){IMAGES.splice(i,1);renderAttachments();}
+
+/* ---------- Sample ---------- */
+const SAMPLE = `ATTN – SERGE
+
+PHONE# 403-333-6741
+
+QTY: 4
+HEIGHT = 1.220"
+T187116: Plain Bushing | Shop.Deere.com  (50.1 X 62.0 X 31.0 mm)
+
+QTY: 4
+HEIGHT = 1.220"
+T187117: Plain Bushing | Shop.Deere.com  (50.1 X 62.0 X 31.0 mm)
+
+Thank you,`;
+function loadSample(){
+  document.getElementById('req').value=SAMPLE;
+  document.getElementById('mCust').value="SERGE CONSTRUCTION";
+  document.getElementById('mContact').value="Serge";
+  document.getElementById('mPhone').value="403-333-6741";
+}
+
+/* ---------- Analyze: call Claude, fall back to local parser ---------- */
+async function analyze(){
+  const text=document.getElementById('req').value.trim();
+  if(!text && !IMAGES.length){setStatus('Paste a request, or drop a file/screenshot first.','err');return;}
+  const btn=document.getElementById('goBtn');btn.disabled=true;
+  setStatus('<span class="spin"></span>Reading request & cross-referencing…','work');
+  let parsed=null;
+  try{ parsed=await callMarion(text); }
+  catch(e){ console.warn('API failed, using local parser',e); }
+  if(!parsed){
+    if(!text){ setStatus('Couldn\u2019t read the screenshot (API unavailable). Type or paste the request to use the offline parser.','err'); btn.disabled=false; return; }
+    parsed=localParse(text); setStatus('Parsed locally (API unavailable). Review carefully.','err');
+  }
+  else { setStatus('Done — '+parsed.lines.length+' line(s) staged. Review below.',''); }
+  applyParsed(parsed);
+  btn.disabled=false;
+}
+
+function setStatus(html,cls){const s=document.getElementById('status');s.innerHTML=html;s.className='status '+(cls||'');}
+
+/* ---- Claude API call ---- */
+async function callMarion(text){
+  const sys=`You are Marion, a sealing-products cross-reference agent for Fluidseal AB Inc. (Sealing Solutions Group). You receive a raw customer request (often a forwarded email or phone note) and must extract a structured quote cart.
+
+YOUR JOB:
+1. Pull out customer info: account/company name, contact name, phone, PO number if present.
+2. For each item requested, identify: the OEM / source part number exactly as written, the OEM brand, quantity, and a clean dimensional description.
+3. Cross-reference the OEM part to a Fluidseal part number using the rules below.
+4. Build a clean Description (the size, e.g. "50 X 62 X 31") from any dimensions you see.
+5. Assign a confidence: "high" if the cross-ref rule clearly applies, "med" if you inferred or rounded, "low" if you are guessing the part number or the rule is unknown.
+6. Add a short note/flag for anything a human should confirm (rounded dims, unknown brand, missing size, assumed qty).
+
+CROSS-REFERENCE RULES (Fluidseal normalizer conventions):
+- John Deere parts written like "T187116" (a "T" followed by digits) are plain bushings. The Fluidseal part number is "RJD-TD" + the numeric portion (drop the leading T). Examples confirmed by the merchant: T187116 -> RJD-TD187116, T187117 -> RJD-TD187117.
+- Description for metric bushings: convert "50.1 X 62.0 X 31.0 mm" to a rounded whole-mm form "50 X 62 X 31" (note the rounding in a flag).
+- Default warehouse: "6 - Edmonton". Default disposition: "B".
+- If you cannot determine a Fluidseal part number, leave pn as "" and set confidence "low" with a note.
+- NEVER invent pricing. Pricing is added later.
+
+Return ONLY valid JSON, no markdown, no prose:
+{"customer":{"acct":"","contact":"","phone":"","po":""},
+ "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","qty":1,"wh":"6 - Edmonton","disp":"B","notes":""}]}`;
+
+  const userContent=[];
+  IMAGES.forEach(im=>userContent.push({type:"image",
+    source:{type:"base64",media_type:im.media_type,data:im.data}}));
+  userContent.push({type:"text",
+    text:(text||"")+(IMAGES.length?"\n\n[One or more screenshots of the request are attached above — read all part numbers, quantities, dimensions, and customer details from them.]":"")});
+
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,
+      system:sys,
+      messages:[{role:"user",content:userContent}]})
+  });
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const data=await res.json();
+  let raw=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();
+  raw=raw.replace(/```json|```/g,"").trim();
+  const j=JSON.parse(raw);
+  if(!j.lines) throw new Error("no lines");
+  return j;
+}
+
+/* ---- Local deterministic fallback parser ---- */
+function localParse(text){
+  const out={customer:{acct:"",contact:"",phone:"",po:""},lines:[]};
+  const attn=text.match(/ATTN[^\n]*?[–\-:]\s*([A-Za-z][A-Za-z .'&]+)/i);
+  if(attn) out.customer.contact=attn[1].trim();
+  const ph=text.match(/PHONE#?\s*([\d\-\(\) .]{7,})/i)||text.match(/(\d{3}[-.\s]\d{3}[-.\s]\d{4})/);
+  if(ph) out.customer.phone=ph[1].trim();
+  const po=text.match(/\bPO#?\s*[:\-]?\s*([A-Za-z0-9\-]+)/i);
+  if(po) out.customer.po=po[1].trim();
+
+  // Split into blocks around QTY markers; pair qty/dims with the next part token.
+  const lines=text.split(/\r?\n/);
+  let curQty=1, curDims="";
+  for(const ln of lines){
+    const q=ln.match(/QTY[:\s]+(\d+)/i); if(q){curQty=parseInt(q[1]);continue;}
+    const dim=ln.match(/(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:\.\d+)?)/);
+    if(dim){curDims=`${Math.round(+dim[1])} X ${Math.round(+dim[2])} X ${Math.round(+dim[3])}`;}
+    const deere=ln.match(/\bT(\d{5,7})\b/);
+    if(deere){
+      const oem="T"+deere[1];
+      out.lines.push({conf:curDims?"high":"med",oem,brand:"John Deere",
+        pn:"RJD-TD"+deere[1],desc:curDims||"",qty:curQty,wh:"6 - Edmonton",disp:"B",
+        notes:curDims?"":"Confirm size — no dimensions found"});
+      curDims="";
+    }
+  }
+  return out;
+}
+
+/* ---------- Apply parsed result to state + UI ---------- */
+function applyParsed(p){
+  // merge customer (manual fields win if filled)
+  const mC=document.getElementById('mCust').value.trim();
+  CUST.acct = mC || p.customer.acct || "";
+  CUST.contact = document.getElementById('mContact').value.trim() || p.customer.contact || "";
+  CUST.phone = document.getElementById('mPhone').value.trim() || p.customer.phone || "";
+  CUST.po = document.getElementById('mPO').value.trim() || p.customer.po || "";
+  CART = p.lines.map(l=>({
+    conf:l.conf||"low",oem:l.oem||"",pn:l.pn||"",desc:l.desc||"",
+    qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes:l.notes||""
+  }));
+  renderCust(); renderCart();
+}
+
+function renderCust(){
+  document.getElementById('cAcct').textContent=CUST.acct||"—";
+  document.getElementById('cContact').textContent=CUST.contact||"—";
+  document.getElementById('cPhone').textContent=CUST.phone||"—";
+  document.getElementById('cWh').textContent=CUST.wh||"6 - Edmonton";
+}
+
+function renderCart(){
+  const tb=document.getElementById('cartBody');
+  if(!CART.length){tb.innerHTML='<tr><td colspan="9" class="empty-cart">No lines yet — analyze a request above, or add a line manually.</td></tr>';
+    document.getElementById('cartFlags').textContent='';return;}
+  tb.innerHTML=CART.map((r,i)=>`<tr>
+    <td class="row-del" onclick="delRow(${i})" title="remove">×</td>
+    <td><span class="conf ${r.conf}">${r.conf}</span></td>
+    <td><input value="${esc(r.oem)}" onchange="upd(${i},'oem',this.value)" placeholder="OEM part #"></td>
+    <td><input class="pn" value="${esc(r.pn)}" onchange="upd(${i},'pn',this.value)" placeholder="—"></td>
+    <td><input value="${esc(r.desc)}" onchange="upd(${i},'desc',this.value)" placeholder="size"></td>
+    <td><input type="number" min="1" value="${r.qty}" onchange="upd(${i},'qty',this.value)"></td>
+    <td><input value="${esc(r.wh)}" onchange="upd(${i},'wh',this.value)"></td>
+    <td><select onchange="upd(${i},'disp',this.value)">${DISPOSITIONS.map(d=>`<option ${d===r.disp?'selected':''}>${d}</option>`).join('')}</select></td>
+    <td><input value="${esc(r.notes)}" onchange="upd(${i},'notes',this.value)" placeholder=""></td>
+  </tr>`).join('');
+  const flags=CART.filter(r=>r.notes||r.conf==='low');
+  document.getElementById('cartFlags').innerHTML = flags.length
+    ? '<b>Needs review:</b> '+flags.map(r=>`${r.oem||r.pn||'line'} — ${r.notes||'low confidence'}`).join(' · ')
+    : '✓ All lines look clean. Generate the quote.';
+}
+function esc(s){return (s+'').replace(/"/g,'&quot;');}
+function upd(i,k,v){CART[i][k]=(k==='qty')?(parseInt(v)||1):v;
+  if(k==='pn'&&v) CART[i].conf='high'; renderCart();}
+function delRow(i){CART.splice(i,1);renderCart();}
+function addRow(){CART.push({conf:'low',oem:'',pn:'',desc:'',qty:1,wh:CUST.wh,disp:'B',notes:'manual'});renderCart();}
+
+/* sync editable customer strip */
+['cAcct','cContact','cPhone','cWh'].forEach(id=>{
+  document.addEventListener('input',e=>{ if(e.target.id===id){
+    const k={cAcct:'acct',cContact:'contact',cPhone:'phone',cWh:'wh'}[id];
+    CUST[k]=e.target.textContent.trim();
+  }});
+});
+
+/* ---------- Quote output ---------- */
+function buildQuote(){
+  if(!CART.length){document.getElementById('quoteOut').innerHTML='<div class="hint">Cart is empty.</div>';return;}
+  const today=new Date().toLocaleDateString('en-CA');
+  const rows=CART.map(r=>`<tr>
+    <td class="pn">${esc(r.pn)||'<span style="color:#c00">— not resolved —</span>'}</td>
+    <td>${esc(r.desc)}</td>
+    <td>${esc(r.oem)}</td>
+    <td>${esc(r.notes)}</td>
+    <td>${esc(r.wh)}</td>
+    <td style="text-align:center">0</td>
+    <td style="text-align:center">${r.qty}</td>
+    <td style="text-align:center">${r.disp}</td>
+    <td class="est-price">$0.00</td>
+    <td>$0.00</td>
+  </tr>`).join('');
+  document.getElementById('quoteOut').innerHTML=`<div class="estimate">
+    <div class="est-top">
+      <div><div class="est-title"><span class="dot"></span>ESTIMATE</div>
+        <div class="est-billship">
+          <div><h4>BILL TO</h4><div>${esc(CUST.acct||'—')}<br>${esc(CUST.contact||'')}<br>${esc(CUST.phone||'')}</div></div>
+          <div><h4>SHIP TO</h4><div>${esc(CUST.acct||'—')}<br>${esc(CUST.contact||'')}</div></div>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:11px"><b>FLUIDSEAL AB INC.</b><br>17309 - 107 Ave<br>Edmonton, AB T5S 1E5<br>(780) 414-1871<br><br>${today}${CUST.po?'<br>PO# '+esc(CUST.po):''}</div>
+    </div>
+    <div class="est-banner">★★★★★★★★★★★★★★★ ESTIMATE ★★★★★★★★★★★★★★★ ESTIMATE ★★★★★★★★★★★★★★★</div>
+    <table class="est"><thead><tr>
+      <th>Part Number</th><th>Description</th><th>Customer Part#</th><th>Notes</th><th>Warehouse</th>
+      <th>Qty On Hand</th><th>Qty</th><th>Disp.</th><th>Net Price</th><th>Total</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    <div class="est-totals"><table>
+      <tr><td class="lbl">FREIGHT IN</td><td>$0.00</td></tr>
+      <tr><td class="lbl">TOTAL TAX</td><td>$0.00</td></tr>
+      <tr><td class="lbl">TOTAL</td><td><b>$0.00</b></td></tr>
+    </table></div>
+    <div class="est-foot">
+      <div><b>FLUIDSEAL AB INC.</b><br>17309 - 107 Ave, Edmonton AB T5S 1E5 · (780) 414-1871</div>
+      <div style="text-align:right"><b>FLUIDSEAL CG INC.</b><br>Bay #6, 3815 - 61st Ave SE, Calgary AB T2C 1V5</div>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:#999;text-align:center">Pricing is not yet connected — net prices show $0.00 until Shopify inventory is linked (Phase 3).</div>
+  </div>`;
+  document.getElementById('quotePanel').scrollIntoView({behavior:'smooth'});
+}
+
+function copyJSON(){
+  const payload={customer:CUST,lines:CART};
+  navigator.clipboard.writeText(JSON.stringify(payload,null,2))
+    .then(()=>setStatus('Cart JSON copied to clipboard.',''));
+}
+function clearAll(){
+  document.getElementById('req').value='';
+  ['mCust','mContact','mPhone','mPO'].forEach(id=>document.getElementById(id).value='');
+  CART=[];CUST={acct:'',contact:'',phone:'',po:'',wh:'6 - Edmonton'};IMAGES=[];
+  renderAttachments();renderCust();renderCart();
+  document.getElementById('quoteOut').innerHTML='<div class="hint">Generate a quote once the cart is reviewed.</div>';
+  setStatus('','');
+}
+initDnD();
+</script>
+</body></html>
