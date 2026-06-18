@@ -9,6 +9,24 @@
     "application_market_context": "knowledge/markets/  (where seals go / why; NOT verified equivalents)",
     "canonical_join_layer": "knowledge/parent-profiles.json  (every vendor profile -> parent_profile -> Fluidseal/SSG equivalent)"
   },
-  "ingestion_principle": "Direct reference (verified OEM->Fluidseal part maps, e.g. John Deere T187116 -> RJD-TD187116) is the highest-confidence path. Where no direct reference exists, Marion reasons from the part's REQUIRED DETAILS (type, dimensions, material, operating envelope) against the profile knowledge base to propose a best-fit Fluidseal equivalent, flagged with confidence. Both paths grow as catalogs + website data are loaded. Website (fluidsealab.com / sealsonline.com) is treated as MORE CURRENT than catalogs; catalogs add technical/dimensional data and older context the website omits. When they conflict, website wins for part numbers/availability, catalog wins for technical depth — note the divergence.",
-  "sources": []
+  "ingestion_principle": "Direct reference (verified OEM->Fluidseal part maps from the live website, e.g. John Deere T108050 -> RJD-T108050) is the highest-confidence path. Where no direct reference exists, Marion reasons from the part's REQUIRED DETAILS (type, dimensions, material, operating envelope) against the profile knowledge base to propose a best-fit Fluidseal equivalent, flagged with confidence. Both paths grow as catalogs + website data are loaded. Website (fluidsealab.com / sealsonline.com) is treated as MORE CURRENT than catalogs; catalogs add technical/dimensional data and older context the website omits. When they conflict, website wins for part numbers/availability, catalog wins for technical depth — note the divergence. (NB: the John Deere convention is RJD- + the OEM reference number, established from live data; an earlier assumption of RJD-TD<number> proved wrong except for the filler-ring internal series — see john-deere.json DATA_INTEGRITY_FLAG.)",
+  "sources": [
+    {
+      "source_id": "john-deere-website-2026-06-18",
+      "label": "John Deere OEM parts (live website harvest)",
+      "origin": "https://www.sealsonline.com/en/flabed/categories/oem-kits-parts/mobile-equipment-seal-kits/john-deere/john-deere-parts",
+      "origin_type": "live-website",
+      "harvested": "2026-06-18",
+      "routed_to": "knowledge/oem-parts/john-deere.json",
+      "routing_target": "oem_part_to_fluidseal",
+      "records": 82,
+      "raw_archived": false,
+      "raw_note": "Sourced directly from live category/leaf pages (12 part-type categories); no raw file to archive. Re-harvest from the same URLs to refresh.",
+      "open_items": [
+        "DATA_INTEGRITY_FLAG in john-deere.json: Serge estimate RJD-TD187116 vs. live RJD-T<number> convention — confirm canonical number for OEM T187116/T187117 (not currently listed on live site).",
+        "Most leaf pages not individually opened; per-part dimensional specs captured only where read. Full per-part specs are on the live leaf pages — deepen on demand or when Shopify is connected.",
+        "john-deere-kits sub-category not yet harvested (this pass covered john-deere-parts only)."
+      ]
+    }
+  ]
 }

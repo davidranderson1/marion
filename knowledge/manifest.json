@@ -1,7 +1,7 @@
 {
   "_note": "Marion's knowledge manifest. Marion reads this FIRST, then loads every file listed under 'manufacturers' and merges their products into one catalog. To add a manufacturer: drop its file in /knowledge/manufacturers/ and add a line here. To temporarily disable one: set active=false. Bump 'knowledge_version' whenever you publish a change.",
-  "knowledge_version": "2.8",
-  "updated": "2026-06-17",
+  "knowledge_version": "2.9",
+  "updated": "2026-06-18",
   "shared": {
     "company": "company.json",
     "product_groups": "product-groups.json",
@@ -12,6 +12,17 @@
     "markets": "markets/markets.json",
     "materials_context": "markets/materials-context.json"
   },
+  "oem_parts": [
+    {
+      "oem": "John Deere",
+      "file": "oem-parts/john-deere.json",
+      "active": true,
+      "parts": 82,
+      "source": "live website (sealsonline.com flabed John Deere parts)",
+      "note": "OEM part-number -> Fluidseal part-number layer (part->part, not profile->profile). 82 real Fluidseal stock parts across 12 part types with verified leaf URLs. Convention: RJD- + the John Deere reference number (exception: filler-ring RJD-TD<diameter> internal series). Carries a DATA_INTEGRITY_FLAG about the Serge estimate's RJD-TD187116 vs. the live RJD-T<number> convention — needs David's confirmation."
+    }
+  ],
+  "oem_parts_note": "oem-parts/ holds OEM brands (John Deere, and future Caterpillar/Hitachi/etc.) whose relationship to Fluidseal is part-number -> part-number plus that part's own dimensional detail, NOT a seal-profile bridge. These are NOT merged into the seal-profile catalog; Marion and quote.html consult them to resolve a customer's OEM part reference to a confirmed Fluidseal part number + leaf URL.",
   "crossref_note": "parent-profiles.json is the canonical join layer: every vendor/manufacturer profile (Fluidseal/SSG, Fluidseal Xpress, DMH, Parker, Hallite, Freudenberg, Maxspare) maps to a parent_profile, which resolves to the Fluidseal/SSG equivalent. crossref.json is the older category-bridge for Hallite/Clipper and is superseded by parent-profiles for any part with an explicit parent.",
   "markets_note": "markets/ holds application & market-context knowledge (NOT profile/part-number data). markets.json maps 21 industries to their operating drivers, seal types, and a routing hint to Fluidseal product-group families; materials-context.json holds material operating envelopes referenced by market entries. Sourced from Freudenberg market/application brochures (raw PDFs archived in markets/freudenberg-brochures/ with _manifest.json). Use for 'where do seals go / why' reasoning; not a verified equivalent mapping.",
   "vendors_tracked": ["Fluidseal/SSG", "Fluidseal Xpress", "DMH", "Parker", "Hallite", "Freudenberg", "Maxspare"],

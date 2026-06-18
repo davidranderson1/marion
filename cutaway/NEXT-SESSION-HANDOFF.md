@@ -1,15 +1,15 @@
 # Marion — Next Session Handoff: Cylinder Cutaway View
 
 Paste the kickoff block below into a NEW chat in the same Claude Project. Everything Marion
-needs is on disk and described here. Upload the two cutaway files first so the new chat works
-from ground truth, not from memory.
+needs is on disk in the repo and described here. The cutaway files now live IN the repo
+(`marion\cutaway\`), so the new chat can read them directly — no upload needed.
 
 ====================================================================
 KICKOFF MESSAGE — copy everything between the lines into the new chat
 --------------------------------------------------------------------
 Continuing **Marion**, Fluidseal AB's customer-facing AI sealing agent. Phase 2 is LIVE at
-https://marion.fluidsealab.com/ (yellow/black chat page, "What Marion Knows" panel shows 87
-profiles, offline recommender + optional Claude API).
+https://marion.fluidsealab.com/ (yellow/black chat page, "What Marion Knows" panel, offline
+recommender + optional Claude API).
 
 This session we build Marion's first real VIEW: the **Cutaway View** (interactive cylinder
 seal selector — answers shown in their physical place on the equipment). Get the cylinder
@@ -20,17 +20,19 @@ Read these to get up to speed (Filesystem connector):
     - ROADMAP-VIEWS.md      <- the plan; defines List / Cards / Compare / Cutaway
     - index.html            <- the live Marion page we're extending
     - MARION-SYSTEM-PROMPT.md, README.md
-- Cutaway working set:  C:\Users\d.anderson\ClaudeWorkspace\cutaway\
+    - knowledge\manifest.json  <- read FIRST; lists all active manufacturers (v2.8+)
+- Cutaway working set (now in the repo):  marion\cutaway\
     - cylinder-seal-selector_7.html   <- the prototype to bring in as the Cutaway view
-    - cylinder-positions (1).json     <- callout coordinates / seal positions
-- Canonical data:  C:\Users\d.anderson\ClaudeWorkspace\marion-knowledge\
-    (products.json, profiles.json, hallite + clipper refs, image json)
+    - cylinder-positions.json         <- callout coordinates / seal positions
+- Canonical knowledge:  marion\knowledge\  (manifest + manufacturers/ + parent-profiles.json
+    + crossref.json + anyseals.json + product-groups + profiles + markets/)
 
-I will UPLOAD cylinder-seal-selector_7.html and cylinder-positions (1).json so you can see them
-directly. Start by reading ROADMAP-VIEWS.md, then inspect the selector prototype, then propose
-how to integrate it as Marion's Cutaway view.
+Start by reading ROADMAP-VIEWS.md, then inspect the selector prototype
+(marion\cutaway\cylinder-seal-selector_7.html) and its callout JSON, then propose how to
+integrate it as Marion's Cutaway view.
 
-Build philosophy stays: TRAIN FIRST, CONNECT LATER. No Shopify/Supabase yet (Phase 3).
+Build philosophy stays: TRAIN FIRST, CONNECT LATER. No Shopify/Supabase wired into the public
+site yet (Phase 3).
 --------------------------------------------------------------------
 
 ====================================================================
@@ -39,13 +41,28 @@ WHERE THINGS STAND (so nothing is lost)
 LIVE / DONE:
 - marion.fluidsealab.com is live (GitHub Pages, repo davidranderson1/marion, public).
   HTTPS enforced. CNAME + DNS done.
-- Repo contents: index.html, CNAME, knowledge/ (manifest + company + product-groups +
-  profiles + products + manufacturers/hallite + manufacturers/clipper), README,
+- Repo contents: index.html, quote.html, CNAME, knowledge/ (manifest + company +
+  product-groups + profiles + products + parent-profiles + crossref + anyseals +
+  manufacturers/ + markets/ + catalogs/_inbox + oem-parts/), parts/, cutaway/, README,
   MARION-SYSTEM-PROMPT, ROADMAP-VIEWS.
-- Knowledge base: 87 profiles (Hallite 82 + Clipper 5), 13 product groups, 170 profile links.
-- Workspace organized: C:\Users\d.anderson\ClaudeWorkspace\ sorted into
-  cutaway / marion-knowledge / catalog / posters / training / oilgas / misc / _ARCHIVE.
-  _ARCHIVE holds all superseded versions (nothing deleted) — purge it yourself when confident.
+- Knowledge base (manifest v2.8): Fluidseal (169, normalizer) + Hallite (82) + Clipper (5) +
+  Parker reciprocating (64) + Parker rotary (217) + Freudenberg (157). Plus parent-profiles.json
+  (221 parent profiles, 8 families) as the canonical join layer, anyseals.json OEM crossref,
+  and markets/ application context. SKF + Trelleborg planned.
+
+CATALOG INGESTION (new):
+- Single drop point for ALL source docs: marion\knowledge\catalogs\_inbox\
+  (Fluidseal catalogs, manufacturer catalogs, OEM kit/part lists, industry PDFs — a mixture is
+  fine). Each is parsed and ROUTED: seal profiles -> manufacturers\<name>.json;
+  OEM part->Fluidseal part -> oem-parts\<oem>.json; brand crossref -> anyseals.json;
+  application context -> markets\. Raw files archived to catalogs\<source>\ and logged in
+  catalogs\_inbox\_INGESTION-LEDGER.json. Marion reads the routed JSON, not _inbox.
+- oem-parts\ is the layer for OEMs (John Deere etc.) whose relationship is part->part, not
+  profile->profile. (e.g. John Deere T187116 -> RJD-TD187116.)
+
+QUOTE INTAKE (new): marion\quote.html — Phase 1 quote tool. Paste/drag a customer request
+(email, screenshot, text) -> agent cross-references OEM->Fluidseal part numbers -> editable
+cart -> Fluidseal estimate form. Cross-ref rules grow as catalogs/website data are loaded.
 
 THE VIEW SYSTEM (from ROADMAP-VIEWS.md):
 - List  (spec-filtered rows)         — data ready
@@ -57,13 +74,16 @@ THE VIEW SYSTEM (from ROADMAP-VIEWS.md):
 
 NEXT PRIORITIES AFTER CUTAWAY:
 1. Phase 2.5 view toggle (List/Cards/Compare) on Marion's answers.
-2. Add manufacturer data: Freudenberg, SKF, Trelleborg, Parker (normalize to schema,
-   add file to knowledge/manufacturers/ + line in manifest.json, bump knowledge_version).
+2. Continue manufacturer data: SKF, Trelleborg (Freudenberg + both Parker catalogs already in).
+   Add comparable lists so the Parker/Freudenberg columns in parent-profiles.json fill in.
 3. Profile Mapping Tool (relate each manufacturer's profiles to Fluidseal profile links).
 4. Phase 3: Shopify (pricing/checkout) + Supabase (quotes) via a server-side key proxy.
 
-KNOWN LOOSE ENDS:
-- A few fluidseal_1..4.html scraps remain in ClaudeWorkspace root; harmless, drag to _ARCHIVE.
-- To add a manufacturer file to the LIVE site, write it into the repo's
-  knowledge/manufacturers/, add it to manifest.json, then commit+push via GitHub Desktop.
+WORKSPACE NOTE:
+- The old local scratch folder C:\Users\d.anderson\ClaudeWorkspace\ has been cleaned up and
+  deleted. Everything needed now lives under OneDrive: the Marion repo
+  (...\ClaudeAgent\Marion\marion\) is the single source of truth; editable design source files
+  (equipment poster PSDs/JPGs) are in ...\OneDrive - Sealing Solutions Group\Design Source Files\.
+- To add a manufacturer file to the LIVE site: write it into knowledge\manufacturers\, add it to
+  manifest.json, bump knowledge_version, then commit+push via GitHub Desktop.
 ====================================================================

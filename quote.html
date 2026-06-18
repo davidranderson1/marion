@@ -220,8 +220,9 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
    model can reason over unfamiliar requests; this JS handles the deterministic bits. */
 const OEM_PREFIX_MAP = {
   // OEM/source brand -> Fluidseal part-number rule
-  // John Deere "T#######" bushings -> RJD-TD#######  (R=normalized, JD=John Deere, then OEM no.)
-  deere:   {brand:"John Deere", build:(oem)=> "RJD-TD"+oem.replace(/^T/i,"")  }
+  // John Deere parts -> "RJD-" + the full OEM number, OEM prefix preserved (T, AT, R, TH, H, U, RE, AH, ...).
+  // e.g. T187116 -> RJD-T187116 ; AT131420 -> RJD-AT131420. (TD is NOT a rule; it is only the filler-ring internal series.)
+  deere:   {brand:"John Deere", build:(oem)=> "RJD-"+oem.toUpperCase()  }
 };
 const DISPOSITIONS = ["B","S","T"]; // Buy / Stock / Transfer  (B = default per cart)
 
@@ -329,7 +330,7 @@ YOUR JOB:
 6. Add a short note/flag for anything a human should confirm (rounded dims, unknown brand, missing size, assumed qty).
 
 CROSS-REFERENCE RULES (Fluidseal normalizer conventions):
-- John Deere parts written like "T187116" (a "T" followed by digits) are plain bushings. The Fluidseal part number is "RJD-TD" + the numeric portion (drop the leading T). Examples confirmed by the merchant: T187116 -> RJD-TD187116, T187117 -> RJD-TD187117.
+- John Deere parts: the Fluidseal part number is "RJD-" + the full John Deere reference number, KEEPING the OEM letter prefix exactly. Observed prefixes: T, AT, R, TH, H, U, RE, AH, YZ, FYB, 4S, and bare-numeric. Examples (verified against the live sealsonline.com catalog): T187116 -> RJD-T187116, AT131420 -> RJD-AT131420, R272388 -> RJD-R272388. Do NOT insert "TD" (RJD-TD is only the internal filler-ring series RJD-TD45..RJD-TD140, sized by diameter; not a general rule).
 - Description for metric bushings: convert "50.1 X 62.0 X 31.0 mm" to a rounded whole-mm form "50 X 62 X 31" (note the rounding in a flag).
 - Default warehouse: "6 - Edmonton". Default disposition: "B".
 - If you cannot determine a Fluidseal part number, leave pn as "" and set confidence "low" with a note.
@@ -377,11 +378,12 @@ function localParse(text){
     const q=ln.match(/QTY[:\s]+(\d+)/i); if(q){curQty=parseInt(q[1]);continue;}
     const dim=ln.match(/(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:\.\d+)?)/);
     if(dim){curDims=`${Math.round(+dim[1])} X ${Math.round(+dim[2])} X ${Math.round(+dim[3])}`;}
-    const deere=ln.match(/\bT(\d{5,7})\b/);
+    // John Deere OEM ref: letter prefix (T, AT, R, TH, H, U, RE, AH, YZ, FYB...) or "4S"-style + digits
+    const deere=ln.match(/\b([A-Z]{1,3}\d{4,8}|\d[A-Z]\d{4,8})\b/i);
     if(deere){
-      const oem="T"+deere[1];
+      const oem=deere[1].toUpperCase();
       out.lines.push({conf:curDims?"high":"med",oem,brand:"John Deere",
-        pn:"RJD-TD"+deere[1],desc:curDims||"",qty:curQty,wh:"6 - Edmonton",disp:"B",
+        pn:"RJD-"+oem,desc:curDims||"",qty:curQty,wh:"6 - Edmonton",disp:"B",
         notes:curDims?"":"Confirm size — no dimensions found"});
       curDims="";
     }

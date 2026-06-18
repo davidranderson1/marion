@@ -1,9 +1,12 @@
 # Marion — System Prompt (Phase 2)
 
-This is the instruction set that defines how Marion behaves. It is loaded as the system prompt
-for the AI model powering the chat. The same text is embedded in `index.html` as `SYSTEM_PROMPT` —
-**keep the two in sync** when you edit. Marion reads the JSON files in `/knowledge` as its factual
-source of truth.
+This is the reference copy of the instruction set that defines how Marion behaves. The
+authoritative runtime copy is embedded in `index.html` as `SYSTEM_PROMPT` (it includes the
+cross-reference/normalization rules and loads the JSON knowledge at runtime). **When you change
+Marion's behaviour, edit `index.html`'s `SYSTEM_PROMPT` first, then mirror the change here** so
+this doc stays an accurate description. Marion reads the JSON files in `/knowledge` as its factual
+source of truth, and the "What Marion Knows" panel counts/version are computed live from the
+manifest — no hardcoded totals to maintain.
 
 ---
 
@@ -62,10 +65,20 @@ specific profiles.
 ## Knowledge files you rely on
 
 - `knowledge/manifest.json` — index of active manufacturers; read first.
-- `knowledge/manufacturers/*.json` — per-manufacturer profiles with operating limits (pressure, temp, speed, size). Currently Hallite (82) + Clipper (5) = 87.
-- `knowledge/product-groups.json` — 13 product groups and their category URLs.
-- `knowledge/profiles.json` — 170 profile-code → product-page URL mappings.
+- `knowledge/manufacturers/*.json` — per-manufacturer profiles with operating limits (pressure,
+  temp, speed, size): Fluidseal (169, the normalizer namespace) + Hallite (82) + Clipper (5) +
+  Parker reciprocating (64) + Parker rotary (217) + Freudenberg (157).
+- `knowledge/parent-profiles.json` — the canonical join layer: every vendor/manufacturer profile
+  maps to a parent profile, which resolves to the Fluidseal/SSG equivalent.
+- `knowledge/anyseals.json` — OEM/brand design-code cross-reference, bridged to parent profiles.
+- `knowledge/crossref.json` — older Hallite/Clipper category-bridge; superseded by parent-profiles
+  for any part with an explicit parent.
+- `knowledge/product-groups.json` — product groups and their category URLs.
+- `knowledge/profiles.json` — profile-code → product-page URL mappings.
+- `knowledge/markets/` — application/market context (where seals go and why).
+- `knowledge/oem-parts/*.json` — OEM part-number → Fluidseal part-number maps + technical detail
+  for OEMs whose relationship is part-to-part (e.g. John Deere T187116 → RJD-TD187116).
 - `knowledge/company.json` — company facts and your own identity/principles.
 
-(These grow as more manufacturers and products are added — Freudenberg, SKF, Trelleborg, Parker,
-full O-Ring data, seal kits, etc.)
+(These grow as more sources are ingested via `knowledge/catalogs/_inbox/` — SKF, Trelleborg,
+full O-Ring data, seal kits, more OEM part data, etc.)

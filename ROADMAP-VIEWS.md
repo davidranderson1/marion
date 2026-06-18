@@ -58,9 +58,10 @@ answers, and part search isn't spatial. The one genuinely spatial thing — stoc
 becomes a real map only in Phase 3 once Shopify inventory is connected.
 
 *Data needed:* equipment diagrams with seal-position metadata. The hydraulic-cylinder seal-selector
-already prototyped (`cylinder-seal-selector_7.html`, in Downloads) is the seed of this — it maps
-every sealing profile to its location on a cutaway cylinder, inch + metric. That artwork + callout
-coordinates is the data layer for Cutaway view.
+already prototyped (`cutaway/cylinder-seal-selector_7.html` in the repo, with its callout coordinates
+in `cutaway/cylinder-positions.json`) is the seed of this — it maps every sealing profile to its
+location on a cutaway cylinder, inch + metric. That artwork + callout coordinates is the data layer
+for Cutaway view.
 
 ---
 
@@ -108,5 +109,6 @@ views across the full catalog.
 2. Decide whether the view toggle is always visible or only appears when results warrant it.
 3. Decide default view per intent (spec-filter query → List; "show me" / browse → Cards;
    "which is better" → Compare; "where does it go" → Cutaway).
-4. Bring `cylinder-seal-selector_7.html` into the repo as the Cutaway seed, or rebuild its callout
-   layer cleanly against the knowledge base.
+4. `cylinder-seal-selector_7.html` is now in the repo (`marion/cutaway/`) alongside
+   `cylinder-positions.json`. Decide: wire this prototype in as the Cutaway seed as-is, or rebuild
+   its callout layer cleanly against the knowledge base.

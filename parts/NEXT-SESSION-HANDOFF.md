@@ -36,7 +36,7 @@ _Last updated: 2026-06-17_
 ## Other open backlog (priority order)
 1. Add shaft-seals profiles to `manufacturers/fluidseal.json` so Clipper oil-seals (LUP/LPD/LDS/RUP/RPD) + RT rotary family resolve to a specific profile+URL (currently bridge to group only).
 2. Fill `exact_equivalent` 1:1 matches in `crossref.json` (needs Hallite cross-ref sheets).
-3. Cutaway View (Phase 2.5) — interactive cylinder-seal-selector. Prototype at `C:\Users\d.anderson\ClaudeWorkspace\cutaway\cylinder-seal-selector_7.html`.
+3. Cutaway View (Phase 2.5) — interactive cylinder-seal-selector. Prototype now in the repo at `marion\cutaway\cylinder-seal-selector_7.html` (callout coords in `cutaway\cylinder-positions.json`).
 4. Add Freudenberg/SKF/Trelleborg/Parker manufacturer files; List/Cards/Compare view toggle.
 5. Load more interchange files into the parts pipeline to widen the dataset.
 
