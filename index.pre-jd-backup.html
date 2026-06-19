@@ -313,8 +313,6 @@
         <button class="chip" data-q="Tell me about Clipper oil seals.">Clipper oil seals</button>
         <button class="chip" data-q="DK101">Cross-ref DK101</button>
         <button class="chip" data-q="B7">Cross-ref Parker B7</button>
-        <button class="chip" data-q="AT224864">John Deere AT224864</button>
-        <button class="chip" data-q="8400">JD 8400 seals</button>
       </div>
       <div class="input-row">
         <textarea id="input" rows="1" placeholder="Describe your application — equipment, rod/bore size, pressure, temp, media…"></textarea>
@@ -360,21 +358,6 @@
           </button>
         </div>
         <div id="xrefStat" style="font-size:11px;color:var(--muted-ink);font-family:var(--mono);margin-top:8px"></div>
-      </div>
-    </div>
-
-    <!-- John Deere OEM lookup -->
-    <div class="panel">
-      <div class="panel-h">John Deere Lookup <span class="k" id="jdK">part&nbsp;#&nbsp;/&nbsp;model</span></div>
-      <div class="panel-b">
-        <p class="mini-note">Enter a John Deere <strong>part number</strong> (e.g. R26375, AT224864) for the catalog entry plus any Fluidseal equivalent — or a <strong>machine model</strong> (e.g. 8400, 310SG) to see how many seal parts fit it.</p>
-        <div class="input-row" style="gap:7px">
-          <input class="key-input" id="jdInput" type="text" placeholder="e.g. R26375  or  8400" autocomplete="off" spellcheck="false" style="margin-bottom:0;font-family:var(--mono)">
-          <button class="send" id="jdBtn" aria-label="Look up John Deere" style="width:42px;height:42px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          </button>
-        </div>
-        <div id="jdStat" style="font-size:11px;color:var(--muted-ink);font-family:var(--mono);margin-top:8px"></div>
       </div>
     </div>
 
@@ -980,14 +963,6 @@ async function handleSend(text){
   setSending(true);
   showTyping();
   try{
-    // John Deere part#/model lookups are answered from the exact OEM data in both modes
-    if(await shouldJD(text)){
-      const html=await answerJD(text.replace(/\b(john\s*deere|deere|jd)\b/ig,'').trim()||text);
-      clearTyping();
-      pushMarion(html);
-      setSending(false);
-      return;
-    }
     if(MARION.apiKey){
       // exact cross-reference hits are answered from the master directly — fast and exact
       if(shouldXref(text)){
@@ -1061,27 +1036,6 @@ function fireXref(){
 if(xrefBtn) xrefBtn.addEventListener('click',fireXref);
 if(xrefInput) xrefInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fireXref();}});
 
-/* side-rail John Deere lookup -> runs in chat */
-const jdInput=document.getElementById('jdInput');
-const jdBtn=document.getElementById('jdBtn');
-async function fireJD(){
-  const v=(jdInput.value||'').trim(); if(!v||!MARION.ready)return;
-  const stat=document.getElementById('jdStat');
-  stat.textContent='searching John Deere data…';
-  const ok=await loadJD();
-  if(ok){
-    const pr=jdLookupPart(v), md=jdLookupModel(v);
-    stat.textContent = pr.rec ? `part found · ${jdCatLabel(pr.rec.category)}${pr.fluid?' · Fluidseal '+pr.fluid.fluidseal_part:''}`
-      : md ? `model found · ${md.total_seal_parts.toLocaleString('en-US')} seal parts`
-      : pr.fluid ? `cross-referenced · Fluidseal ${pr.fluid.fluidseal_part}`
-      : 'no John Deere part/model match';
-  } else { stat.textContent='could not load John Deere data'; }
-  jdInput.value='';
-  handleSend(v);
-}
-if(jdBtn) jdBtn.addEventListener('click',fireJD);
-if(jdInput) jdInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fireJD();}});
-
 /* connect modal */
 const modal=document.getElementById('modalBg');
 document.getElementById('connectBtn').onclick=()=>{modal.classList.add('show');document.getElementById('keyInput').focus();};
@@ -1112,195 +1066,6 @@ function setConnected(on){
     btn.onclick=()=>{modal.classList.add('show');document.getElementById('keyInput').focus();};
   }
 }
-
-/* ============================================================
-   JOHN DEERE OEM LOOKUP MODULE  (Phase 2.1)
-   Two capabilities, both lazy-loaded (the parts master is 4.3MB,
-   so it is NOT pulled at boot — only on first JD interaction):
-     • JD part#  -> shop.deere.com catalog entry + Fluidseal RJD- equivalent
-     • JD model  -> per-category seal-part counts + on-demand fitment note
-   Data: knowledge/oem-parts/john-deere-parts.json  (35,425 parts)
-         knowledge/oem-parts/john-deere-models.json (3,669 models)
-         knowledge/oem-parts/john-deere.json        (82-part RJD bridge, already used by xref)
-   ============================================================ */
-const JD = {
-  loaded:false, loading:null,
-  parts:[], models:[], bridge:[],
-  partIdx:null, modelIdx:null, bridgeIdx:null,
-  meta:{partsCount:0, modelsCount:0, capped:false}
-};
-
-function jdNorm(s){return String(s||'').toUpperCase().replace(/[\s.\-_/]/g,'');}
-
-/* Lazy-load JD data the first time it's needed. Returns true on success. */
-async function loadJD(){
-  if(JD.loaded) return true;
-  if(JD.loading) return JD.loading;
-  JD.loading = (async ()=>{
-    const base='./knowledge/oem-parts/';
-    try{
-      const [pm, mm] = await Promise.all([
-        fetchJSON(base+'john-deere-parts.json'),
-        fetchJSON(base+'john-deere-models.json')
-      ]);
-      JD.parts = pm.parts||[];
-      JD.models = mm.models||[];
-      // bridge may already be loaded as part of xref; if not, fetch it
-      JD.bridge = (MARION.knowledge.jdBridge)||[];
-      if(!JD.bridge.length){
-        try{ const b=await fetchJSON(base+'john-deere.json'); JD.bridge=b.parts||[]; }catch(e){ JD.bridge=[]; }
-      }
-      // build indexes
-      JD.partIdx=new Map(); JD.parts.forEach(p=>JD.partIdx.set(jdNorm(p.jd_part),p));
-      JD.modelIdx=new Map(); JD.models.forEach(m=>JD.modelIdx.set(jdNorm(m.model),m));
-      JD.bridgeIdx=new Map(); JD.bridge.forEach(b=>{ if(b.oem_ref) JD.bridgeIdx.set(jdNorm(b.oem_ref),b); });
-      JD.meta.partsCount=JD.parts.length;
-      JD.meta.modelsCount=JD.models.length;
-      JD.meta.capped = (pm.DATA_INTEGRITY_NOTE&&/10,000/.test(JSON.stringify(pm.DATA_INTEGRITY_NOTE)))||false;
-      JD.loaded=true;
-      return true;
-    }catch(e){
-      JD.loading=null; // allow retry
-      return false;
-    }
-  })();
-  return JD.loading;
-}
-
-/* ---- lookups ---- */
-function jdLookupPart(q){
-  const raw=String(q||'').trim();
-  const isAlt=/^A-/i.test(raw);
-  const base=isAlt?raw.replace(/^A-/i,''):raw;
-  const rec=JD.partIdx?JD.partIdx.get(jdNorm(raw)):null;
-  const fluid=JD.bridgeIdx?JD.bridgeIdx.get(jdNorm(base)):null;
-  return {rec, fluid, isAlt, base, query:raw};
-}
-function jdLookupModel(q){
-  return JD.modelIdx?JD.modelIdx.get(jdNorm(q)):null;
-}
-
-/* A JD part number looks like: 1-3 letters + 4-7 digits (R26375, AT224864, RE11902),
-   optionally an A- alternative prefix, or bare-numeric kit codes (51M7040 / 4487585).
-   We confirm against the loaded index rather than guess. */
-function jdPartPattern(t){
-  const s=t.trim();
-  return /^A-?[A-Z]{0,3}\d{3,7}$/i.test(s) || /^[A-Z]{1,3}\d{3,7}$/i.test(s) || /^\d{2}[A-Z]\d{3,5}$/i.test(s) || /^\d{6,8}$/.test(s);
-}
-/* A JD model looks like alphanumeric, often with letters+digits in either order
-   (8400, 670G, 310SG, S690, LX188, 8R 340). Looser; confirm against index. */
-function jdModelPattern(t){
-  const s=t.trim();
-  if(s.length<2||s.length>10) return false;
-  return /^[A-Z0-9][A-Z0-9 ]{1,9}$/i.test(s) && /\d/.test(s);
-}
-
-/* ---- card renderers (reuse Marion's .rec card system) ---- */
-function jdCatLabel(c){return {oring:'O-Ring',seal:'Seal / Seal Kit',gasket:'Gasket',backup:'Back-Up Ring'}[c]||c;}
-
-function jdPartCard(r){
-  const p=r.rec;
-  const tierTag = p.tier==='Alternative'
-    ? `<span class="fit-tag fit-warn" title="John Deere's own lower-cost alternative">JD ALT</span>`
-    : `<span class="fit-tag fit-ok" title="John Deere genuine OEM">JD GENUINE</span>`;
-  // Fluidseal equivalent block
-  let fluidBlock;
-  if(r.fluid){
-    fluidBlock = `<div class="rec-specs" style="border-top:1.2px dashed var(--line)">
-      <span class="spec" style="background:var(--amber);border-color:var(--ink)"><b>Fluidseal equivalent</b></span>
-      <a href="${esc(r.fluid.url)}" target="_blank" rel="noopener" style="font-size:14px;font-weight:700;color:var(--rust);align-self:center">${esc(r.fluid.fluidseal_part)}</a>
-      <span class="rec-cat" style="align-self:center">${esc(r.fluid.part_type||'')}</span>
-    </div>`;
-  } else {
-    fluidBlock = `<div class="rec-specs" style="border-top:1.2px dashed var(--line)">
-      <span class="spec" style="background:var(--paper-2)"><b>Fluidseal equivalent</b></span>
-      <span style="font-size:12.5px;color:var(--muted-ink);align-self:center">Not yet cross-referenced — Fluidseal can match this by profile + dimensions. <a href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">Start a request →</a></span>
-    </div>`;
-  }
-  return `<div class="rec">
-    <div class="rec-top">
-      <span class="rec-code">${esc(p.jd_part)}</span>
-      <span class="rec-mfr">John Deere</span>
-      <span class="rec-cat">${esc(jdCatLabel(p.category))}</span>
-    </div>
-    <div class="rec-specs">
-      <span class="spec"><b>Name</b> ${esc(p.name||'—')}</span>
-      ${tierTag}
-      <a href="${esc(p.url)}" target="_blank" rel="noopener" class="spec" style="text-decoration:none">View on shop.deere.com →</a>
-    </div>
-    ${fluidBlock}
-  </div>`;
-}
-
-function jdModelCard(m){
-  const c=m.seal_part_counts||{};
-  const counts=[['oring','O-Rings'],['seal','Seals & Kits'],['gasket','Gaskets'],['backup','Back-Up Rings']]
-    .map(([k,lbl])=>`<span class="spec"${c[k]?'':' style="opacity:.5"'}><b>${lbl}</b> ${c[k]||0}</span>`).join('');
-  return `<div class="rec">
-    <div class="rec-top">
-      <span class="rec-code">${esc(m.model)}</span>
-      <span class="rec-mfr">John Deere · Model</span>
-      <span class="rec-cat">${m.total_seal_parts.toLocaleString('en-US')} seal parts</span>
-    </div>
-    <div class="rec-specs">${counts}</div>
-    <div class="rec-foot" style="border-top:1.2px dashed var(--line)">
-      <span class="rec-cat">Seal-family parts that fit this model, by category.</span>
-      <a href="https://shop.deere.com/ca/en/cl/Seals%2C-Gaskets-O-rings" target="_blank" rel="noopener" style="margin-left:auto">Browse JD parts →</a>
-    </div>
-  </div>`;
-}
-
-/* ---- full JD answer (used by both engines) ---- */
-async function answerJD(query){
-  const ok=await loadJD();
-  if(!ok){
-    return `<p>I couldn't load my John Deere parts data just now. Give it another try, or browse directly at <a href="https://shop.deere.com/ca/en/cl/Seals%2C-Gaskets-O-rings" target="_blank" rel="noopener">shop.deere.com</a>.</p>`;
-  }
-  const q=query.trim();
-  // try part first (more specific), then model
-  const partHit=jdLookupPart(q);
-  if(partHit.rec){
-    let intro = partHit.rec.tier==='Alternative'
-      ? `<p><strong>${esc(partHit.rec.jd_part)}</strong> is John Deere's own alternative-line part. Here it is${partHit.fluid?', with the Fluidseal equivalent':''}:</p>`
-      : `<p>Here's John Deere <strong>${esc(partHit.rec.jd_part)}</strong>${partHit.fluid?', and the Fluidseal equivalent':''}:</p>`;
-    return intro + jdPartCard(partHit);
-  }
-  const modelHit=jdLookupModel(q);
-  if(modelHit){
-    return `<p>John Deere <strong>${esc(modelHit.model)}</strong> — here's the seal-parts picture for that machine:</p>`
-      + jdModelCard(modelHit)
-      + `<p style="margin-top:8px;font-size:13px;color:var(--muted-ink)">Tell me which kind you need (O-ring, seal, gasket, back-up ring) and the rod/bore size, and I'll help track down the exact part. Serial number helps too — some fitments vary by serial break.</p>`;
-  }
-  // No exact hit — was it a bridge-only part (in the 82 curated, not the harvested master)?
-  if(partHit.fluid){
-    return `<p>I don't see <strong>${esc(q)}</strong> in the live John Deere catalog, but Fluidseal already cross-references it:</p>`
-      + jdPartCard({rec:{jd_part:partHit.base,name:partHit.fluid.description||partHit.fluid.part_type||'—',category:'seal',tier:'Original',url:'https://shop.deere.com/ca/en/cl/Seals%2C-Gaskets-O-rings'}, fluid:partHit.fluid, isAlt:false});
-  }
-  return `<p>I couldn't find <strong>${esc(q)}</strong> as a John Deere part number or model in what I've got loaded. Double-check the number, or browse <a href="https://shop.deere.com/ca/en/cl/Seals%2C-Gaskets-O-rings" target="_blank" rel="noopener">JD's seal catalog</a>. If it's a competitor part, try the cross-reference panel instead.</p>`;
-}
-
-/* Decide whether a message should route to the JD engine.
-   Requires JD data loaded to confirm; for the router we do a cheap pattern test
-   plus an explicit "john deere"/"deere"/"jd" mention OR a confirmed index hit. */
-function mentionsJD(text){
-  return /\b(john\s*deere|deere|jd)\b/i.test(text);
-}
-async function shouldJD(text){
-  const t=text.trim();
-  if(t.length>42) return false;
-  if(/\b(bar|psi|°|cylinder|application|need a|looking for|recommend|seal for)\b/i.test(t)) return false;
-  const tokens=t.split(/[\s,]+/).filter(Boolean);
-  // explicit single-token part/model pattern
-  const single = tokens.length<=2 && (jdPartPattern(t)||jdModelPattern(t));
-  if(!single && !mentionsJD(t)) return false;
-  // confirm against the index (load if needed)
-  const ok=await loadJD(); if(!ok) return false;
-  // strip a leading "jd"/"john deere" to test the code itself
-  const codePart=t.replace(/\b(john\s*deere|deere|jd)\b/ig,'').trim();
-  const probe=codePart||t;
-  return !!(jdLookupPart(probe).rec || jdLookupModel(probe) || jdLookupPart(probe).fluid);
-}
-
 
 /* ---------------- Boot ---------------- */
 (async function boot(){

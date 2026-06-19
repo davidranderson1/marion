@@ -855,463 +855,427 @@ function pushUser(text){
 }
 function pushMarion(html){
   const d=document.createElement('div');d.className='msg marion';
-  d.innerHTML=`<div class="av">M</div><div class="bubble">${html}</div>`;
-  messagesEl.appendChild(d);scrollDown();return d;
-}
-function showTyping(){
-  const d=document.createElement('div');d.className='msg marion';d.id='typing';
-  d.innerHTML=`<div class="av">M</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
-  messagesEl.appendChild(d);scrollDown();
-}
-function clearTyping(){const t=document.getElementById('typing');if(t)t.remove();}
-
-// minimal markdown: **bold**, links, line breaks, bullet lines
-function mdLite(t){
-  let s=esc(t);
-  s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  s=s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-  s=s.replace(/(^|[\s(])((https?:\/\/)[^\s)]+)/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
-  // bullet lines starting with - or •
-  const lines=s.split('\n');let out='';let inList=false;
-  for(let ln of lines){
-    if(/^\s*[-•]\s+/.test(ln)){ if(!inList){out+='<ul>';inList=true;} out+='<li>'+ln.replace(/^\s*[-•]\s+/,'')+'</li>'; }
-    else { if(inList){out+='</ul>';inList=false;} if(ln.trim()) out+='<p>'+ln+'</p>'; }
-  }
-  if(inList)out+='</ul>';
-  return out||('<p>'+s+'</p>');
-}
-
-// render a product rec card
-function recCard(x){
-  const p=x.p,L=p.operating_limits||{};
-  const specs=[];
-  if(num(L.pressure_bar)!=null) specs.push(`<span class="spec"><b>P</b> ${L.pressure_bar} bar${num(L.pressure_psi)!=null?` / ${L.pressure_psi} psi`:''}</span>`);
-  else if(num(L.pressure_psi)!=null) specs.push(`<span class="spec"><b>P</b> ${L.pressure_psi} psi</span>`);
-  if(lo(L.temp_C)!=null||hi(L.temp_C)!=null) specs.push(`<span class="spec"><b>T</b> ${lo(L.temp_C)??'?'}…${hi(L.temp_C)??'?'} °C</span>`);
-  if(num(L.speed_mps)!=null) specs.push(`<span class="spec"><b>v</b> ${L.speed_mps} m/s</span>`);
-  if(p.materials) specs.push(`<span class="spec">${esc(p.materials)}</span>`);
-  const link=linkFor(p.profile)||groupLink(p.category);
-  const fit = x.fits===false
-    ? `<span class="fit-tag fit-warn">check fit</span>`
-    : `<span class="fit-tag fit-ok">fits spec</span>`;
-  const issue = (x.issues&&x.issues.length&&x.fits===false)?`<span class="rec-cat">${esc(x.issues[0])}</span>`:'';
-  return `<div class="rec">
-    <div class="rec-top"><span class="rec-code">${esc(p.profile)}</span>
-      <span class="rec-mfr">${esc(p.manufacturer)}</span>
-      <span class="rec-cat">${esc((p.category||'').replace(/-/g,' '))}</span></div>
-    <div class="rec-specs">${specs.join('')}</div>
-    <div class="rec-foot">${fit}${issue}
-      ${link?`<a href="${esc(link.url)}" target="_blank" rel="noopener" style="margin-left:auto">View ${esc(link.label)} →</a>`:''}</div>
-  </div>`;
-}
-
-/* ---------------- Engine A: Anthropic API ---------------- */
-async function answerViaAPI(userText){
-  const kb = {
-    company: MARION.knowledge.company,
-    product_groups: MARION.knowledge.groups,
-    profile_links: MARION.knowledge.profiles,
-    products: MARION.knowledge.products,
-    parent_profiles: MARION.knowledge.parents,
-    anyseals_crossref: MARION.knowledge.anyseals
-  };
-  const sys = SYSTEM_PROMPT + "\n\n=== KNOWLEDGE BASE (your only source of truth) ===\n" + JSON.stringify(kb);
-  MARION.history.push({role:'user',content:userText});
-  const body={model:'claude-sonnet-4-6',max_tokens:1024,system:sys,messages:MARION.history.slice(-12)};
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':MARION.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify(body)
-  });
-  if(!res.ok){const e=await res.text();throw new Error('API '+res.status+': '+e.slice(0,140));}
-  const data=await res.json();
-  const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
-  MARION.history.push({role:'assistant',content:text});
-  return text;
-}
-
-// pull [[RECS: ...]] codes out of a model reply
-function extractRecs(text){
-  const m=text.match(/\[\[RECS:\s*([^\]]+)\]\]/i);
-  if(!m)return{clean:text,codes:[]};
-  const codes=m[1].split(',').map(s=>s.trim()).filter(Boolean);
-  return{clean:text.replace(m[0],'').trim(),codes};
-}
-
-/* ---------------- Engine B: structured recommender ---------------- */
-function answerViaRecommender(userText){
-  const t=userText.toLowerCase();
-  // simple intents
-  if(/\b(hi|hello|hey|good (morning|afternoon))\b/.test(t) && t.length<24){
-    return {html:`<p>Hi — I'm <strong>Marion</strong>, Fluidseal's sealing specialist. Tell me about your application and I'll find you the right seal. Equipment, whether it's a rod or piston or shaft, the size, pressure, temperature, and what it's sealing against — whatever you've got.</p>`,codes:[]};
-  }
-  if(/\b(what|which) (manufacturers|brands)\b/.test(t)){
-    const names=[...new Set(MARION.knowledge.products.map(p=>p.manufacturer))];
-    return {html:`<p>Right now I've got live spec data for <strong>${names.join('</strong> and <strong>')}</strong> — ${MARION.knowledge.products.length} profiles in all. More manufacturers (Freudenberg, SKF, Trelleborg, Parker) are being added.</p>`,codes:[]};
-  }
-  // part-number / profile cross-reference lookup
-  if(shouldXref(userText)){
-    return {html:answerXref(userText.trim()),codes:[]};
-  }
-  const req=parseReq(userText);
-  const recs=recommend(req,3);
-  if(!recs.length){
-    return {html:`<p>I couldn't pin that to a specific profile from what I've got loaded. Give me a bit more — is it a <strong>rod</strong>, <strong>piston</strong>, <strong>wiper</strong>, or <strong>shaft/oil seal</strong> application, and roughly what pressure and temperature? You can also browse the full catalog at <a href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">sealsonline.com</a>.</p>`,codes:[]};
-  }
-  const anyFit=recs.some(r=>r.fits);
-  let lead;
-  const cond=[];
-  if(req.pressure_bar) cond.push(`${req.pressure_bar} bar`);
-  if(req.pressure_psi) cond.push(`${req.pressure_psi} psi`);
-  if(req.temp_min!=null) cond.push(`down to ${Math.round(req.temp_min)}°C`);
-  if(req.temp_max!=null) cond.push(`up to ${Math.round(req.temp_max)}°C`);
-  const condStr=cond.length?` for ${cond.join(', ')}`:'';
-  if(anyFit) lead=`<p>Here's what fits${condStr}${req.category?` in <strong>${req.category.replace(/-/g,' ')}</strong>`:''}:</p>`;
-  else lead=`<p>Closest matches${condStr} — but check the flagged limits before you commit:</p>`;
-  const cards=recs.map(recCard).join('');
-  const tail=`<p style="margin-top:8px;font-size:13px;color:var(--muted-ink)">Want me to narrow it down? Tell me the rod/bore size or the media. Prices and stock come from the <a href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">store</a> — I can't quote firm numbers yet.</p>`;
-  return {html:lead+cards+tail,codes:[]};
-}
-
-/* ---------------- Send flow ---------------- */
-async function handleSend(text){
-  if(!text.trim()||!MARION.ready)return;
-  pushUser(text);
-  setSending(true);
-  showTyping();
-  try{
-    // John Deere part#/model lookups are answered from the exact OEM data in both modes
-    if(await shouldJD(text)){
-      const html=await answerJD(text.replace(/\b(john\s*deere|deere|jd)\b/ig,'').trim()||text);
-      clearTyping();
-      pushMarion(html);
-      setSending(false);
-      return;
-    }
-    if(MARION.apiKey){
-      // exact cross-reference hits are answered from the master directly — fast and exact
-      if(shouldXref(text)){
-        clearTyping();
-        pushMarion(answerXref(text.trim()));
-        setSending(false);
-        return;
-      }
-      const raw=await answerViaAPI(text);
-      clearTyping();
-      const {clean,codes}=extractRecs(raw);
-      let html=mdLite(clean);
-      // render any rec cards the model named
-      if(codes.length){
-        const cards=codes.map(c=>{
-          const p=MARION.knowledge.products.find(x=>String(x.profile).toLowerCase()===c.toLowerCase());
-          return p?recCard({p,fits:true,issues:[]}):'';
-        }).join('');
-        html+=cards;
-      }
-      pushMarion(html);
-    }else{
-      await new Promise(r=>setTimeout(r,380)); // brief, feels considered
-      clearTyping();
-      const {html}=answerViaRecommender(text);
-      pushMarion(html);
-    }
-  }catch(err){
-    clearTyping();
-    pushMarion(`<p>Something went wrong reaching my AI brain (<code>${esc(err.message)}</code>). I'll answer from the catalog instead.</p>`);
-    const {html}=answerViaRecommender(text);
-    pushMarion(html);
-  }finally{
-    setSending(false);
-  }
-}
-
-/* ---------------- UI wiring ---------------- */
-const inputEl=document.getElementById('input');
-const sendBtn=document.getElementById('send');
-function setSending(on){sendBtn.disabled=on|| !inputEl.value.trim();}
-inputEl.addEventListener('input',()=>{
-  inputEl.style.height='auto';inputEl.style.height=Math.min(inputEl.scrollHeight,140)+'px';
-  sendBtn.disabled=!inputEl.value.trim();
-});
-inputEl.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fire();}
-});
-sendBtn.addEventListener('click',fire);
-function fire(){
-  const v=inputEl.value.trim();if(!v)return;
-  inputEl.value='';inputEl.style.height='auto';sendBtn.disabled=true;
-  handleSend(v);
-}
-document.getElementById('suggest').addEventListener('click',e=>{
-  const b=e.target.closest('.chip');if(!b)return;
-  handleSend(b.dataset.q);
-});
-
-/* side-rail cross-reference lookup -> runs in chat */
-const xrefInput=document.getElementById('xrefInput');
-const xrefBtn=document.getElementById('xrefBtn');
-function fireXref(){
-  const v=(xrefInput.value||'').trim(); if(!v||!MARION.ready)return;
-  const res=xrefLookup(v);
-  const n=res.total;
-  document.getElementById('xrefStat').textContent = n? `${res.parents.length} Fluidseal · ${res.anyseals.length} Anyseals matched` : 'no match in the cross-reference master';
-  xrefInput.value='';
-  handleSend(v);
-}
-if(xrefBtn) xrefBtn.addEventListener('click',fireXref);
-if(xrefInput) xrefInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fireXref();}});
-
-/* side-rail John Deere lookup -> runs in chat */
-const jdInput=document.getElementById('jdInput');
-const jdBtn=document.getElementById('jdBtn');
-async function fireJD(){
-  const v=(jdInput.value||'').trim(); if(!v||!MARION.ready)return;
-  const stat=document.getElementById('jdStat');
-  stat.textContent='searching John Deere data…';
-  const ok=await loadJD();
-  if(ok){
-    const pr=jdLookupPart(v), md=jdLookupModel(v);
-    stat.textContent = pr.rec ? `part found · ${jdCatLabel(pr.rec.category)}${pr.fluid?' · Fluidseal '+pr.fluid.fluidseal_part:''}`
-      : md ? `model found · ${md.total_seal_parts.toLocaleString('en-US')} seal parts`
-      : pr.fluid ? `cross-referenced · Fluidseal ${pr.fluid.fluidseal_part}`
-      : 'no John Deere part/model match';
-  } else { stat.textContent='could not load John Deere data'; }
-  jdInput.value='';
-  handleSend(v);
-}
-if(jdBtn) jdBtn.addEventListener('click',fireJD);
-if(jdInput) jdInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fireJD();}});
-
-/* connect modal */
-const modal=document.getElementById('modalBg');
-document.getElementById('connectBtn').onclick=()=>{modal.classList.add('show');document.getElementById('keyInput').focus();};
-document.getElementById('modalClose').onclick=()=>modal.classList.remove('show');
-modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show');});
-document.getElementById('keySave').onclick=()=>{
-  const k=document.getElementById('keyInput').value.trim();
-  if(!k){return;}
-  MARION.apiKey=k;
-  modal.classList.remove('show');
-  document.getElementById('keyInput').value='';
-  setConnected(true);
-  pushMarion(`<p>Claude's connected — I'm running at full capability now. Ask me anything about your sealing application and I'll work it through with you properly.</p>`);
-};
-function setConnected(on){
-  const st=document.getElementById('connState'),lbl=document.getElementById('connLbl'),
-    note=document.getElementById('connNote'),dot=document.getElementById('statusDot'),btn=document.getElementById('connectBtn');
-  if(on){
-    st.className='conn-state conn-on';lbl.textContent='Claude connected';
-    note.textContent='Marion is answering as a full conversational specialist via the Anthropic API (this session only).';
-    dot.className='status-dot';dot.title='Claude connected';
-    btn.textContent='Disconnect';btn.onclick=()=>{MARION.apiKey=null;MARION.history=[];setConnected(false);};
-  }else{
-    st.className='conn-state conn-off';lbl.textContent='Offline recommender';
-    note.textContent='Marion is running as a structured recommender over the catalog — no AI key needed. For full conversational answers, connect Claude.';
-    dot.className='status-dot off';dot.title='Offline recommender mode';
-    btn.textContent='Connect Claude (best quality)';
-    btn.onclick=()=>{modal.classList.add('show');document.getElementById('keyInput').focus();};
-  }
-}
-
-/* ============================================================
-   JOHN DEERE OEM LOOKUP MODULE  (Phase 2.1)
-   Two capabilities, both lazy-loaded (the parts master is 4.3MB,
-   so it is NOT pulled at boot — only on first JD interaction):
-     • JD part#  -> shop.deere.com catalog entry + Fluidseal RJD- equivalent
-     • JD model  -> per-category seal-part counts + on-demand fitment note
-   Data: knowledge/oem-parts/john-deere-parts.json  (35,425 parts)
-         knowledge/oem-parts/john-deere-models.json (3,669 models)
-         knowledge/oem-parts/john-deere.json        (82-part RJD bridge, already used by xref)
+   Two engines: (A) Anthropic API when a key is provided,
+   (B) structured spec-recommender fallback — always available.
    ============================================================ */
-const JD = {
-  loaded:false, loading:null,
-  parts:[], models:[], bridge:[],
-  partIdx:null, modelIdx:null, bridgeIdx:null,
-  meta:{partsCount:0, modelsCount:0, capped:false}
+
+const MARION = {
+  knowledge: { company:null, groups:[], profiles:[], products:[], manifest:null, parents:[], xrefIndex:null, anyseals:[] },
+  apiKey: null,
+  history: [],          // {role, content} for API continuity
+  ready: false
 };
 
-function jdNorm(s){return String(s||'').toUpperCase().replace(/[\s.\-_/]/g,'');}
+/* ---- System prompt (kept in sync with MARION-SYSTEM-PROMPT.md) ---- */
+const SYSTEM_PROMPT = `You are Marion, the AI sealing-products specialist for Fluidseal AB Inc., an industrial sealing company in Edmonton, Alberta, Canada, in business since the late 1950s. You are named in honour of the company's founder.
 
-/* Lazy-load JD data the first time it's needed. Returns true on success. */
-async function loadJD(){
-  if(JD.loaded) return true;
-  if(JD.loading) return JD.loading;
-  JD.loading = (async ()=>{
-    const base='./knowledge/oem-parts/';
+Your job: help customers find the right seal for their application, explain products and specifications clearly, point them to the exact product page, and help prepare quotes. You are like a veteran parts-counter expert who knows seals cold and respects the customer's time.
+
+HOW YOU HELP
+1. Understand the application first. Find out only what you need: the equipment/application, whether it's rod/piston/shaft/rotary, dimensions (bore, rod, groove), operating pressure, temperature range, speed, and the media. Ask only for what you actually need — don't interrogate.
+2. Match to real products from the PRODUCTS knowledge below. Compare the customer's pressure, temperature and speed against each profile's operating limits. Recommend profiles that fit; say plainly when a requirement exceeds a product's rating.
+3. Give direct links from the PRODUCT GROUPS / PROFILE LINKS knowledge when you name something.
+4. Quotes (later phase): gather parts, quantity, contact details and hand off.
+
+CROSS-REFERENCE / NORMALIZATION
+Fluidseal normalizes every manufacturer into its own parent profiles. The PARENT PROFILES knowledge maps a canonical parent_profile (e.g. PS101, RS117) to the Fluidseal/SSG profile (with URL), plus equivalent codes from Fluidseal Xpress, DMH, Parker, Hallite, Freudenberg and Maxspare. The ANYSEALS CROSSREF knowledge is a brand-to-brand table from the distributor Anyseals, mapping Anyseals design codes (OS-/PS-/RS-/WS-/GS-) to Simrit (=Freudenberg), Trelleborg, Forsheda/Stefa, Eriks, Dichtomatik, Parker and Taiwan/China equivalents; some records carry a fluidseal_bridge linking them to a Fluidseal parent_profile via a shared OEM code. When a customer gives any competitor or vendor part number or profile, translate it: find the parent profile and give the Fluidseal/SSG equivalent and its page; if it only appears in the Anyseals table, give the brand equivalents and say a direct Fluidseal link will follow once that brand's comparable list is loaded. Treat Simrit and Freudenberg as the same brand. SSG and Fluidseal share profiles. Anyseals equivalences are orientation-only — tell the customer to verify before quoting. Never invent an equivalence that isn't in the knowledge.
+
+HARD RULES
+- Never invent a product, profile code, specification, or URL. If it isn't in the knowledge below, say so and point to the right category page or offer a human.
+- Stay in scope: Fluidseal sealing products and related advice. Politely redirect anything else.
+- Be honest about fit and limits. A wrong seal costs the customer real downtime.
+- Do not quote firm prices or availability — the live store isn't connected yet. Point to the product page or offer to start a quote request.
+
+TONE: Plain-spoken, confident, friendly, efficient. Industrial-trade voice, not corporate fluff. Short answers when simple; structured detail when comparing products.
+
+When you recommend specific profiles, also list them at the very end of your reply on their own line in this exact machine-readable form so the page can render spec cards:
+[[RECS: CODE1, CODE2, CODE3]]
+Use only profile codes that exist in the knowledge. Omit the line if you're not recommending specific profiles.`;
+
+/* ---------------- Knowledge loading ---------------- */
+async function loadKnowledge(){
+  const base = './knowledge/';
+  try{
+    const manifest = await fetchJSON(base+'manifest.json');
+    MARION.knowledge.manifest = manifest;
+
+    // shared files
+    const [company, groups, profiles] = await Promise.all([
+      fetchJSON(base+manifest.shared.company).catch(()=>null),
+      fetchJSON(base+manifest.shared.product_groups).catch(()=>({groups:[]})),
+      fetchJSON(base+manifest.shared.profile_links).catch(()=>({profiles:[]}))
+    ]);
+    MARION.knowledge.company = company;
+    MARION.knowledge.groups = groups.groups || [];
+    MARION.knowledge.profiles = profiles.profiles || [];
+
+    // manufacturer files (only active ones)
+    const active = (manifest.manufacturers||[]).filter(m=>m.active!==false);
+    const loaded = await Promise.all(active.map(m =>
+      fetchJSON(base+m.file).then(d=>({name:m.name, products:d.products||[]})).catch(()=>({name:m.name,products:[]}))
+    ));
+    let all = [];
+    loaded.forEach(l => all = all.concat(l.products));
+    MARION.knowledge.products = all;
+
+    // cross-reference parent-profile master (canonical join layer)
+    if(manifest.shared && manifest.shared.parent_profiles){
+      try{
+        const pp = await fetchJSON(base+manifest.shared.parent_profiles);
+        MARION.knowledge.parents = pp.parent_profiles || [];
+      }catch(e){ MARION.knowledge.parents=[]; }
+    }
+    // Anyseals brand-to-brand cross-reference layer
+    if(manifest.shared && manifest.shared.anyseals_crossref){
+      try{
+        const an = await fetchJSON(base+manifest.shared.anyseals_crossref);
+        MARION.knowledge.anyseals = an.crossrefs || [];
+      }catch(e){ MARION.knowledge.anyseals=[]; }
+    }
+    MARION.knowledge.xrefIndex = buildXrefIndex(MARION.knowledge.parents, MARION.knowledge.anyseals);
+
+    MARION.ready = true;
+    renderKnowledgePanel(loaded, manifest);
+    return true;
+  }catch(err){
+    // Fallback: try the legacy flat products.json if manifest is missing
     try{
-      const [pm, mm] = await Promise.all([
-        fetchJSON(base+'john-deere-parts.json'),
-        fetchJSON(base+'john-deere-models.json')
+      const [company, groups, profiles, prod] = await Promise.all([
+        fetchJSON(base+'company.json').catch(()=>null),
+        fetchJSON(base+'product-groups.json').catch(()=>({groups:[]})),
+        fetchJSON(base+'profiles.json').catch(()=>({profiles:[]})),
+        fetchJSON(base+'products.json')
       ]);
-      JD.parts = pm.parts||[];
-      JD.models = mm.models||[];
-      // bridge may already be loaded as part of xref; if not, fetch it
-      JD.bridge = (MARION.knowledge.jdBridge)||[];
-      if(!JD.bridge.length){
-        try{ const b=await fetchJSON(base+'john-deere.json'); JD.bridge=b.parts||[]; }catch(e){ JD.bridge=[]; }
-      }
-      // build indexes
-      JD.partIdx=new Map(); JD.parts.forEach(p=>JD.partIdx.set(jdNorm(p.jd_part),p));
-      JD.modelIdx=new Map(); JD.models.forEach(m=>JD.modelIdx.set(jdNorm(m.model),m));
-      JD.bridgeIdx=new Map(); JD.bridge.forEach(b=>{ if(b.oem_ref) JD.bridgeIdx.set(jdNorm(b.oem_ref),b); });
-      JD.meta.partsCount=JD.parts.length;
-      JD.meta.modelsCount=JD.models.length;
-      JD.meta.capped = (pm.DATA_INTEGRITY_NOTE&&/10,000/.test(JSON.stringify(pm.DATA_INTEGRITY_NOTE)))||false;
-      JD.loaded=true;
+      MARION.knowledge.company = company;
+      MARION.knowledge.groups = groups.groups||[];
+      MARION.knowledge.profiles = profiles.profiles||[];
+      MARION.knowledge.products = prod.products||[];
+      MARION.ready = true;
+      const byMfr = {};
+      MARION.knowledge.products.forEach(p=>{byMfr[p.manufacturer]=(byMfr[p.manufacturer]||0)+1});
+      renderKnowledgePanel(Object.entries(byMfr).map(([name,c])=>({name,products:new Array(c)})), {knowledge_version:'1.0'});
       return true;
-    }catch(e){
-      JD.loading=null; // allow retry
+    }catch(e2){
+      document.getElementById('kbFoot').textContent = 'Knowledge base not found. Run from the site root so /knowledge/ is reachable.';
+      pushMarion("I can't reach my knowledge base right now. If you're opening this file directly, serve the folder over http (or deploy it) so I can load <code>/knowledge/</code>.");
       return false;
     }
-  })();
-  return JD.loading;
-}
-
-/* ---- lookups ---- */
-function jdLookupPart(q){
-  const raw=String(q||'').trim();
-  const isAlt=/^A-/i.test(raw);
-  const base=isAlt?raw.replace(/^A-/i,''):raw;
-  const rec=JD.partIdx?JD.partIdx.get(jdNorm(raw)):null;
-  const fluid=JD.bridgeIdx?JD.bridgeIdx.get(jdNorm(base)):null;
-  return {rec, fluid, isAlt, base, query:raw};
-}
-function jdLookupModel(q){
-  return JD.modelIdx?JD.modelIdx.get(jdNorm(q)):null;
-}
-
-/* A JD part number looks like: 1-3 letters + 4-7 digits (R26375, AT224864, RE11902),
-   optionally an A- alternative prefix, or bare-numeric kit codes (51M7040 / 4487585).
-   We confirm against the loaded index rather than guess. */
-function jdPartPattern(t){
-  const s=t.trim();
-  return /^A-?[A-Z]{0,3}\d{3,7}$/i.test(s) || /^[A-Z]{1,3}\d{3,7}$/i.test(s) || /^\d{2}[A-Z]\d{3,5}$/i.test(s) || /^\d{6,8}$/.test(s);
-}
-/* A JD model looks like alphanumeric, often with letters+digits in either order
-   (8400, 670G, 310SG, S690, LX188, 8R 340). Looser; confirm against index. */
-function jdModelPattern(t){
-  const s=t.trim();
-  if(s.length<2||s.length>10) return false;
-  return /^[A-Z0-9][A-Z0-9 ]{1,9}$/i.test(s) && /\d/.test(s);
-}
-
-/* ---- card renderers (reuse Marion's .rec card system) ---- */
-function jdCatLabel(c){return {oring:'O-Ring',seal:'Seal / Seal Kit',gasket:'Gasket',backup:'Back-Up Ring'}[c]||c;}
-
-function jdPartCard(r){
-  const p=r.rec;
-  const tierTag = p.tier==='Alternative'
-    ? `<span class="fit-tag fit-warn" title="John Deere's own lower-cost alternative">JD ALT</span>`
-    : `<span class="fit-tag fit-ok" title="John Deere genuine OEM">JD GENUINE</span>`;
-  // Fluidseal equivalent block
-  let fluidBlock;
-  if(r.fluid){
-    fluidBlock = `<div class="rec-specs" style="border-top:1.2px dashed var(--line)">
-      <span class="spec" style="background:var(--amber);border-color:var(--ink)"><b>Fluidseal equivalent</b></span>
-      <a href="${esc(r.fluid.url)}" target="_blank" rel="noopener" style="font-size:14px;font-weight:700;color:var(--rust);align-self:center">${esc(r.fluid.fluidseal_part)}</a>
-      <span class="rec-cat" style="align-self:center">${esc(r.fluid.part_type||'')}</span>
-    </div>`;
-  } else {
-    fluidBlock = `<div class="rec-specs" style="border-top:1.2px dashed var(--line)">
-      <span class="spec" style="background:var(--paper-2)"><b>Fluidseal equivalent</b></span>
-      <span style="font-size:12.5px;color:var(--muted-ink);align-self:center">Not yet cross-referenced — Fluidseal can match this by profile + dimensions. <a href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">Start a request →</a></span>
-    </div>`;
   }
-  return `<div class="rec">
-    <div class="rec-top">
-      <span class="rec-code">${esc(p.jd_part)}</span>
-      <span class="rec-mfr">John Deere</span>
-      <span class="rec-cat">${esc(jdCatLabel(p.category))}</span>
-    </div>
-    <div class="rec-specs">
-      <span class="spec"><b>Name</b> ${esc(p.name||'—')}</span>
-      ${tierTag}
-      <a href="${esc(p.url)}" target="_blank" rel="noopener" class="spec" style="text-decoration:none">View on shop.deere.com →</a>
-    </div>
-    ${fluidBlock}
-  </div>`;
+}
+function fetchJSON(url){return fetch(url,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json();});}
+
+/* ============================================================
+   CROSS-REFERENCE ENGINE
+   parent_profile is the canonical hub key. Any vendor code,
+   any Fluidseal/SSG profile, or a parent code itself resolves
+   to the parent record, and from there to the Fluidseal part.
+   ============================================================ */
+function normCode(s){return String(s||'').toUpperCase().replace(/[\s.\-_/]/g,'');}
+
+function buildXrefIndex(parents, anyseals){
+  // map normalized code -> array of {parent, via, vendor, raw} (Fluidseal parent layer)
+  // and a parallel anyseals index entry {anyseals:designCode}
+  const idx=new Map();
+  const add=(code,entry)=>{
+    if(!code)return; const k=normCode(code); if(!k)return;
+    if(!idx.has(k)) idx.set(k,[]);
+    const arr=idx.get(k);
+    if(!arr.some(e=>JSON.stringify(e)===JSON.stringify(entry))) arr.push(entry);
+  };
+  (parents||[]).forEach(p=>{
+    const parent=p.parent_profile;
+    add(parent,{parent,via:'parent',vendor:'Parent profile',raw:parent});
+    (p.fluidseal_ssg||[]).forEach(s=>{
+      if(s.profile) add(s.profile,{parent,via:'fluidseal',vendor:'Fluidseal / SSG',raw:s.profile});
+    });
+    const v=p.vendors||{};
+    Object.keys(v).forEach(vendorName=>{
+      (v[vendorName].codes||[]).forEach(code=>add(code,{parent,via:'vendor',vendor:vendorName,raw:code}));
+      if(v[vendorName].raw) add(v[vendorName].raw,{parent,via:'vendor',vendor:vendorName,raw:v[vendorName].raw});
+    });
+  });
+  // Anyseals layer: index the design code and every brand code, pointing to the anyseals record
+  (anyseals||[]).forEach(r=>{
+    add(r.anyseals,{anyseals:r.anyseals,via:'anyseals',vendor:'Anyseals',raw:r.anyseals});
+    const b=r.brands||{};
+    Object.keys(b).forEach(brand=>{
+      (b[brand]||[]).forEach(c=>add(c.code,{anyseals:r.anyseals,via:'brand',vendor:brand,raw:c.code,approx:!!c.approx}));
+    });
+  });
+  return idx;
 }
 
-function jdModelCard(m){
-  const c=m.seal_part_counts||{};
-  const counts=[['oring','O-Rings'],['seal','Seals & Kits'],['gasket','Gaskets'],['backup','Back-Up Rings']]
-    .map(([k,lbl])=>`<span class="spec"${c[k]?'':' style="opacity:.5"'}><b>${lbl}</b> ${c[k]||0}</span>`).join('');
-  return `<div class="rec">
-    <div class="rec-top">
-      <span class="rec-code">${esc(m.model)}</span>
-      <span class="rec-mfr">John Deere · Model</span>
-      <span class="rec-cat">${m.total_seal_parts.toLocaleString('en-US')} seal parts</span>
-    </div>
-    <div class="rec-specs">${counts}</div>
-    <div class="rec-foot" style="border-top:1.2px dashed var(--line)">
-      <span class="rec-cat">Seal-family parts that fit this model, by category.</span>
-      <a href="https://shop.deere.com/ca/en/cl/Seals%2C-Gaskets-O-rings" target="_blank" rel="noopener" style="margin-left:auto">Browse JD parts →</a>
-    </div>
-  </div>`;
+function parentByCode(code){
+  return (MARION.knowledge.parents||[]).find(p=>normCode(p.parent_profile)===normCode(code));
+}
+function anysealsByCode(code){
+  return (MARION.knowledge.anyseals||[]).find(r=>normCode(r.anyseals)===normCode(code));
 }
 
-/* ---- full JD answer (used by both engines) ---- */
-async function answerJD(query){
-  const ok=await loadJD();
-  if(!ok){
-    return `<p>I couldn't load my John Deere parts data just now. Give it another try, or browse directly at <a href="https://shop.deere.com/ca/en/cl/Seals%2C-Gaskets-O-rings" target="_blank" rel="noopener">shop.deere.com</a>.</p>`;
+/* Resolve a free-text part# / profile into matching parent records + anyseals records. */
+function xrefLookup(query){
+  const idx=MARION.knowledge.xrefIndex; if(!idx) return {parents:[], anyseals:[], total:0};
+  const q=normCode(query);
+  if(!q) return {parents:[], anyseals:[], total:0};
+  let hits = idx.get(q) || [];
+  if(!hits.length){
+    for(const [k,entries] of idx){
+      if(k.includes(q) && q.length>=3){ hits=hits.concat(entries); }
+    }
   }
-  const q=query.trim();
-  // try part first (more specific), then model
-  const partHit=jdLookupPart(q);
-  if(partHit.rec){
-    let intro = partHit.rec.tier==='Alternative'
-      ? `<p><strong>${esc(partHit.rec.jd_part)}</strong> is John Deere's own alternative-line part. Here it is${partHit.fluid?', with the Fluidseal equivalent':''}:</p>`
-      : `<p>Here's John Deere <strong>${esc(partHit.rec.jd_part)}</strong>${partHit.fluid?', and the Fluidseal equivalent':''}:</p>`;
-    return intro + jdPartCard(partHit);
-  }
-  const modelHit=jdLookupModel(q);
-  if(modelHit){
-    return `<p>John Deere <strong>${esc(modelHit.model)}</strong> — here's the seal-parts picture for that machine:</p>`
-      + jdModelCard(modelHit)
-      + `<p style="margin-top:8px;font-size:13px;color:var(--muted-ink)">Tell me which kind you need (O-ring, seal, gasket, back-up ring) and the rod/bore size, and I'll help track down the exact part. Serial number helps too — some fitments vary by serial break.</p>`;
-  }
-  // No exact hit — was it a bridge-only part (in the 82 curated, not the harvested master)?
-  if(partHit.fluid){
-    return `<p>I don't see <strong>${esc(q)}</strong> in the live John Deere catalog, but Fluidseal already cross-references it:</p>`
-      + jdPartCard({rec:{jd_part:partHit.base,name:partHit.fluid.description||partHit.fluid.part_type||'—',category:'seal',tier:'Original',url:'https://shop.deere.com/ca/en/cl/Seals%2C-Gaskets-O-rings'}, fluid:partHit.fluid, isAlt:false});
-  }
-  return `<p>I couldn't find <strong>${esc(q)}</strong> as a John Deere part number or model in what I've got loaded. Double-check the number, or browse <a href="https://shop.deere.com/ca/en/cl/Seals%2C-Gaskets-O-rings" target="_blank" rel="noopener">JD's seal catalog</a>. If it's a competitor part, try the cross-reference panel instead.</p>`;
+  // Fluidseal parent matches
+  const byParent=new Map();
+  hits.filter(h=>h.parent).forEach(h=>{
+    const rec=parentByCode(h.parent); if(!rec)return;
+    const prev=byParent.get(h.parent);
+    if(!prev || (prev.hit.via==='parent' && h.via!=='parent')) byParent.set(h.parent,{hit:h,record:rec});
+  });
+  // Anyseals matches
+  const byAny=new Map();
+  hits.filter(h=>h.anyseals).forEach(h=>{
+    const rec=anysealsByCode(h.anyseals); if(!rec)return;
+    const prev=byAny.get(h.anyseals);
+    if(!prev || (prev.hit.via==='anyseals' && h.via!=='anyseals')) byAny.set(h.anyseals,{hit:h,record:rec});
+  });
+  const parents=[...byParent.values()], anyseals=[...byAny.values()];
+  return {parents, anyseals, total:parents.length+anyseals.length};
 }
 
-/* Decide whether a message should route to the JD engine.
-   Requires JD data loaded to confirm; for the router we do a cheap pattern test
-   plus an explicit "john deere"/"deere"/"jd" mention OR a confirmed index hit. */
-function mentionsJD(text){
-  return /\b(john\s*deere|deere|jd)\b/i.test(text);
-}
-async function shouldJD(text){
+/* Looks like a part-number lookup rather than an application question? */
+function looksLikeXref(text){
   const t=text.trim();
   if(t.length>42) return false;
-  if(/\b(bar|psi|°|cylinder|application|need a|looking for|recommend|seal for)\b/i.test(t)) return false;
+  if(/\b(bar|psi|°|temp|pressure|cylinder|application|need a|looking for|recommend)\b/i.test(t)) return false;
   const tokens=t.split(/[\s,]+/).filter(Boolean);
-  // explicit single-token part/model pattern
-  const single = tokens.length<=2 && (jdPartPattern(t)||jdModelPattern(t));
-  if(!single && !mentionsJD(t)) return false;
-  // confirm against the index (load if needed)
-  const ok=await loadJD(); if(!ok) return false;
-  // strip a leading "jd"/"john deere" to test the code itself
-  const codePart=t.replace(/\b(john\s*deere|deere|jd)\b/ig,'').trim();
-  const probe=codePart||t;
-  return !!(jdLookupPart(probe).rec || jdLookupModel(probe) || jdLookupPart(probe).fluid);
+  if(tokens.length>4) return false;
+  return tokens.some(tok=>/^[A-Za-z]{1,12}[-/]?\d{1,5}[A-Za-z0-9\-/]*$/.test(tok) || /^[A-Za-z]{2}\d/.test(tok) || /^(OR|BU|PS|RS|RW|WR|RT|GS)\d/i.test(tok));
 }
 
+/* Decide whether to route a message to the cross-reference engine. */
+function shouldXref(text){
+  const t=text.trim();
+  if(t.length>42) return false;
+  if(/\b(bar|psi|°|temp|pressure|cylinder|application|need a|looking for|recommend|seal for)\b/i.test(t)) return false;
+  return xrefLookup(t).total>0;
+}
 
-/* ---------------- Boot ---------------- */
-(async function boot(){
-  pushMarion(`<p>Hi, I'm <strong>Marion</strong> — Fluidseal's sealing specialist, named after the fellow who started this company back in the '50s. Tell me what you're sealing and I'll find you the right profile. Loading the catalog now…</p>`);
-  const ok=await loadKnowledge();
-  if(ok){
-    const last=messagesEl.querySelector('.msg.marion:first-child .bubble');
-    if(last) last.innerHTML=`<p>Hi, I'm <strong>Marion</strong> — Fluidseal's sealing specialist, named after the fellow who started this company back in the '50s. I've got <strong>${MARION.knowledge.products.length} seal profiles</strong> from ${[...new Set(MARION.knowledge.products.map(p=>p.manufacturer))].join(' and ')} loaded and ready. Tell me what you're sealing — equipment, size, pressure, temperature — and I'll find you the right one.</p>`;
+/* Render one parent-profile cross-reference card */
+function xrefCard(item){
+  const p=item.record, hit=item.hit;
+  const fs=(p.fluidseal_ssg||[]);
+  const resolved=fs.filter(s=>s.fluidseal_url);
+  let fsLine;
+  if(resolved.length){
+    fsLine=resolved.map(s=>{
+      const sc=s.scope?` <span class="rec-cat">${esc(s.scope)}</span>`:'';
+      const ann=s.annotation?` <span class="rec-cat" title="note">${esc(s.annotation)}</span>`:'';
+      return `<a href="${esc(s.fluidseal_url)}" target="_blank" rel="noopener">${esc(s.profile)}</a>${sc}${ann}`;
+    }).join(' &nbsp;·&nbsp; ');
+  } else {
+    const notes=fs.map(s=>esc(s.note||s.profile||'')).filter(Boolean);
+    fsLine = notes.length
+      ? `<span style="color:var(--muted-ink)">${notes.join(', ')} <em>(not yet a linked profile)</em></span>`
+      : `<span style="color:var(--muted-ink)"><em>No Fluidseal/SSG profile mapped yet</em></span>`;
   }
-  inputEl.focus();
-})();
-</script>
-</body>
-</html>
+  const v=p.vendors||{};
+  const vendorRows=Object.keys(v).map(name=>{
+    const codes=(v[name].codes&&v[name].codes.length)?v[name].codes.join(', '):v[name].raw;
+    const isHit = hit.via==='vendor' && hit.vendor===name;
+    return `<span class="spec"${isHit?' style="border-color:var(--amber-deep);background:var(--paper-2)"':''}><b>${esc(name)}</b> ${esc(codes)}</span>`;
+  }).join('');
+  let matchedOn;
+  if(hit.via==='parent') matchedOn=`parent profile <b>${esc(hit.raw)}</b>`;
+  else if(hit.via==='fluidseal') matchedOn=`Fluidseal/SSG profile <b>${esc(hit.raw)}</b>`;
+  else matchedOn=`<b>${esc(hit.vendor)}</b> code <b>${esc(hit.raw)}</b>`;
+  return `<div class="rec">
+    <div class="rec-top">
+      <span class="rec-code">${esc(p.parent_profile)}</span>
+      <span class="rec-mfr">${esc(p.family||'')}</span>
+      <span class="rec-cat">matched on ${matchedOn}</span>
+    </div>
+    <div class="rec-specs" style="border-bottom:1.2px dashed var(--line)">
+      <span class="spec" style="background:var(--amber);border-color:var(--ink)"><b>Fluidseal / SSG</b></span>
+      <span style="font-size:13px;align-self:center">${fsLine}</span>
+    </div>
+    ${vendorRows?`<div class="rec-specs">${vendorRows}</div>`:''}
+  </div>`;
+}
+
+/* Render one Anyseals brand-to-brand cross-reference card */
+function anysealsCard(item){
+  const r=item.record, hit=item.hit;
+  const b=r.brands||{};
+  const brandRows=Object.keys(b).map(brand=>{
+    const codes=(b[brand]||[]).map(c=>esc(c.code)+(c.approx?' <span style="color:var(--rust)" title="approximate / unverified in source">≈</span>':'')).join(', ');
+    const isHit = hit.via==='brand' && hit.vendor===brand;
+    return `<span class="spec"${isHit?' style="border-color:var(--amber-deep);background:var(--paper-2)"':''}><b>${esc(brand)}</b> ${codes}</span>`;
+  }).join('');
+  // Fluidseal bridge, if any
+  let bridgeLine='';
+  if(r.fluidseal_bridge && r.fluidseal_bridge.length){
+    const links=r.fluidseal_bridge.map(br=>{
+      const par=parentByCode(br.parent_profile);
+      const fs=par?(par.fluidseal_ssg||[]).filter(s=>s.fluidseal_url):[];
+      const fsLinks=fs.length?fs.map(s=>`<a href="${esc(s.fluidseal_url)}" target="_blank" rel="noopener">${esc(s.profile)}</a>`).join(', '):'';
+      return `<b>${esc(br.parent_profile)}</b>${fsLinks?' → '+fsLinks:''} <span class="rec-cat">via ${esc(br.via_brand)} ${esc(br.via_code)}</span>`;
+    }).join(' &nbsp;·&nbsp; ');
+    bridgeLine=`<div class="rec-specs" style="border-top:1.2px dashed var(--line)">
+      <span class="spec" style="background:var(--amber);border-color:var(--ink)"><b>Fluidseal parent</b></span>
+      <span style="font-size:13px;align-self:center">${links}</span></div>`;
+  }
+  let matchedOn;
+  if(hit.via==='anyseals') matchedOn=`Anyseals design <b>${esc(hit.raw)}</b>`;
+  else matchedOn=`<b>${esc(hit.vendor)}</b> code <b>${esc(hit.raw)}</b>${hit.approx?' <span style="color:var(--rust)">(approx)</span>':''}`;
+  return `<div class="rec">
+    <div class="rec-top">
+      <span class="rec-code">${esc(r.anyseals)}</span>
+      <span class="rec-mfr">Anyseals · ${esc(r.family||'')}</span>
+      <span class="rec-cat">matched on ${matchedOn}</span>
+    </div>
+    <div class="rec-specs">${brandRows}</div>
+    ${bridgeLine}
+  </div>`;
+}
+
+/* Full cross-reference answer (used by both engines) */
+function answerXref(query){
+  const res=xrefLookup(query);
+  if(!res.total){
+    return `<p>I don't have <strong>${esc(query)}</strong> in the cross-reference master yet. It covers Fluidseal/SSG, Fluidseal Xpress and DMH profiles, plus the Anyseals brand table (Simrit/Freudenberg, Trelleborg, Parker, Eriks, Dichtomatik, Forsheda/Stefa). You can also browse the catalog at <a href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">sealsonline.com</a> or tell me the application and I'll match by spec.</p>`;
+  }
+  let out='';
+  if(res.parents.length){
+    out += res.parents.length===1
+      ? `<p>Here's the Fluidseal cross-reference for <strong>${esc(query)}</strong>:</p>`
+      : `<p>Found <strong>${res.parents.length}</strong> Fluidseal parent profiles matching <strong>${esc(query)}</strong>:</p>`;
+    out += res.parents.slice(0,6).map(xrefCard).join('');
+  }
+  if(res.anyseals.length){
+    out += res.parents.length
+      ? `<p style="margin-top:6px">And in the <strong>Anyseals</strong> brand table:</p>`
+      : `<p><strong>${esc(query)}</strong> in the <strong>Anyseals</strong> brand cross-reference:</p>`;
+    out += res.anyseals.slice(0,6).map(anysealsCard).join('');
+  }
+  const tail = res.parents.length
+    ? `<p style="margin-top:8px;font-size:13px;color:var(--muted-ink)">Every part traces back to a <strong>parent profile</strong> — the key Fluidseal normalizes all manufacturers into. Click a Fluidseal/SSG profile to open its page.</p>`
+    : `<p style="margin-top:8px;font-size:13px;color:var(--muted-ink)">This is a brand-to-brand equivalence (orientation only — verify before quoting). A direct Fluidseal link appears once that brand's comparable list is loaded into the parent profiles.</p>`;
+  return out+tail;
+}
+
+/* ---------------- Knowledge panel (signature) ---------------- */
+function renderKnowledgePanel(loaded, manifest){
+  document.getElementById('kbCount').textContent = MARION.knowledge.products.length;
+  document.getElementById('kbVer').textContent = 'v'+(manifest.knowledge_version||'—');
+  // slim-badge chips (live from manifest + loaded knowledge)
+  const mfrCount = loaded.length;
+  const plannedCount = (manifest.planned_manufacturers||[]).length;
+  const oemParts = (manifest.oem_parts||[]).reduce((s,o)=>s+(Number(o.parts)||0),0);
+  const grpCount = MARION.knowledge.groups.length;
+  const chipMfr=document.getElementById('kbChipMfr');
+  const chipOem=document.getElementById('kbChipOem');
+  const chipGrp=document.getElementById('kbChipGrp');
+  if(chipMfr) chipMfr.textContent = mfrCount+(plannedCount?` +${plannedCount}`:'')+' manufacturers';
+  if(chipOem) chipOem.textContent = oemParts? oemParts.toLocaleString('en-US')+' OEM parts' : '—';
+  if(chipGrp) chipGrp.textContent = grpCount+' category groups';
+  const upd = manifest.updated ? ' · updated '+manifest.updated : '';
+  const pc = (MARION.knowledge.parents||[]).length;
+  document.getElementById('kbFoot').innerHTML =
+    `${pc?`${pc} profile groups · `:''}${MARION.knowledge.profiles.length} profile links${upd}`;
+}
+
+/* ---------------- Spec helpers ---------------- */
+function num(v){return (v===null||v===undefined||isNaN(v))?null:Number(v);}
+function lo(arr){return Array.isArray(arr)?num(arr[0]):null;}
+function hi(arr){return Array.isArray(arr)?num(arr[1]):null;}
+
+// parse a free-text query into structured requirements
+function parseReq(text){
+  const t = ' '+text.toLowerCase()+' ';
+  const req = {pressure_bar:null,pressure_psi:null,temp_min:null,temp_max:null,speed_mps:null,category:null,manufacturer:null,group:null,keywords:[]};
+  let m;
+  if(m=t.match(/(\d[\d,\.]*)\s*(?:bar)/)) req.pressure_bar=parseFloat(m[1].replace(/,/g,''));
+  if(m=t.match(/(\d[\d,\.]*)\s*(?:psi)/)) req.pressure_psi=parseFloat(m[1].replace(/,/g,''));
+  // temperatures: capture negative/low temps
+  let temps=[...t.matchAll(/(-?\d{1,3})\s*°?\s*([cf])\b/g)].map(x=>({v:parseFloat(x[1]),u:x[2]}));
+  if(temps.length){
+    const cs=temps.map(x=>x.u==='f'?(x.v-32)*5/9:x.v);
+    req.temp_min=Math.min(...cs); req.temp_max=Math.max(...cs);
+    if(temps.length===1){ // single temp — treat very low as min, high as max
+      if(cs[0]<0){req.temp_min=cs[0];req.temp_max=null;} else {req.temp_max=cs[0];req.temp_min=null;}
+    }
+  }
+  if(m=t.match(/(\d[\d\.]*)\s*m\/?s/)) req.speed_mps=parseFloat(m[1]);
+  // category cues
+  const catMap=[
+    [/\brod\s*seal/,'rod-seals'],[/\bpiston\s*seal/,'double-acting-piston-seals'],
+    [/\bwiper|scraper/,'wipers'],[/\bvee|v-?pack/,'vee-packs'],
+    [/\bbuffer/,'rod-buffer-seals'],[/\bpneumatic|air\s*cyl/,'pneumatic-seals'],
+    [/\boil\s*seal|rotary\s*shaft|shaft\s*seal/,'oil-seals'],[/\bswivel/,'swivel-seals']
+  ];
+  for(const[re,c]of catMap){if(re.test(t)){req.category=c;break;}}
+  const mfrs=['hallite','clipper','parker','freudenberg','skf','trelleborg'];
+  for(const mf of mfrs){if(t.includes(mf)){req.manufacturer=mf;break;}}
+  return req;
+}
+
+// score a product against requirements; returns {score, fits, issues[]}
+function evalProduct(p,req){
+  const L=p.operating_limits||{};
+  let score=0, fits=true; const issues=[];
+  // category
+  if(req.category){ if(p.category===req.category) score+=5; else score-=2; }
+  if(req.manufacturer){ if((p.manufacturer||'').toLowerCase()===req.manufacturer) score+=3; else score-=1; }
+  // pressure
+  const pBar=num(L.pressure_bar), pPsi=num(L.pressure_psi);
+  if(req.pressure_bar!=null && pBar!=null){
+    if(pBar>=req.pressure_bar){score+=4;} else {fits=false;issues.push(`rated ${pBar} bar < needed ${req.pressure_bar} bar`);}
+  }
+  if(req.pressure_psi!=null && pPsi!=null){
+    if(pPsi>=req.pressure_psi){score+=4;} else {fits=false;issues.push(`rated ${pPsi} psi < needed ${req.pressure_psi} psi`);}
+  }
+  // temperature
+  const tmin=lo(L.temp_C), tmax=hi(L.temp_C);
+  if(req.temp_min!=null && tmin!=null){ if(tmin<=req.temp_min){score+=2;} else {fits=false;issues.push(`min ${tmin}°C above your ${Math.round(req.temp_min)}°C`);} }
+  if(req.temp_max!=null && tmax!=null){ if(tmax>=req.temp_max){score+=2;} else {fits=false;issues.push(`max ${tmax}°C below your ${Math.round(req.temp_max)}°C`);} }
+  // speed
+  const sp=num(L.speed_mps);
+  if(req.speed_mps!=null && sp!=null){ if(sp>=req.speed_mps){score+=1;} else {issues.push(`speed ${sp} m/s < ${req.speed_mps} m/s`);} }
+  return {score,fits,issues};
+}
+
+function recommend(req,limit=3){
+  const scored = MARION.knowledge.products.map(p=>({p,...evalProduct(p,req)}))
+    .filter(x=>x.score>0)
+    .sort((a,b)=> (b.fits-a.fits) || (b.score-a.score));
+  return scored.slice(0,limit);
+}
+
+/* find a link for a profile code */
+function linkFor(code){
+  const pl = MARION.knowledge.profiles.find(x=>String(x.profile).toLowerCase()===String(code).toLowerCase());
+  if(pl) return {url:pl.url,label:`${pl.group} · ${pl.scope}`};
+  return null;
+}
+function groupLink(category){
+  // map a product category to a Fluidseal product group url (best-effort)
+  const map={'rod-seals':'Rod Seals','wipers':'Rod Wipers','vee-packs':'Vee Packings',
+    'oil-seals':'Shaft Seals','double-acting-piston-seals':'Piston Seals',
+    'single-acting-piston-seals':'Piston Seals','rod-buffer-seals':'Rod Seals',
+    'pneumatic-seals':'Piston Seals','swivel-seals':'Rod Seals','unitized-pistons':'Piston Seals'};
+  const gName=map[category];
+  const g=MARION.knowledge.groups.find(x=>x.group===gName);
+  return g?{url:g.inch_url||g.metric_url,label:g.group}:null;
+}
+
+/* ---------------- Rendering messages ---------------- */
+const messagesEl=document.getElementById('messages');
+function scrollDown(){messagesEl.scrollTop=messagesEl.scrollHeight;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function pushUser(text){
+  const d=document.createElement('div');d.className='msg user';
+  d.innerHTML=`<div class="av">You</div><div class="bubble">${mdLite(text)}</div>`;
+  messagesEl.appendChild(d);scrollDown();
+}
+function pushMarion(html){
+  const d=document.createElement('div');d.className='msg marion';
