@@ -208,6 +208,20 @@
   .mfr-row.planned .mfr-dot{background:var(--muted)}
   .kb-foot{margin-top:11px;font-size:11px;color:var(--muted-ink);font-family:var(--mono);border-top:1px dashed var(--line);padding-top:9px}
 
+  /* slim knowledge badge (home rail) */
+  .kb-badge{display:block;text-decoration:none;color:inherit;transition:.14s;cursor:pointer}
+  .kb-badge:hover{box-shadow:6px 6px 0 rgba(18,18,18,.12);transform:translate(-1px,-1px)}
+  .kb-badge-row{display:flex;align-items:center;gap:13px}
+  .kb-stat-mini{display:flex;align-items:baseline;gap:7px;flex:none}
+  .kb-badge-meta{display:flex;flex-direction:column;gap:4px;margin-left:auto;align-items:flex-end}
+  .kb-chip{font-family:var(--mono);font-size:11px;color:var(--muted-ink);background:var(--paper-2);
+    border:1px solid var(--line);border-radius:20px;padding:2px 9px;white-space:nowrap}
+  .kb-badge-cta{display:flex;align-items:center;gap:6px;margin-top:11px;font-weight:700;font-size:12.5px;
+    color:var(--ink);border-top:1px solid var(--line);padding-top:9px}
+  .kb-badge-cta svg{width:15px;height:15px;transition:transform .14s}
+  .kb-badge:hover .kb-badge-cta{color:var(--amber-deep)}
+  .kb-badge:hover .kb-badge-cta svg{transform:translateX(3px)}
+
   /* connect / API panel */
   .conn-state{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:10px}
   .conn-state .d{width:9px;height:9px;border-radius:50%;flex:none}
@@ -269,6 +283,7 @@
     </a>
     <div class="topbar-spacer"></div>
     <nav class="nav-links">
+      <a href="knowledge.html">Knowledge</a>
       <a href="https://posters.fluidsealab.com/" target="_blank" rel="noopener">Posters</a>
       <a href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">Store</a>
       <a href="https://www.fluidsealab.com" target="_blank" rel="noopener">Fluidseal</a>
@@ -310,18 +325,26 @@
 
   <!-- SIDE RAIL -->
   <aside class="rail">
-    <!-- SIGNATURE: live knowledge panel -->
-    <div class="panel">
+    <!-- SIGNATURE: slim knowledge badge → full knowledge.html -->
+    <a class="panel kb-badge" href="knowledge.html" id="kbBadge">
       <div class="panel-h">What Marion Knows <span class="k" id="kbVer">v—</span></div>
       <div class="panel-b">
-        <div class="kb-stat">
-          <div class="kb-num" id="kbCount">—</div>
-          <div class="kb-lbl">seal profiles<br>loaded</div>
+        <div class="kb-badge-row">
+          <div class="kb-stat-mini">
+            <div class="kb-num" id="kbCount">—</div>
+            <div class="kb-lbl">profiles<br>loaded</div>
+          </div>
+          <div class="kb-badge-meta" id="kbBadgeMeta">
+            <span class="kb-chip" id="kbChipMfr">— manufacturers</span>
+            <span class="kb-chip" id="kbChipOem">— OEM parts</span>
+            <span class="kb-chip" id="kbChipGrp">— groups</span>
+          </div>
         </div>
-        <div class="mfr-list" id="mfrList"></div>
         <div class="kb-foot" id="kbFoot">Loading knowledge base…</div>
+        <div class="kb-badge-cta">See everything Marion knows <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
       </div>
-    </div>
+      <span class="mfr-list" id="mfrList" hidden></span>
+    </a>
 
     <!-- Connect -->
     <div class="panel">
@@ -702,22 +725,21 @@ function answerXref(query){
 function renderKnowledgePanel(loaded, manifest){
   document.getElementById('kbCount').textContent = MARION.knowledge.products.length;
   document.getElementById('kbVer').textContent = 'v'+(manifest.knowledge_version||'—');
-  const list = document.getElementById('mfrList');
-  list.innerHTML='';
-  loaded.sort((a,b)=>b.products.length-a.products.length).forEach(m=>{
-    const row=document.createElement('div');row.className='mfr-row';
-    row.innerHTML=`<span class="mfr-dot"></span><span class="nm">${esc(m.name)}</span><span class="ct">${m.products.length} profiles</span>`;
-    list.appendChild(row);
-  });
-  (manifest.planned_manufacturers||[]).forEach(name=>{
-    const row=document.createElement('div');row.className='mfr-row planned';
-    row.innerHTML=`<span class="mfr-dot"></span><span class="nm">${esc(name)}</span><span class="ct">coming</span>`;
-    list.appendChild(row);
-  });
+  // slim-badge chips (live from manifest + loaded knowledge)
+  const mfrCount = loaded.length;
+  const plannedCount = (manifest.planned_manufacturers||[]).length;
+  const oemParts = (manifest.oem_parts||[]).reduce((s,o)=>s+(Number(o.parts)||0),0);
+  const grpCount = MARION.knowledge.groups.length;
+  const chipMfr=document.getElementById('kbChipMfr');
+  const chipOem=document.getElementById('kbChipOem');
+  const chipGrp=document.getElementById('kbChipGrp');
+  if(chipMfr) chipMfr.textContent = mfrCount+(plannedCount?` +${plannedCount}`:'')+' manufacturers';
+  if(chipOem) chipOem.textContent = oemParts? oemParts.toLocaleString('en-US')+' OEM parts' : '—';
+  if(chipGrp) chipGrp.textContent = grpCount+' category groups';
   const upd = manifest.updated ? ' · updated '+manifest.updated : '';
   const pc = (MARION.knowledge.parents||[]).length;
   document.getElementById('kbFoot').innerHTML =
-    `${MARION.knowledge.groups.length} product groups · ${MARION.knowledge.profiles.length} profile links${pc?` · ${pc} parent profiles`:''}${upd}`;
+    `${pc?`${pc} profile groups · `:''}${MARION.knowledge.profiles.length} profile links${upd}`;
 }
 
 /* ---------------- Spec helpers ---------------- */

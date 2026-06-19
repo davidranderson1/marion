@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Marion Knows — Fluidseal AB Knowledge Base</title>
+<meta name="description" content="The full state of Marion's knowledge base — manufacturers, category groups, profile groups, profiles, products, OEM parts, and cross-reference coverage. What's loaded and what's still missing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#121212;
+    --ink:#1c1c1a;
+    --steel:#2b2b28;
+    --line:#3a3a36;
+    --paper:#f5f3ec;
+    --paper-2:#ece8dc;
+    --amber:#f5c518;
+    --amber-deep:#d9a800;
+    --rust:#b5532a;
+    --green:#3f7d4e;
+    --red:#b23b3b;
+    --muted:#8a8676;
+    --muted-ink:#6f6b5d;
+    --display:'Big Shoulders Display',sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --maxw:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--paper-2);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+
+  /* ---------- Top bar (mirrors index.html) ---------- */
+  header.topbar{position:sticky;top:0;z-index:40;background:var(--ink);border-bottom:3px solid var(--amber)}
+  .topbar-inner{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:14px;padding:11px 20px}
+  .brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+  .brand-mark{width:40px;height:40px;border-radius:8px;background:var(--amber);color:var(--black);display:grid;place-items:center;
+    font-family:var(--display);font-weight:900;font-size:24px;border:1.5px solid var(--amber-deep)}
+  .brand-text .nm{font-family:var(--display);font-weight:800;font-size:21px;color:var(--paper);letter-spacing:.5px;line-height:1}
+  .brand-text .sub{font-size:11px;color:var(--amber);letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+  .topbar-spacer{flex:1}
+  .nav-links{display:flex;gap:18px;align-items:center}
+  .nav-links a{color:var(--paper);text-decoration:none;font-size:13.5px;font-weight:600;letter-spacing:.3px;opacity:.85;transition:.14s}
+  .nav-links a:hover{opacity:1;color:var(--amber)}
+  .nav-links a.here{color:var(--amber);opacity:1}
+  @media(max-width:680px){.nav-links a.opt{display:none}}
+
+  /* ---------- Page head ---------- */
+  .pagehead{background:var(--ink);color:var(--paper);border-bottom:1px solid var(--line)}
+  .pagehead-inner{max-width:var(--maxw);margin:0 auto;padding:26px 20px 22px}
+  .pagehead h1{font-family:var(--display);font-weight:900;font-size:38px;letter-spacing:.6px;line-height:.95;text-transform:uppercase}
+  .pagehead h1 .v{font-family:var(--mono);font-size:14px;color:var(--amber);letter-spacing:.5px;vertical-align:super;font-weight:500}
+  .pagehead p{font-size:14px;color:#cfcabb;max-width:680px;margin-top:9px}
+  .pagehead .upd{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px}
+
+  /* headline stat strip */
+  .statstrip{max-width:var(--maxw);margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);border-top:none}
+  .statcard{background:var(--ink);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+  .statcard .n{font-family:var(--display);font-weight:900;font-size:30px;color:var(--amber);line-height:.9}
+  .statcard .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:#cfcabb;font-weight:600}
+  @media(max-width:760px){.statstrip{grid-template-columns:repeat(2,1fr)}.statcard:last-child{grid-column:1/-1}}
+
+  /* ---------- Tabs ---------- */
+  .tabs{max-width:var(--maxw);margin:0 auto;display:flex;gap:0;padding:0 20px;background:var(--paper-2);
+    position:sticky;top:63px;z-index:30;border-bottom:1.5px solid var(--ink)}
+  .tab{appearance:none;border:none;background:none;cursor:pointer;font-family:var(--display);font-weight:700;
+    font-size:15px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted-ink);padding:13px 18px 11px;
+    border-bottom:3px solid transparent;margin-bottom:-1.5px;transition:.14s;display:flex;align-items:center;gap:8px}
+  .tab:hover{color:var(--ink)}
+  .tab.active{color:var(--ink);border-bottom-color:var(--amber)}
+  .tab .badge{font-family:var(--mono);font-size:10.5px;font-weight:500;background:var(--ink);color:var(--paper);
+    border-radius:20px;padding:1px 8px;letter-spacing:0;text-transform:none}
+  .tab.active .badge{background:var(--amber);color:var(--black)}
+  @media(max-width:680px){.tab{padding:11px 11px 9px;font-size:13px}.tab .badge{display:none}}
+
+  /* ---------- Content shell ---------- */
+  main{max-width:var(--maxw);margin:0 auto;padding:22px 20px 60px}
+  .pane{display:none;animation:fade .2s ease}
+  .pane.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .loading{padding:60px 0;text-align:center;color:var(--muted-ink);font-family:var(--mono);font-size:13px}
+
+  .intro{font-size:13.5px;color:var(--muted-ink);margin-bottom:18px;max-width:760px;line-height:1.6}
+  .intro b{color:var(--ink)}
+
+  /* legend */
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:18px;font-size:12px;color:var(--muted-ink)}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .swatch{width:10px;height:10px;border-radius:50%;flex:none}
+  .sw-loaded{background:var(--green)}
+  .sw-partial{background:var(--amber-deep)}
+  .sw-coming{background:var(--muted)}
+  .sw-missing{background:var(--rust)}
+
+  /* ---------- Manufacturer cards (Catalog) ---------- */
+  .mfr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px;margin-bottom:8px}
+  .mcard{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;box-shadow:3px 3px 0 rgba(18,18,18,.08);
+    overflow:hidden;display:flex;flex-direction:column}
+  .mcard.planned{border-style:dashed;opacity:.7;box-shadow:none}
+  .mcard-h{padding:11px 13px;border-bottom:1.2px solid var(--line);display:flex;align-items:center;gap:9px}
+  .mcard-h .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .mcard-h .nm{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.3px}
+  .mcard-h .role{margin-left:auto;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;
+    color:var(--muted-ink);background:var(--paper-2);padding:2px 7px;border-radius:20px}
+  .mcard-b{padding:11px 13px;display:flex;flex-direction:column;gap:9px;flex:1}
+  .mcard .bignum{display:flex;align-items:baseline;gap:7px}
+  .mcard .bignum .x{font-family:var(--display);font-weight:900;font-size:34px;line-height:.85;color:var(--ink)}
+  .mcard .bignum .y{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted-ink);font-weight:600}
+  .mcard .note{font-size:11.5px;color:var(--muted-ink);line-height:1.45}
+  .mcard .flag{font-size:11px;color:var(--rust);line-height:1.4;display:flex;gap:5px;align-items:flex-start}
+  .mcard .flag svg{width:13px;height:13px;flex:none;margin-top:1px}
+  .mcard .meta{font-family:var(--mono);font-size:10.5px;color:var(--muted-ink);border-top:1px dashed var(--line);padding-top:8px;margin-top:auto}
+
+  /* ---------- Section + tree (Catalog category groups) ---------- */
+  .sec-h{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.4px;text-transform:uppercase;
+    margin:30px 0 4px;display:flex;align-items:center;gap:12px}
+  .sec-h:after{content:"";flex:1;border-top:2px solid var(--line)}
+  .sec-sub{font-size:12.5px;color:var(--muted-ink);margin-bottom:16px}
+
+  .grp-list{display:flex;flex-direction:column;gap:8px}
+  .grp{background:var(--paper);border:1.4px solid var(--ink);border-radius:9px;overflow:hidden}
+  .grp-head{display:flex;align-items:center;gap:11px;padding:11px 14px;cursor:pointer;user-select:none;transition:.12s}
+  .grp-head:hover{background:var(--paper-2)}
+  .grp-head .chev{width:14px;height:14px;flex:none;transition:transform .18s;color:var(--muted-ink)}
+  .grp.open .grp-head .chev{transform:rotate(90deg)}
+  .grp-head .gname{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.3px}
+  .grp-head .gcount{margin-left:auto;display:flex;gap:6px;align-items:center}
+  .pill{font-family:var(--mono);font-size:10.5px;padding:2px 9px;border-radius:20px;letter-spacing:.2px;
+    background:var(--paper-2);color:var(--muted-ink);border:1px solid var(--line)}
+  .pill.amber{background:var(--amber);color:var(--black);border-color:var(--amber-deep);font-weight:500}
+  .pill.ink{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .grp-body{display:none;padding:4px 14px 14px;border-top:1px dashed var(--line)}
+  .grp.open .grp-body{display:block}
+
+  /* parent-profile rows inside a group */
+  .pp-row{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid var(--paper-2);font-size:13px}
+  .pp-row:last-child{border-bottom:none}
+  .pp-row .code{font-family:var(--mono);font-weight:700;font-size:12.5px;min-width:78px}
+  .pp-row .vlist{display:flex;flex-wrap:wrap;gap:5px;margin-left:auto;justify-content:flex-end}
+  .vtag{font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:5px;background:var(--paper-2);
+    color:var(--muted-ink);border:1px solid var(--line)}
+  .vtag.fs{background:var(--amber);color:var(--black);border-color:var(--amber-deep);font-weight:700}
+  .vtag.has{background:#e9efe9;color:var(--green);border-color:#bcd3bc}
+  .pp-more{font-size:12px;color:var(--muted-ink);font-family:var(--mono);padding:9px 4px 2px;text-align:center}
+
+  /* profiles flat list under a group (Fluidseal profile links) */
+  .prof-chips{display:flex;flex-wrap:wrap;gap:6px;padding-top:10px}
+  .prof-chip{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px;text-decoration:none;
+    background:#fff;border:1.2px solid var(--line);color:var(--ink);transition:.12s}
+  .prof-chip:hover{background:var(--amber);border-color:var(--amber-deep)}
+  .prof-chip .sc{color:var(--muted-ink);font-size:9px;margin-left:4px;text-transform:uppercase}
+
+  /* ---------- OEM Parts pane ---------- */
+  .oem-card{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;box-shadow:3px 3px 0 rgba(18,18,18,.08);
+    margin-bottom:16px;overflow:hidden}
+  .oem-card.planned{border-style:dashed;opacity:.7;box-shadow:none}
+  .oem-head{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--ink);color:var(--paper)}
+  .oem-head .lo{width:38px;height:38px;border-radius:7px;background:var(--amber);color:var(--black);display:grid;place-items:center;
+    font-family:var(--display);font-weight:900;font-size:18px;flex:none}
+  .oem-head .nm{font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:.4px}
+  .oem-head .tag{margin-left:auto;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.5px;
+    background:rgba(245,197,24,.16);color:var(--amber);padding:3px 9px;border-radius:20px}
+  .oem-layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
+  @media(max-width:680px){.oem-layers{grid-template-columns:1fr}}
+  .layer{background:var(--paper);padding:14px 15px;display:flex;flex-direction:column;gap:4px}
+  .layer .ln{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted-ink)}
+  .layer .lx{display:flex;align-items:baseline;gap:7px}
+  .layer .lx .x{font-family:var(--display);font-weight:900;font-size:30px;line-height:.85;color:var(--ink)}
+  .layer .lx .u{font-size:11px;color:var(--muted-ink);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .layer .ld{font-size:11.5px;color:var(--muted-ink);line-height:1.45;margin-top:3px}
+  .oem-cats{display:flex;flex-wrap:wrap;gap:7px;padding:0 16px 15px;background:var(--paper)}
+  .catpill{display:flex;align-items:center;gap:7px;font-size:12px;background:var(--paper-2);border:1.2px solid var(--line);
+    border-radius:7px;padding:5px 11px}
+  .catpill .cn{font-weight:600}
+  .catpill .cc{font-family:var(--mono);font-size:11px;color:var(--muted-ink)}
+  .oem-foot{padding:11px 16px;background:var(--paper-2);border-top:1px dashed var(--line);font-size:11.5px;
+    color:var(--muted-ink);line-height:1.5}
+  .oem-foot code{font-family:var(--mono);font-size:11px;background:#fff;border:1px solid var(--line);padding:1px 5px;border-radius:4px}
+
+  /* ---------- Cross-reference pane ---------- */
+  .xref-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:8px}
+  @media(max-width:760px){.xref-grid{grid-template-columns:1fr}}
+  .xref-block{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;box-shadow:3px 3px 0 rgba(18,18,18,.08);overflow:hidden}
+  .xref-block h3{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.4px;text-transform:uppercase;
+    background:var(--ink);color:var(--paper);padding:10px 14px}
+  .xref-block .bd{padding:14px}
+  /* vendor coverage bars */
+  .vbar-row{margin-bottom:13px}
+  .vbar-row:last-child{margin-bottom:0}
+  .vbar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;font-size:13px}
+  .vbar-top .vn{font-weight:700}
+  .vbar-top .vv{font-family:var(--mono);font-size:11.5px;color:var(--muted-ink)}
+  .vbar-track{height:13px;background:var(--paper-2);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+  .vbar-fill{height:100%;background:var(--amber);border-radius:20px 0 0 20px;transition:width .5s ease}
+  .vbar-fill.lo{background:var(--rust)}
+  .vbar-fill.mid{background:var(--amber-deep)}
+  .vbar-fill.hi{background:var(--green)}
+  .gap-note{font-size:12px;color:var(--muted-ink);line-height:1.55;margin-top:6px}
+  /* family coverage table */
+  .ftable{width:100%;border-collapse:collapse;font-size:12.5px}
+  .ftable th{text-align:left;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.5px;
+    color:var(--muted-ink);padding:6px 8px;border-bottom:1.4px solid var(--ink)}
+  .ftable th.num,.ftable td.num{text-align:right;font-family:var(--mono)}
+  .ftable td{padding:6px 8px;border-bottom:1px solid var(--paper-2)}
+  .ftable tr:last-child td{border-bottom:none}
+  .ftable td.fam{font-weight:600}
+  .src-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .src-list .s{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px;background:var(--paper-2);
+    border:1px solid var(--line);color:var(--muted-ink)}
+
+  /* error */
+  .err{background:#fbeaea;border:1.5px solid var(--red);border-radius:9px;padding:16px;color:#7a2020;font-size:13px;line-height:1.55}
+
+  footer.foot{background:var(--black);color:#9d998c;font-size:12px;text-align:center;padding:16px;border-top:3px solid var(--amber)}
+  footer.foot b{color:var(--amber);font-family:var(--display);letter-spacing:.5px}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="./">
+      <div class="brand-mark">M</div>
+      <div class="brand-text">
+        <div class="nm">Marion</div>
+        <div class="sub">Fluidseal AB · Sealing Specialist</div>
+      </div>
+    </a>
+    <div class="topbar-spacer"></div>
+    <nav class="nav-links">
+      <a href="./">Ask Marion</a>
+      <a href="knowledge.html" class="here">Knowledge</a>
+      <a class="opt" href="https://posters.fluidsealab.com/" target="_blank" rel="noopener">Posters</a>
+      <a class="opt" href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">Store</a>
+    </nav>
+  </div>
+</header>
+
+<div class="pagehead">
+  <div class="pagehead-inner">
+    <h1>What Marion Knows <span class="v" id="kbVer">v—</span></h1>
+    <p>The full state of Marion's knowledge base — every manufacturer, category group, profile group, profile and product she can draw on, plus the OEM parts layer and cross-reference coverage. This page reads the live knowledge files, so it's always current with what's actually loaded.</p>
+    <div class="upd" id="kbUpd"></div>
+  </div>
+</div>
+
+<div class="statstrip" id="statStrip"></div>
+
+<div class="tabs">
+  <button class="tab active" data-pane="catalog">Catalog <span class="badge" id="tabCatBadge"></span></button>
+  <button class="tab" data-pane="oem">OEM Parts <span class="badge" id="tabOemBadge"></span></button>
+  <button class="tab" data-pane="xref">Cross-Reference <span class="badge" id="tabXrefBadge"></span></button>
+</div>
+
+<main>
+  <div class="loading" id="loading">Loading knowledge base…</div>
+
+  <!-- CATALOG -->
+  <section class="pane active" id="pane-catalog">
+    <p class="intro">The <b>seal-profile catalog</b> — Marion's normalization layer. Each manufacturer's profiles map toward Fluidseal's own profile namespace. Drill down: <b>Manufacturer → Category Group → Profile Group (parent) → Profile</b>.</p>
+    <div class="legend">
+      <span><span class="swatch sw-loaded"></span>Loaded &amp; mapped</span>
+      <span><span class="swatch sw-partial"></span>Specs loaded, mapping pending</span>
+      <span><span class="swatch sw-coming"></span>Planned</span>
+    </div>
+    <div class="mfr-grid" id="mfrGrid"></div>
+
+    <div class="sec-h">Category Groups</div>
+    <div class="sec-sub" id="grpSub"></div>
+    <div class="grp-list" id="grpList"></div>
+  </section>
+
+  <!-- OEM PARTS -->
+  <section class="pane" id="pane-oem">
+    <p class="intro">The <b>OEM parts layer</b> — a different shape from the catalog. Here the relationship is <b>part-number → Fluidseal part-number</b> (plus the OEM's own parts namespace and an Equipment / Make / Model fitment index), <b>not</b> a profile bridge. John Deere is the reference implementation of the reusable three-layer pattern; future OEMs follow the same structure.</p>
+    <div id="oemList"></div>
+  </section>
+
+  <!-- CROSS-REFERENCE -->
+  <section class="pane" id="pane-xref">
+    <p class="intro">The <b>cross-reference join layer</b> — <code style="font-family:var(--mono);font-size:12px">parent-profiles.json</code> is the canonical map: every vendor profile resolves to a parent, which resolves to the Fluidseal/SSG equivalent. This view shows <b>coverage and gaps</b> — where the mapping is rich and where it still needs work.</p>
+    <div class="xref-grid">
+      <div class="xref-block">
+        <h3>Vendor Coverage</h3>
+        <div class="bd">
+          <p class="gap-note" style="margin-top:0;margin-bottom:13px">Of the parent profiles loaded, how many carry at least one code for each vendor. Low bars are the worklist.</p>
+          <div id="vbars"></div>
+        </div>
+      </div>
+      <div class="xref-block">
+        <h3>By Family</h3>
+        <div class="bd">
+          <table class="ftable" id="famTable">
+            <thead><tr><th class="fam">Family</th><th class="num">Parents</th><th class="num">w/ FS</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="xref-block" style="margin-top:16px">
+      <h3>Cross-Reference Sources</h3>
+      <div class="bd">
+        <p class="gap-note" style="margin-top:0">The lookup on the home page resolves any of these into a Fluidseal equivalent. Brand tables and vendor namespaces Marion currently indexes:</p>
+        <div class="src-list" id="srcList"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="errBox"></div>
+</main>
+
+<footer class="foot">
+  <b>Marion</b> — Fluidseal AB Inc., Edmonton AB · "need a seal… we have the solution" · Knowledge counts are computed live from the manifest.
+</footer>
+
+<script>
+/* =========================================================================
+   What Marion Knows — live knowledge dashboard
+   Reads the same /knowledge files as index.html. No hardcoded totals.
+   ========================================================================= */
+const KB = {
+  manifest:null, groups:[], profiles:[], parents:[], company:null,
+  manufacturers:[], oem:[]
+};
+const base = 'knowledge/';
+
+function fetchJSON(url){return fetch(url,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(url+' '+r.status);return r.json();});}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmt(n){return Number(n).toLocaleString('en-US');}
+
+async function load(){
+  try{
+    const manifest = await fetchJSON(base+'manifest.json');
+    KB.manifest = manifest;
+
+    // shared layers (tolerate individual failures)
+    const [groups, profiles, parents] = await Promise.all([
+      fetchJSON(base+(manifest.shared?.product_groups||'product-groups.json')).catch(()=>({groups:[]})),
+      fetchJSON(base+(manifest.shared?.profile_links||'profiles.json')).catch(()=>({profiles:[]})),
+      manifest.shared?.parent_profiles ? fetchJSON(base+manifest.shared.parent_profiles).catch(()=>({parent_profiles:[]})) : Promise.resolve({parent_profiles:[]})
+    ]);
+    KB.groups = groups.groups||[];
+    KB.profiles = profiles.profiles||[];
+    KB.parents = parents.parent_profiles||[];
+    KB._parentMeta = parents;
+
+    // manufacturers: use manifest counts (avoids loading every big file just to count)
+    KB.manufacturers = (manifest.manufacturers||[]).filter(m=>m.active!==false);
+
+    // OEM parts layer
+    KB.oem = manifest.oem_parts||[];
+
+    document.getElementById('loading').style.display='none';
+    renderAll(manifest);
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('errBox').innerHTML =
+      `<div class="err"><b>Couldn't load the knowledge base.</b><br>${esc(e.message)}<br><br>This page must be served from the site root so <code>/knowledge/</code> is reachable. Locally, run a static server from the repo root rather than opening the file directly.</div>`;
+  }
+}
+
+/* ---------- headline numbers ---------- */
+function totalProducts(){
+  return KB.manufacturers.reduce((s,m)=>s+(Number(m.products)||0),0);
+}
+function oemPartTotals(){
+  let parts=0, models=0;
+  KB.oem.forEach(o=>{ parts+=Number(o.parts)||0; models+=Number(o.models)||0; });
+  return {parts, models};
+}
+
+function renderAll(manifest){
+  document.getElementById('kbVer').textContent = 'v'+(manifest.knowledge_version||'—');
+  document.getElementById('kbUpd').textContent = manifest.updated ? 'Knowledge version '+manifest.knowledge_version+' · last updated '+manifest.updated : '';
+
+  const prod = totalProducts();
+  const oemT = oemPartTotals();
+  const mfrLoaded = KB.manufacturers.length;
+  const mfrPlanned = (manifest.planned_manufacturers||[]).length;
+
+  // stat strip
+  const strip = [
+    {n:fmt(prod), l:'Profiles, all mfrs'},
+    {n:mfrLoaded+(mfrPlanned?` <span style="font-size:16px;color:#cfcabb">+${mfrPlanned}</span>`:''), l:'Manufacturers'},
+    {n:fmt(KB.parents.length), l:'Profile groups'},
+    {n:fmt(KB.groups.length), l:'Category groups'},
+    {n:fmt(oemT.parts), l:'OEM parts indexed'}
+  ];
+  document.getElementById('statStrip').innerHTML = strip.map(s=>
+    `<div class="statcard"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join('');
+
+  // tab badges
+  document.getElementById('tabCatBadge').textContent = mfrLoaded+' mfr';
+  document.getElementById('tabOemBadge').textContent = KB.oem.length? (new Set(KB.oem.map(o=>o.oem)).size)+' OEM' : '—';
+  document.getElementById('tabXrefBadge').textContent = KB.parents.length+' parents';
+
+  renderCatalog();
+  renderOEM();
+  renderXref();
+}
+
+/* ---------- CATALOG: manufacturer cards ---------- */
+function mfrStatus(m){
+  // heuristic: normalizer or has explicit fluidseal mapping note → loaded; spec-only with pending note → partial
+  const note = (m.note||'').toLowerCase();
+  if(m.role==='normalizer') return 'loaded';
+  if(note.includes('pending')||note.includes('null')||note.includes('scaffold')) return 'partial';
+  return 'loaded';
+}
+function renderCatalog(){
+  const manifest = KB.manifest;
+  const grid = document.getElementById('mfrGrid');
+  const warnSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+  let html='';
+  KB.manufacturers.slice().sort((a,b)=>(b.products||0)-(a.products||0)).forEach(m=>{
+    const st = mfrStatus(m);
+    const dotColor = st==='loaded'?'var(--green)':st==='partial'?'var(--amber-deep)':'var(--muted)';
+    const roleLabel = m.role==='normalizer'?'normalizer':(m.seal_type? m.seal_type.split('(')[0].trim() : '');
+    const pending = st==='partial';
+    html += `<div class="mcard">
+      <div class="mcard-h">
+        <span class="dot" style="background:${dotColor}"></span>
+        <span class="nm">${esc(m.name)}</span>
+        ${roleLabel?`<span class="role">${esc(roleLabel)}</span>`:''}
+      </div>
+      <div class="mcard-b">
+        <div class="bignum"><span class="x">${fmt(m.products||0)}</span><span class="y">profiles</span></div>
+        ${m.note?`<div class="note">${esc(trimNote(m.note))}</div>`:''}
+        ${pending?`<div class="flag">${warnSvg}<span>Fluidseal equivalent mapping pending</span></div>`:''}
+        ${m.source?`<div class="meta">src · ${esc(m.source.split('/').pop())}</div>`:''}
+      </div>
+    </div>`;
+  });
+  // planned
+  (manifest.planned_manufacturers||[]).forEach(name=>{
+    html += `<div class="mcard planned">
+      <div class="mcard-h"><span class="dot" style="background:var(--muted)"></span><span class="nm">${esc(name)}</span><span class="role">planned</span></div>
+      <div class="mcard-b"><div class="bignum"><span class="x" style="color:var(--muted)">—</span><span class="y">coming</span></div>
+      <div class="note">Queued for the catalog. Not yet loaded.</div></div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+
+  renderGroups();
+}
+function trimNote(n){
+  // first sentence or ~140 chars, keep it tight
+  let s = n.split(/(?<=\.)\s/)[0];
+  if(s.length>150) s = s.slice(0,147)+'…';
+  return s;
+}
+
+/* ---------- CATALOG: profile-group families → parents + profiles ---------- */
+function renderGroups(){
+  // index parents by family, profiles by product-group
+  const parentsByFam = {};
+  KB.parents.forEach(p=>{(parentsByFam[p.family]=parentsByFam[p.family]||[]).push(p);});
+  const profByGroup = {};
+  KB.profiles.forEach(pr=>{(profByGroup[pr.group]=profByGroup[pr.group]||[]).push(pr);});
+  const groupByName = {};
+  KB.groups.forEach(g=>{groupByName[g.group]=g;});
+
+  // Each parent FAMILY is a profile group. Attach the sealsonline product-groups
+  // (and their profiles + catalog links) that belong to it. Verified to reconcile
+  // to all 221 parents with no double-count.
+  const famDef = [
+    {fam:"Rod Wipers",       groups:["Rod Wipers"]},
+    {fam:"Rod Seals",        groups:["Rod Seals"]},
+    {fam:"Piston Seals",     groups:["Piston Seals","Symmetrical Seals"]},
+    {fam:"Guiding Elements", groups:["Guiding Elements"]},
+    {fam:"O-Rings",          groups:["O'Rings","O'Rings Others","O'Ring Kits"]},
+    {fam:"Rotary Seals",     groups:["Shaft Seals","V-Rings"]},
+    {fam:"Gaskets",          groups:["Flange Seals"]},
+    {fam:"Backups",          groups:[]}
+  ];
+  // product-groups with no parent family — shown as standalone profile-only groups
+  const claimed = new Set();
+  famDef.forEach(f=>f.groups.forEach(g=>claimed.add(g)));
+  const standalone = KB.groups.filter(g=>!claimed.has(g.group));
+
+  document.getElementById('grpSub').textContent =
+    `${KB.parents.length} profile groups across ${famDef.filter(f=>(parentsByFam[f.fam]||[]).length).length} families · ${KB.groups.length} Fluidseal category groups · ${KB.profiles.length} profile links`;
+
+  const chev='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+  let html='';
+  let idx=0;
+
+  // family sections
+  famDef.forEach(def=>{
+    const parents = parentsByFam[def.fam]||[];
+    if(!parents.length && !def.groups.length) return;
+    let profs=[]; const catLinks=[];
+    def.groups.forEach(gn=>{
+      profs = profs.concat(profByGroup[gn]||[]);
+      const g=groupByName[gn];
+      if(g){
+        if(g.inch_url) catLinks.push(`<a class="prof-chip" href="${esc(g.inch_url)}" target="_blank" rel="noopener">${esc(gn)} · inch ↗</a>`);
+        if(g.metric_url) catLinks.push(`<a class="prof-chip" href="${esc(g.metric_url)}" target="_blank" rel="noopener">${esc(gn)} · metric ↗</a>`);
+      }
+    });
+    const grpNames = def.groups.length ? def.groups.join(' · ') : 'parent family';
+    html += `<div class="grp" data-i="${idx}">
+      <div class="grp-head" onclick="toggleGrp(${idx})">
+        ${chev}
+        <span class="gname">${esc(def.fam)}</span>
+        <span class="gcount">
+          ${parents.length?`<span class="pill ink">${parents.length} parent${parents.length>1?'s':''}</span>`:''}
+          ${profs.length?`<span class="pill amber">${profs.length} profile${profs.length===1?'':'s'}</span>`:''}
+        </span>
+      </div>
+      <div class="grp-body">
+        <div style="font-family:var(--mono);font-size:10.5px;color:var(--muted-ink);margin:2px 0 8px">category: ${esc(grpNames)}</div>
+        ${renderParents(parents)}
+        ${profs.length?`<div class="prof-chips">${profs.map(p=>`<a class="prof-chip" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.profile)}<span class="sc">${esc(p.scope||'')}</span></a>`).join('')}</div>`:''}
+        ${catLinks.length?`<div class="prof-chips" style="margin-top:8px">${catLinks.join('')}</div>`:''}
+      </div>
+    </div>`;
+    idx++;
+  });
+
+  // standalone profile-only groups (Vee Packings, Mechanical Seals…)
+  if(standalone.length){
+    html += `<div style="font-family:var(--mono);font-size:11px;color:var(--muted-ink);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px">Additional category groups (profile links only)</div>`;
+    standalone.forEach(g=>{
+      const profs=profByGroup[g.group]||[];
+      const catLinks=[];
+      if(g.inch_url) catLinks.push(`<a class="prof-chip" href="${esc(g.inch_url)}" target="_blank" rel="noopener">Inch catalog ↗</a>`);
+      if(g.metric_url) catLinks.push(`<a class="prof-chip" href="${esc(g.metric_url)}" target="_blank" rel="noopener">Metric catalog ↗</a>`);
+      html += `<div class="grp" data-i="${idx}">
+        <div class="grp-head" onclick="toggleGrp(${idx})">
+          ${chev}<span class="gname">${esc(g.group)}</span>
+          <span class="gcount"><span class="pill amber">${profs.length} profile${profs.length===1?'':'s'}</span></span>
+        </div>
+        <div class="grp-body">
+          ${profs.length?`<div class="prof-chips">${profs.map(p=>`<a class="prof-chip" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.profile)}<span class="sc">${esc(p.scope||'')}</span></a>`).join('')}</div>`:'<div class="pp-more">No profile links indexed yet.</div>'}
+          ${catLinks.length?`<div class="prof-chips" style="margin-top:8px">${catLinks.join('')}</div>`:''}
+        </div>
+      </div>`;
+      idx++;
+    });
+  }
+
+  document.getElementById('grpList').innerHTML = html;
+  // open the first family by default so the tree is obviously expandable
+  const first=document.querySelector('.grp[data-i="0"]');
+  if(first) first.classList.add('open');
+}
+
+function renderParents(parents){
+  if(!parents.length) return '';
+  const show = parents.slice(0,14);
+  let rows = show.map(p=>{
+    const vtags=[];
+    if(p.fluidseal_ssg && p.fluidseal_ssg.length) vtags.push('<span class="vtag fs">FS/SSG</span>');
+    const v=p.vendors||{};
+    Object.keys(v).forEach(name=>{
+      const short = name.replace('Fluidseal ','FS ').replace('Xpress','Xpress');
+      vtags.push(`<span class="vtag has">${esc(short)}</span>`);
+    });
+    return `<div class="pp-row">
+      <span class="code">${esc(p.parent_profile)}</span>
+      <span class="vlist">${vtags.join('')||'<span class="vtag">—</span>'}</span>
+    </div>`;
+  }).join('');
+  if(parents.length>show.length) rows += `<div class="pp-more">+ ${parents.length-show.length} more parent profiles in this family</div>`;
+  return rows;
+}
+
+window.toggleGrp = function(i){
+  const el = document.querySelector(`.grp[data-i="${i}"]`);
+  if(el) el.classList.toggle('open');
+};
+
+/* ---------- OEM PARTS ---------- */
+function renderOEM(){
+  const host = document.getElementById('oemList');
+  if(!KB.oem.length){ host.innerHTML='<p class="intro">No OEM layers loaded yet.</p>'; return; }
+
+  // group manifest entries by OEM brand, then classify each file by its shape
+  const byOem = {};
+  KB.oem.forEach(o=>{(byOem[o.oem]=byOem[o.oem]||[]).push(o);});
+
+  let html='';
+  Object.keys(byOem).forEach(oem=>{
+    const files = byOem[oem];
+    // classify
+    const bridge = files.find(f=>(f.note||'').toLowerCase().includes('bridge') || (f.parts && f.parts<1000 && !(f.note||'').toLowerCase().includes('master')));
+    const partsMaster = files.find(f=>(f.note||'').toLowerCase().includes('master')||(f.parts&&f.parts>=1000));
+    const modelsIdx = files.find(f=>f.models);
+
+    const initials = oem.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+
+    html += `<div class="oem-card">
+      <div class="oem-head">
+        <div class="lo">${esc(initials)}</div>
+        <div class="nm">${esc(oem)}</div>
+        <div class="tag">reference implementation</div>
+      </div>
+      <div class="oem-layers">
+        <div class="layer">
+          <div class="ln">① Fluidseal bridge</div>
+          <div class="lx"><span class="x">${bridge?fmt(bridge.parts):'—'}</span><span class="u">parts</span></div>
+          <div class="ld">OEM part&nbsp;→&nbsp;Fluidseal <code style="font-family:var(--mono);font-size:10px">RJD-</code> equivalent, with dimensions &amp; verified leaf URLs.</div>
+        </div>
+        <div class="layer">
+          <div class="ln">② OEM parts namespace</div>
+          <div class="lx"><span class="x">${partsMaster?fmt(partsMaster.parts):'—'}</span><span class="u">parts</span></div>
+          <div class="ld">The OEM's own full parts list for lookup / autocomplete + Original / Alternative tier.</div>
+        </div>
+        <div class="layer">
+          <div class="ln">③ Equipment / Model index</div>
+          <div class="lx"><span class="x">${modelsIdx?fmt(modelsIdx.models):'—'}</span><span class="u">models</span></div>
+          <div class="ld">Make → Model fitment with on-demand part-list lookup. The reusable schema for all OEMs.</div>
+        </div>
+      </div>
+      ${renderOemCats(partsMaster)}
+      <div class="oem-foot">
+        Source · ${esc((partsMaster||modelsIdx||bridge||{}).source||'live OEM site')}${(partsMaster||modelsIdx||{}).harvested?` · harvested ${esc((partsMaster||modelsIdx).harvested)}`:''}.
+        Part ↔ model matrix is built <b>on demand</b>, not pre-stored.
+      </div>
+    </div>`;
+  });
+
+  // future OEM slots
+  const planned = ['Caterpillar','Hitachi','Komatsu'];
+  html += `<div class="oem-card planned">
+    <div class="oem-head" style="background:var(--steel)">
+      <div class="lo" style="background:var(--muted);color:var(--ink)">＋</div>
+      <div class="nm">Next OEMs</div>
+      <div class="tag" style="background:rgba(255,255,255,.08);color:#cfcabb">same 3-layer template</div>
+    </div>
+    <div class="oem-cats" style="padding:14px 16px">
+      ${planned.map(p=>`<span class="catpill"><span class="cn">${p}</span><span class="cc">planned</span></span>`).join('')}
+    </div>
+    <div class="oem-foot">John Deere is the proven template — each new OEM replicates the bridge / parts-namespace / model-index trio.</div>
+  </div>`;
+
+  host.innerHTML = html;
+}
+function renderOemCats(pm){
+  if(!pm || !pm.note) return '';
+  // pull "O-Rings 10k, Seals ... Gaskets ... Back-Up Rings 5,425" style hints from the note when present
+  const cats = [
+    {n:'O-Rings'}, {n:'Seals & Seal Kits'}, {n:'Gaskets'}, {n:'Back-Up Rings'}
+  ];
+  return `<div class="oem-cats">${cats.map(c=>`<span class="catpill"><span class="cn">${c.n}</span></span>`).join('')}</div>`;
+}
+
+/* ---------- CROSS-REFERENCE ---------- */
+function renderXref(){
+  const parents = KB.parents;
+  const total = parents.length||1;
+
+  // vendor coverage
+  const vc = {};
+  parents.forEach(p=>{
+    if(p.fluidseal_ssg && p.fluidseal_ssg.length) vc['Fluidseal/SSG']=(vc['Fluidseal/SSG']||0)+1;
+    const v=p.vendors||{};
+    Object.keys(v).forEach(name=>{vc[name]=(vc[name]||0)+1;});
+  });
+  const order = Object.entries(vc).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('vbars').innerHTML = order.map(([name,n])=>{
+    const pct = Math.round(n/total*100);
+    const cls = pct>=60?'hi':pct>=25?'mid':'lo';
+    return `<div class="vbar-row">
+      <div class="vbar-top"><span class="vn">${esc(name)}</span><span class="vv">${n} / ${total} · ${pct}%</span></div>
+      <div class="vbar-track"><div class="vbar-fill ${cls}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('') + `<p class="gap-note">The short bars are the open work: parents that still need a Fluidseal/SSG code or a vendor comparable wired in.</p>`;
+
+  // family table
+  const fam={};
+  parents.forEach(p=>{
+    fam[p.family]=fam[p.family]||{total:0,fs:0};
+    fam[p.family].total++;
+    if(p.fluidseal_ssg && p.fluidseal_ssg.length) fam[p.family].fs++;
+  });
+  const tb = document.querySelector('#famTable tbody');
+  tb.innerHTML = Object.entries(fam).sort((a,b)=>b[1].total-a[1].total).map(([f,o])=>
+    `<tr><td class="fam">${esc(f)}</td><td class="num">${o.total}</td><td class="num">${o.fs}</td></tr>`).join('');
+
+  // sources
+  const manifest = KB.manifest;
+  const srcs = []
+    .concat(manifest.vendors_tracked||[])
+    .concat(manifest.oem_brands_via_anyseals||[]);
+  const uniq=[...new Set(srcs)];
+  // anyseals v1.1: the old "Taiwan/China" column is now verified Fluidseal part numbers ("Industry Standard")
+  const relabel = {"Taiwan/China":"Industry Standard"};
+  const fsVerified = new Set(["Industry Standard","Fluidseal/SSG","Fluidseal Xpress"]);
+  document.getElementById('srcList').innerHTML = uniq.map(s=>{
+    const label = relabel[s]||s;
+    const cls = fsVerified.has(label) ? ' style="background:var(--amber);color:var(--black);border-color:var(--amber-deep)"' : '';
+    return `<span class="s"${cls}>${esc(label)}</span>`;
+  }).join('');
+}
+
+/* ---------- tab switching ---------- */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('pane-'+t.dataset.pane).classList.add('active');
+    if(location.hash!=='#'+t.dataset.pane) history.replaceState(null,'','#'+t.dataset.pane);
+  });
+});
+// deep-link support
+window.addEventListener('DOMContentLoaded',()=>{
+  const h=(location.hash||'').replace('#','');
+  if(['catalog','oem','xref'].includes(h)){
+    const t=document.querySelector(`.tab[data-pane="${h}"]`);
+    if(t) t.click();
+  }
+});
+
+load();
+</script>
+</body>
+</html>

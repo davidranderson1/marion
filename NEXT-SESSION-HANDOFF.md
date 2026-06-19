@@ -1,5 +1,66 @@
 # NEXT-SESSION-HANDOFF.md
 
+**Session date:** 2026-06-19
+**Focus:** Knowledge dashboard — split "What Marion Knows" + "Brain" into a dedicated page
+
+---
+
+## What shipped this session
+
+New **`knowledge.html`** (repo root, served alongside `index.html`) — a standalone, live-reading
+whole-brain knowledge dashboard. Reads the same `/knowledge` files as `index.html` (manifest +
+product-groups + profiles + parent-profiles), so counts never go stale. Three tabs:
+
+1. **Catalog** — manufacturer cards (loaded / specs-pending / planned status), then the 8 parent
+   FAMILIES as profile groups, each drilling into parent profiles (with vendor tags) + Fluidseal
+   profile links + sealsonline category links. Tree is family-driven and verified to reconcile to
+   all 221 parents with **no double-count and no orphaned families** (Gaskets/Backups included).
+   Vee Packings + Mechanical Seals shown as standalone profile-only groups (no parent family).
+2. **OEM Parts** — the John Deere three-layer card (82 bridge / 35,425 namespace / 3,669 models)
+   that was previously invisible in the rail panel, plus "Next OEMs" template slots
+   (Caterpillar/Hitachi/Komatsu).
+3. **Cross-Reference** — vendor coverage bars (the worklist: FS Xpress 66%, DMH 66%, FS/SSG 29%,
+   Parker <1%), by-family FS-coverage table, and the cross-ref source list. The old anyseals
+   "Taiwan/China" label is rendered as "Industry Standard" (yellow / FS-verified) per anyseals v1.1.
+
+**`index.html`** — 4 targeted edits: (1) added a "Knowledge" link to the top nav; (2) added
+`.kb-badge` CSS; (3) replaced the big "What Marion Knows" rail panel with a slim live badge
+(profiles count + manufacturer / OEM-parts / category-group chips) that links to `knowledge.html`;
+(4) rewrote `renderKnowledgePanel()` to populate the new chips instead of the old manufacturer list.
+Marion's Brain (connect) and Cross-Reference lookup stay on the home rail. JS validated
+(`node --check`); all three tabs rendered against live data via headless Chrome with no JS errors.
+
+**Design:** `knowledge.html` reuses Marion's exact design tokens (Big Shoulders / Inter / JetBrains
+Mono, amber/ink/paper palette, the panel + sticky-rail idiom) so it reads as the same product.
+
+---
+
+## Open / next
+
+1. **Commit + push** (summary `summary`): `knowledge.html` (new) + `index.html` (modified). Then
+   confirm live at marion.fluidsealab.com/knowledge.html that the badge + tabs read real counts.
+2. The Catalog manufacturer-status heuristic is note-based (`pending`/`scaffold`/`null` → amber).
+   When Freudenberg/Parker `fluidseal_equivalent` mappings land in parent-profiles, those cards
+   flip to green automatically — no code change needed, but worth a glance after the next mapping.
+3. `renderOemCats()` shows the 4 JD categories as static pills; if you want live per-category part
+   counts on the OEM card, they'd need to be added to the manifest oem_parts entries.
+4. Deep-links work: `knowledge.html#oem` / `#xref` / `#catalog` open the right tab.
+
+---
+
+## Carry-over from prior sessions (still open)
+
+- john-deere.json v1.1 dimensional correction write (Filesystem timeout last attempt).
+- Fluidseal World: David to create `fluidseal-world\` folder, then standard go-live.
+- Overflow harvest of the 3 capped JD categories (O-Rings/Seals/Gaskets truncated at 10k).
+- Serial-layer decision (login-gated behind partscatalog.deere.com).
+
+---
+
+---
+
+# (prior session) NEXT-SESSION-HANDOFF.md
+
 **Session date:** 2026-06-18
 **Focus:** John Deere Equipment/Make/Model layer — live harvest from shop.deere.com
 
