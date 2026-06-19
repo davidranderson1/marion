@@ -1,6 +1,6 @@
 {
   "_note": "Marion's knowledge manifest. Marion reads this FIRST, then loads every file listed under 'manufacturers' and merges their products into one catalog. To add a manufacturer: drop its file in /knowledge/manufacturers/ and add a line here. To temporarily disable one: set active=false. Bump 'knowledge_version' whenever you publish a change.",
-  "knowledge_version": "2.9",
+  "knowledge_version": "3.0",
   "updated": "2026-06-18",
   "shared": {
     "company": "company.json",
@@ -20,9 +20,27 @@
       "parts": 82,
       "source": "live website (sealsonline.com flabed John Deere parts)",
       "note": "OEM part-number -> Fluidseal part-number layer (part->part, not profile->profile). 82 real Fluidseal stock parts across 12 part types with verified leaf URLs. Convention: RJD- + the John Deere reference number (exception: filler-ring RJD-TD<diameter> internal series). Carries a DATA_INTEGRITY_FLAG about the Serge estimate's RJD-TD187116 vs. the live RJD-T<number> convention — needs David's confirmation."
+    },
+    {
+      "oem": "John Deere",
+      "file": "oem-parts/john-deere-parts.json",
+      "active": true,
+      "parts": 35425,
+      "source": "live website (shop.deere.com CA, Constructor.io browse API)",
+      "harvested": "2026-06-18",
+      "note": "JD-SIDE PARTS MASTER (the John Deere parts namespace, NOT a Fluidseal equivalent map). 35,425 unique JD seal-family part numbers across 4 categories: O-Rings 10k, Seals & Seal Kits 10k, Gaskets 10k (all 3 TRUNCATED at the API's 10k pagination cap — true totals higher), Back-Up Rings 5,425 (COMPLETE). Each part has name, category, and Original|Alternative tier ('A-'+number = JD's own alternative for an original). Purpose: let Marion look up / autocomplete ANY JD seal part number and report name+category+tier; then resolve to the Fluidseal RJD- equivalent via oem-parts/john-deere.json where a bridge exists. NOT merged into the seal-profile catalog. See its DATA_INTEGRITY_NOTE for cap/overflow re-harvest method and why fitment is not inline."
+    },
+    {
+      "oem": "John Deere",
+      "file": "oem-parts/john-deere-models.json",
+      "active": true,
+      "models": 3669,
+      "source": "live website (shop.deere.com CA fitment facet, Constructor.io browse API)",
+      "harvested": "2026-06-18",
+      "note": "EQUIPMENT/MAKE/MODEL fitment index. 3,669 John Deere models, each with per-category seal-part counts (oring/seal/gasket/backup) and total. Purpose: a customer names their machine MODEL (e.g. 8400, 670G, S690, LX188), Marion confirms it's a known JD model and how many parts exist per category, then builds the ACTUAL part list ON DEMAND via the live fitment query (full recipe + JD category IDs stored in the file's on_demand_fitment_recipe). Make is always 'John Deere'. Part<->model matrix is deliberately NOT pre-stored (would be millions of rows). Serial-level fitment is login-gated behind partscatalog.deere.com (see serial_note). Facet caps at 2,000 models/category; union across 4 categories = 3,669. This is the reusable Equipment/Make/Model/Serial schema template for all future OEMs (Caterpillar, Hitachi, Komatsu, etc.)."
     }
   ],
-  "oem_parts_note": "oem-parts/ holds OEM brands (John Deere, and future Caterpillar/Hitachi/etc.) whose relationship to Fluidseal is part-number -> part-number plus that part's own dimensional detail, NOT a seal-profile bridge. These are NOT merged into the seal-profile catalog; Marion and quote.html consult them to resolve a customer's OEM part reference to a confirmed Fluidseal part number + leaf URL.",
+  "oem_parts_note": "oem-parts/ holds OEM brands (John Deere, and future Caterpillar/Hitachi/etc.) whose relationship to Fluidseal is part-number -> part-number plus that part's own dimensional detail, NOT a seal-profile bridge. These are NOT merged into the seal-profile catalog; Marion and quote.html consult them to resolve a customer's OEM part reference to a confirmed Fluidseal part number + leaf URL. THREE-LAYER OEM PATTERN (template for all OEMs): (1) <oem>.json = OEM part -> Fluidseal RJD-/part bridge with dimensions; (2) <oem>-parts.json = the OEM's own full parts namespace (lookup/autocomplete + tier); (3) <oem>-models.json = Equipment/Make/Model fitment index with on-demand part-list recipe. John Deere is the reference implementation of all three.",
   "crossref_note": "parent-profiles.json is the canonical join layer: every vendor/manufacturer profile (Fluidseal/SSG, Fluidseal Xpress, DMH, Parker, Hallite, Freudenberg, Maxspare) maps to a parent_profile, which resolves to the Fluidseal/SSG equivalent. crossref.json is the older category-bridge for Hallite/Clipper and is superseded by parent-profiles for any part with an explicit parent.",
   "markets_note": "markets/ holds application & market-context knowledge (NOT profile/part-number data). markets.json maps 21 industries to their operating drivers, seal types, and a routing hint to Fluidseal product-group families; materials-context.json holds material operating envelopes referenced by market entries. Sourced from Freudenberg market/application brochures (raw PDFs archived in markets/freudenberg-brochures/ with _manifest.json). Use for 'where do seals go / why' reasoning; not a verified equivalent mapping.",
   "vendors_tracked": ["Fluidseal/SSG", "Fluidseal Xpress", "DMH", "Parker", "Hallite", "Freudenberg", "Maxspare"],
