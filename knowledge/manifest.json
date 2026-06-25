@@ -1,7 +1,7 @@
 {
   "_note": "Marion's knowledge manifest. Marion reads this FIRST, then loads every file listed under 'manufacturers' and merges their products into one catalog. To add a manufacturer: drop its file in /knowledge/manufacturers/ and add a line here. To temporarily disable one: set active=false. Bump 'knowledge_version' whenever you publish a change.",
-  "knowledge_version": "3.0",
-  "updated": "2026-06-18",
+  "knowledge_version": "3.1",
+  "updated": "2026-06-25",
   "shared": {
     "company": "company.json",
     "product_groups": "product-groups.json",
@@ -10,8 +10,10 @@
     "parent_profiles": "parent-profiles.json",
     "anyseals_crossref": "anyseals.json",
     "markets": "markets/markets.json",
-    "materials_context": "markets/materials-context.json"
+    "materials_context": "markets/materials-context.json",
+    "training": "training.json"
   },
+  "training_note": "training.json is Marion's STAFF-TRAINING knowledge layer (added v3.1). It is teaching/how-to knowledge — caliper measurement procedure, measurement order, material & chemical-compatibility Q&A, the catalog A–G reference system, and the full 6-level staff certification curriculum (85 questions with explanations). It is NOT a product catalog and is NOT merged into the manufacturer profile set. Marion uses it to answer 'how do I measure / identify / select' questions, to tutor staff on certification topics, and to hand off to the interactive training pages under /training/ (see training.json -> destinations). Source: FluidSeal AB Staff Training Hub. To grow it, edit training.json and bump this manifest's knowledge_version.",
   "oem_parts": [
     {
       "oem": "John Deere",

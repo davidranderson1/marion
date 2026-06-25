@@ -1,0 +1,227 @@
+{
+  "_note": "Marion's STAFF-TRAINING knowledge layer. Distinct from the product catalog (manufacturers/*) — this is the teaching/measurement/material-science knowledge that powers staff certification and lets Marion explain HOW to measure, identify, and select seals. Sourced from the FluidSeal AB Staff Training Hub (caliper module, product-profiles module, and the 6-level certification program). Marion can answer 'how do I…' questions from here and can point staff/customers to the interactive training pages listed in destinations.",
+  "version": "1.0",
+  "updated": "2026-06-25",
+  "source": "FluidSeal AB Staff Training Hub (Modules 1–3 + 6-level certification)",
+  "destinations": {
+    "_note": "Live training pages published from this repo under /training/. Marion links here to hand off to the full interactive module.",
+    "training_hub": "https://marion.fluidsealab.com/training/",
+    "product_profiles_guide": "https://marion.fluidsealab.com/training/product-profiles-training.html",
+    "caliper_measurement": "https://marion.fluidsealab.com/training/fluidseal_training.html",
+    "certification_program": "https://marion.fluidsealab.com/training/training-certificate.html"
+  },
+  "caliper_measurement": {
+    "instrument": "Mitutoyo 505-series 8-inch dial caliper",
+    "anatomy": [
+      "External (outside) jaws — measure outer diameters, e.g. piston seal OD.",
+      "Internal (inside) jaws — measure bores and inner diameters, e.g. rod seal ID.",
+      "Depth rod — measures groove/gland depth.",
+      "Scale beam — the main inch/metric graduated bar.",
+      "Dial + bezel — fine reading; rotate bezel nut to zero.",
+      "Thumb wheel — fine slide control; lock screw / clamp screw to hold a reading."
+    ],
+    "reading_procedure": [
+      "Close jaws fully and confirm the dial reads zero; rotate the bezel to zero if not.",
+      "Read the whole inches/large increments off the scale beam at the slider edge.",
+      "Read the fractional value off the dial (each revolution = 0.1\" on a typical inch caliper).",
+      "Add beam + dial for the total. Lock the clamp screw before removing the part if needed."
+    ],
+    "measurement_order": {
+      "rod_seals": "Measure cross-section (c.s.) first, then i.d., o.d., and hgt. The c.s./i.d./o.d./hgt. order is universal for rod seals.",
+      "piston_seals": "OD (outer diameter) is listed first for piston seals, because it contacts the cylinder bore.",
+      "best_practice": "Measure the GROOVE (gland), not the old seal — used seals are deformed/worn and give false dimensions."
+    }
+  },
+  "measurement_rules_qa": [
+    {
+      "q": "In what order do I measure a rod seal?",
+      "a": "Cross section (c.s.) first, then i.d., o.d., and hgt. — the universal rod-seal order."
+    },
+    {
+      "q": "For a piston seal, which dimension is listed first?",
+      "a": "OD (outer diameter), because it contacts the cylinder bore."
+    },
+    {
+      "q": "Should I measure the old seal or the groove?",
+      "a": "Measure the groove/gland. A used seal is worn and deformed and will give the wrong size."
+    }
+  ],
+  "materials_qa": [
+    {
+      "q": "What's the difference between BR.PTFE and GF.PTFE?",
+      "a": "BR.PTFE (bronze-filled) gives better thermal conductivity and wear resistance for lubricated metallic bores. GF.PTFE (glass-filled) gives better chemical resistance for dry or chemical environments."
+    },
+    {
+      "q": "Why can't standard polyurethane seals run in hot water?",
+      "a": "Water hydrolyzes the urethane linkages — especially polyester-based AU grade. Use EPDM for water/steam service."
+    },
+    {
+      "q": "What seal works with phosphate ester hydraulic fluid (Skydrol)?",
+      "a": "IIR (Butyl) or EPDM. Standard NBR and polyurethane swell and fail — never use them with phosphate esters."
+    },
+    {
+      "q": "How do I identify the 8700 back-up ring?",
+      "a": "It is bright ORANGE — that's its unique identifier. It's a Polymyte (V.PTFE) back-up ring."
+    },
+    {
+      "q": "What is a buffer ring and when is it needed?",
+      "a": "A buffer ring (e.g. HBY series) absorbs hydraulic pressure spikes before they reach the primary rod seal. Used in high-pressure cylinders where valve switching or load changes create spikes."
+    },
+    {
+      "q": "What are wear rings (guiding elements) for?",
+      "a": "They absorb radial/side loads, preventing metal-to-metal contact between rod/piston and bore. Without them, off-center loads cause scoring, seal damage, and premature failure."
+    }
+  ],
+  "catalog_reference_system": {
+    "_note": "FluidSeal AB Fluid Power Catalog Vol. 6 — section letters before a page number indicate the product family.",
+    "main_catalog": "Fluid Power Catalog Volume 6",
+    "section_letters": {
+      "A": "Rod Wipers",
+      "B": "Rod Seals",
+      "C": "Symmetrical Seals",
+      "D": "Piston Seals",
+      "E": "Vee Packings",
+      "F": "Guiding Elements",
+      "G": "O-Rings & Accessories"
+    },
+    "example": "'A 2' = AN wiper on page 2 of the Rod Wipers section."
+  },
+  "certification_curriculum": {
+    "_note": "The 6-level staff certification. Full interactive quiz with scoring + PDF certificate is at destinations.certification_program. Each level's questions and teaching feedback are included so Marion can tutor staff and answer the underlying concepts.",
+    "levels": [
+      {
+        "level": 1,
+        "name": "Catalog Navigation",
+        "focus": "How to navigate the FluidSeal AB Fluid Power Catalog Vol. 6 and its A–G section-letter page reference system.",
+        "question_count": 10,
+        "questions": [
+          { "q": "The FluidSeal AB main seal catalog is Fluid Power Catalog Volume ___", "answer": "6", "explanation": "The Fluid Power Catalog Vol. 6 covers rod wipers, rod seals, symmetrical seals, piston seals, vee packings, guiding elements, and O-rings." },
+          { "q": "In the catalog page reference system, what does the letter 'A' before the page number indicate?", "answer": "Rod Wipers", "explanation": "'A' = Rod Wipers section. Example: 'A 2' = AN wiper on page 2. B = Rod Seals, C = Symmetrical, D = Piston Seals, E = Vee Packings." },
+          { "q": "What does the catalog section letter 'B' represent?", "answer": "Rod Seals", "explanation": "'B' = Rod Seals. Page references like 'B 5' point to rod seal series pages. This is the second section of the Fluid Power Catalog." },
+          { "q": "The AN rod wiper is found on catalog page:", "answer": "A 2", "explanation": "The AN wiper is on catalog page A 2 — section A (Rod Wipers), page 2." },
+          { "q": "Which FluidSeal AB catalog specifically covers seal kits?", "answer": "Kits Catalog Vol. 2", "explanation": "The Kits Catalog Vol. 2 covers pre-packaged seal kits." },
+          { "q": "When measuring a U-cup rod seal, what is the CORRECT dimension order for catalog lookup?", "answer": "c.s. / i.d. / o.d. / hgt.", "explanation": "For rod seals: c.s. (cross section) first, then i.d., o.d., hgt. This is the universal measurement order for U-cup rod seals." },
+          { "q": "For piston seals, catalog dimension listings always start with:", "answer": "o.d.", "explanation": "Piston seals: OD first, then ID, then height. The outer diameter contacts the cylinder bore, so it is the primary identifying dimension." },
+          { "q": "Catalog section letter 'D' represents which product family?", "answer": "Piston Seals", "explanation": "D = Piston Seals. Catalog sections: A=Wipers, B=Rod Seals, C=Symmetrical, D=Piston, E=Vee Packing, F=Guiding, G=O-Rings." },
+          { "q": "The abbreviation 'duro.' in the catalog refers to:", "answer": "Durometer (Shore hardness)", "explanation": "duro. = Durometer — the Shore A hardness of the elastomer. Harder seals (e.g. 90A) resist extrusion better; softer seals (e.g. 70A) seal better at low pressure." },
+          { "q": "A catalog page reference of 'E 3' belongs to which product category?", "answer": "Vee Packings", "explanation": "E = Vee Packings section. E 3 = page 3 of the Vee Packings section." }
+        ]
+      },
+      {
+        "level": 2,
+        "name": "Website Navigation",
+        "focus": "Finding products on sealsonline.com/en/flabed — categories, inch vs metric, profile search.",
+        "question_count": 10,
+        "questions": [
+          { "q": "What is the correct web address for the FluidSeal AB store?", "answer": "sealsonline.com/en/flabed", "explanation": "The FluidSeal AB store URL is sealsonline.com/en/flabed — 'en' for English, 'flabed' for the FluidSeal AB Edmonton branch." },
+          { "q": "On sealsonline.com, how are products primarily organized at the top navigation level?", "answer": "By Inch and Metric standards, then by category", "explanation": "Products split into Inch and Metric standards first, then by category. This mirrors the catalog structure." },
+          { "q": "To find the metric RA rod seal on sealsonline.com, which URL path applies?", "answer": "/metric/rod-seals/ra", "explanation": "RA is a metric rod seal: /metric/rod-seals/ra. Always confirm inch vs metric — wrong standard gives wrong sizes." },
+          { "q": "The AN inch rod wiper URL on sealsonline.com follows the pattern:", "answer": "/categories/inch/rod-wipers/an", "explanation": "Full URL: sealsonline.com/en/flabed/categories/inch/rod-wipers/an. Structure: /categories/[standard]/[category]/[series]." },
+          { "q": "On the Product Profiles Training Guide, the Quick Reference Table can be filtered by:", "answer": "Standard (Inch/Metric) and Category", "explanation": "The QR table has two dropdowns: Standard (Inch/Metric) and Category. Combine with text search to narrow any series." },
+          { "q": "When a product page shows '24 Series' on sealsonline.com, this means:", "answer": "There are 24 size variants available in that series", "explanation": "'X Series' badge = number of individual size variants stocked. '24 Series' = 24 different sizes available." },
+          { "q": "The 'Shop ↗' link on a product card in the training guide takes you to:", "answer": "The FluidSeal AB store page for that specific series", "explanation": "Every product card has a 'Shop ↗' link mapped to the exact series URL on sealsonline.com." },
+          { "q": "To quickly navigate between product categories without scrolling, you use:", "answer": "The sticky category navigation bar", "explanation": "The sticky category nav bar uses scrollspy to highlight the active section and allows one-click jumps between all 8 categories." },
+          { "q": "On the Quick Reference Table, clicking the product image thumbnail links to:", "answer": "The product page on sealsonline.com", "explanation": "Every product image thumbnail in the QR Table is a direct link to that series on sealsonline.com/en/flabed." },
+          { "q": "If SERIES_LINKS has no entry for a series, the training guide defaults to:", "answer": "Linking to the category page on sealsonline.com, then the main store", "explanation": "Fallback chain: SERIES_LINKS[series] → CAT_LINKS[category] → sealsonline.com/en/flabed. Every series always has a valid store link." }
+        ]
+      },
+      {
+        "level": 3,
+        "name": "Profiles and Shapes",
+        "focus": "Identifying seal profiles by cross-section shape and matching them to applications.",
+        "question_count": 15,
+        "questions": [
+          { "q": "A U-cup seal gets its name because:", "answer": "Its cross-sectional profile resembles the letter U", "explanation": "The U-cup cross section looks like the letter U. The two lips contact the housing and rod, creating the seal." },
+          { "q": "A 'symmetrical' seal can be installed on BOTH rod and piston because:", "answer": "Lip geometry is identical on both sides — sealing direction doesn't matter", "explanation": "Symmetrical seals have mirror-image lips — both sides identical, so the seal works on a rod bore or against a cylinder bore." },
+          { "q": "How does a rod wiper differ from a rod seal?", "answer": "Wipers remove contaminants from the rod on outstroke; rod seals prevent fluid from escaping", "explanation": "The wiper sits outboard of the rod seal and scrapes dirt/moisture off the rod as it retracts, before it can contaminate the rod seal." },
+          { "q": "The cross-sectional shape of a standard O-ring is:", "answer": "Circular (round)", "explanation": "O-rings have a circular (toroidal) cross section. Compression in the groove creates the seal. Quad-Rings have a 4-lobed cross section." },
+          { "q": "A vee packing assembly consists of:", "answer": "Male adaptor + female adaptor + one or more V-rings stacked between them", "explanation": "Vee packings: male adaptor at bottom, V-rings in middle (add more for higher pressure), female adaptor at top. Gland nut compresses for adjustment." },
+          { "q": "Piston seals seal against the:", "answer": "Outside diameter against the cylinder bore", "explanation": "Piston seals ride the piston OD and seal against the cylinder bore ID. Rod seals sit in the gland and seal against the rod OD." },
+          { "q": "The HBY buffer ring profile is:", "answer": "A U-cup with an integrated anti-extrusion heel ring", "explanation": "HBY is a U-cup buffer ring with an AER built into the heel. Absorbs pressure spikes before they reach the primary rod seal." },
+          { "q": "Multi-piece piston seals use PTFE as the outer ring because:", "answer": "PTFE gives low friction and broad chemical resistance; rubber energizer provides radial load since PTFE lacks elasticity", "explanation": "PTFE has excellent low friction and chemical resistance but no elastic recovery. The rubber energizer pushes the PTFE cap against the bore for sealing load." },
+          { "q": "The Polypak® seal profile is best described as:", "answer": "A U-cup with a loaded shallow-lip profile for both rod and piston applications", "explanation": "Polypak® is a single-piece U-cup with a loaded-lip profile. Standard, Deep, Type B, and Spring-Loaded variants exist." },
+          { "q": "Back-up rings are used alongside O-rings to:", "answer": "Prevent the O-ring from extruding into the clearance gap under high pressure", "explanation": "Under high pressure, O-rings flow into clearance gaps and extrude — eventually cutting and failing. Back-up rings close the gap." },
+          { "q": "The PRIMARY purpose of a guiding element / wear ring is:", "answer": "Absorb radial/side loads and prevent metal-to-metal contact between rod/piston and bore", "explanation": "Wear rings absorb side loads from machine weight and external forces. Without them, rod/piston contacts bore — causing scoring, seal damage, premature failure." },
+          { "q": "A step-cut outer ring on a piston seal has this geometry to:", "answer": "Allow the ring to be compressed for installation into the bore", "explanation": "Step-cut rings can be compressed smaller than nominal OD for fitting into the cylinder bore, then spring back to seal." },
+          { "q": "A Quad-Ring's advantage over an O-ring in dynamic applications is:", "answer": "4 sealing contact points and resistance to spiral twist failure in reciprocating applications", "explanation": "O-rings in dynamic applications can spiral-twist and fail. The Quad-Ring's 4-lobe cross section resists this twist while providing 4 sealing contact points." },
+          { "q": "The DU bearing construction from outside to inside is:", "answer": "Steel backing + porous bronze layer + PTFE/lead sliding surface", "explanation": "DU bearings: steel backing → sintered porous bronze layer → PTFE + lead overlay. Never scratch the inside PTFE with caliper points." },
+          { "q": "Why is a buffer ring installed outboard of the primary rod seal?", "answer": "Absorbs hydraulic pressure spikes before they reach the rod seal, extending primary seal life", "explanation": "High-pressure spikes fatigue and blow out rod seals. The buffer ring absorbs the spike and allows pressure to equalize gradually before it reaches the primary seal." }
+        ]
+      },
+      {
+        "level": 4,
+        "name": "Materials",
+        "focus": "Seal materials (PU/AU, NBR, FKM, EPDM, PTFE and fills) and their properties.",
+        "question_count": 15,
+        "questions": [
+          { "q": "The most common seal material at FluidSeal AB is:", "answer": "Polyurethane", "explanation": "Polyurethane is the primary seal material — outstanding abrasion resistance, tensile strength, and good compatibility with mineral hydraulic oil." },
+          { "q": "What makes Polyurethane preferred for hydraulic rod seals over NBR?", "answer": "Excellent abrasion resistance (3–5× better than NBR), high tensile strength, and superior extrusion resistance", "explanation": "PU has dramatically better abrasion resistance than NBR — critical for rod seals exposed to contaminated rods. Higher tensile = better extrusion resistance." },
+          { "q": "The ASTM designation for polyester-based polyurethane is:", "answer": "AU", "explanation": "AU = Polyester-based Polyurethane. EU = Polyether-based. AU is common; EU has better hydrolysis resistance for wet environments." },
+          { "q": "Shore A durometer hardness measures:", "answer": "Hardness of rubber/elastomeric materials", "explanation": "Shore A = standard hardness scale for soft elastomers. 40A = very soft, 90A+ = very hard. Most hydraulic seals are 70A–95A." },
+          { "q": "Compared to 70A, a 90A seal of the same material is:", "answer": "Harder, more extrusion resistant, better for high pressure", "explanation": "Higher durometer = harder, stiffer, better extrusion resistance. 90A = high-pressure applications or larger clearance gaps." },
+          { "q": "Which elastomer must NEVER be used with petroleum hydraulic oil?", "answer": "EPDM (Ethylene Propylene)", "explanation": "EPDM swells dramatically in petroleum oils — absorbs oil, loses mechanical properties, fails quickly. EPDM is for water/steam/chemical applications ONLY." },
+          { "q": "FKM (Viton®) is preferred over NBR when:", "answer": "High temperatures, aggressive chemicals, or aromatic fuels", "explanation": "FKM excels where standard materials fail: temperatures up to 400°F, aggressive chemicals, aromatic hydrocarbons. High fluorine content = extremely chemically stable." },
+          { "q": "PTFE is used as the outer ring in multi-piece piston seals because:", "answer": "Very low friction + broad chemical resistance, with rubber energizer compensating for lack of elastic recovery", "explanation": "PTFE: near-zero friction, resists virtually all chemicals, but not elastic. Rubber O-ring inside provides the spring force to keep PTFE cap against bore." },
+          { "q": "The Parker compound prefix letter for NBR (Nitrile) is:", "answer": "N", "explanation": "Parker prefixes: N=NBR, V=FKM, E=EPDM, K=HNBR, S=Silicone, L=Fluorosilicone, F=FFKM, B=IIR. Part number starting with N = Nitrile." },
+          { "q": "Which elastomer has the widest temperature range?", "answer": "VMQ Silicone (−175 to +450°F)", "explanation": "Silicone (VMQ): −175°F to +450°F widest range. FFKM reaches +608°F but has narrower lower limit. Silicone for extreme-cold-to-moderate-heat cycling." },
+          { "q": "IIR (Butyl Rubber) is specified for its unique advantage of:", "answer": "Lowest gas permeability — best for vacuum and gas containment", "explanation": "Butyl has the lowest gas permeability of any common elastomer — critical for vacuum seals and phosphate ester hydraulic systems. NOT petroleum oil compatible." },
+          { "q": "Bronze-filled PTFE (BR.PTFE) is preferred over Glass-filled PTFE (GF.PTFE) when:", "answer": "High thermal conductivity and wear resistance for lubricated metallic bore conditions", "explanation": "BR.PTFE = better thermal conductivity and wear resistance in lubricated conditions. GF.PTFE = better chemical resistance in dry or chemical environments." },
+          { "q": "'AU 90A' on a seal specification means:", "answer": "Polyester-based Polyurethane, Shore 90A hardness", "explanation": "AU = Polyester-based Polyurethane (ASTM AU). 90A = Shore A hardness 90. Standard hydraulic rod seal grade." },
+          { "q": "Nylon (Polyamide / PA) is used in seal assemblies primarily as:", "answer": "Anti-extrusion rings and wear rings due to stiffness and dimensional stability", "explanation": "Nylon's stiffness and dimensional stability make it ideal for anti-extrusion rings and wear rings — non-deforming bearing and gap-closing surfaces." },
+          { "q": "AEM (Vamac® / Ethylene Acrylate) compared to ACM (Polyacrylate) offers:", "answer": "Better low-temperature flexibility to −40°F while retaining heat-in-oil resistance", "explanation": "ACM: great oil at high temp, poor cold. AEM adds cold flexibility to −40°F while keeping similar oil resistance. Key advantage for cold-climate equipment." }
+        ]
+      },
+      {
+        "level": 5,
+        "name": "Applications and Markets",
+        "focus": "Matching seals to industries, equipment, and operating conditions.",
+        "question_count": 15,
+        "questions": [
+          { "q": "A hydraulic cylinder in a mobile excavator would typically use:", "answer": "Polyurethane U-cup rod seal + rod wiper for dirt/contaminant protection", "explanation": "Mobile equipment cylinders use PU rod seals for abrasion resistance and a rod wiper to scrape dirt/mud/ice off the rod before it reaches the rod seal." },
+          { "q": "In a double-acting hydraulic cylinder, where is sealing required?", "answer": "Both sides of the piston AND on the rod", "explanation": "Double-acting = powered both ways. Requires: piston seal (both sides), rod seal, rod wiper, and wear rings for lateral load support." },
+          { "q": "For a hydraulic cylinder in food processing, the critical material requirement is:", "answer": "FDA-approved materials (VMQ silicone, FKM) for incidental food contact", "explanation": "Food-grade = FDA-compliant materials (21 CFR). FDA-grade silicone, FKM, and specific NBR compounds. Standard seals may contain non-approved carbon black or plasticizers." },
+          { "q": "FFKM (Perfluoroelastomer) seals are specified for:", "answer": "Semiconductor plasma etching with aggressive process chemicals", "explanation": "FFKM = most chemically resistant elastomer. Used where all others fail: semiconductor fabs, aggressive pharma CIP/SIP, high-temp chemical reactors. Cost 10–50× standard FKM." },
+          { "q": "Vee packing seals are best suited for:", "answer": "Slow-speed reciprocating high-pressure applications where gland adjustment is possible", "explanation": "Vee packings excel in slow, high-pressure reciprocating service (presses, jacks). Adjustable gland compensates for wear. Not suited for fast-cycling unattended applications." },
+          { "q": "A buffer ring (HBY) is installed to:", "answer": "Absorb pressure spikes before they reach the rod seal, extending primary seal life", "explanation": "High-pressure spikes from fast valve switching or sudden load changes fatigue rod seals. Buffer ring absorbs the spike, allows pressure to equalize gradually." },
+          { "q": "For a cylinder in Arctic conditions below −40°F, specify:", "answer": "Low-temperature FKM compound or Fluorosilicone (FVMQ) rated to −100°F", "explanation": "Standard PU and NBR become brittle below −40°F. FVMQ goes to −100°F. Low-temp FKM compounds also handle Arctic conditions while maintaining chemical resistance." },
+          { "q": "Wear rings in a hydraulic cylinder primarily manage:", "answer": "Radial/lateral loads on rod and piston, preventing metal-to-metal contact", "explanation": "Without wear rings, off-center loads from machine weight or tooling cause rod/piston to contact bore — scoring, seal damage, rapid failure." },
+          { "q": "Pneumatic cylinders differ from hydraulic in that they require:", "answer": "Low-friction seals for compressed air (lower pressure, cleaner environment), less emphasis on extrusion resistance", "explanation": "Pneumatic: compressed air, typically 8–12 bar, clean environment, low friction priority. Hydraulic: oil, 150–350 bar, contaminated environment, extrusion resistance priority." },
+          { "q": "The largest volume user of hydraulic cylinder seals in North America is:", "answer": "Mobile equipment (construction, agriculture, forestry, mining)", "explanation": "Mobile equipment is by far the largest seal market: excavators, loaders, agricultural equipment, forestry machines, and mining all use extensive hydraulic cylinder systems." },
+          { "q": "For a forestry mulcher in extreme abrasion, the ideal seal specification prioritizes:", "answer": "High durometer polyurethane with multi-lip wiper for bark, rocks, debris", "explanation": "Forestry: extreme abrasion from bark/rocks/wire. Hard PU (90A+) for extrusion resistance; multi-lip wiper (H-series or BW/S metal wiper) to remove aggressive contaminants." },
+          { "q": "A hydraulic press at 420 bar (6000 PSI) needs:", "answer": "Multi-piece seal with PTFE cap + AER anti-extrusion rings + elastomeric energizer", "explanation": "At very high pressure, single-piece seals extrude. Multi-piece seals (P4A, CTS, CAT-TYPE-4) combine PTFE sealing with AERs to handle extreme pressures reliably." },
+          { "q": "Rotary shaft sealing requires different seal types than reciprocating seals because:", "answer": "Rotary requires lip seals for continuous 360° contact at speed, not U-cups designed for linear stroke", "explanation": "U-cup seals cannot handle continuous rotation — the lip would wear quickly and generate heat. Rotary shaft seals have spring-loaded continuous lip geometry optimized for speed." },
+          { "q": "A cylinder sitting overnight at −30°F fails on first stroke. Most likely cause:", "answer": "Rubber seals below glass transition temperature become brittle and crack on dynamic shock loading", "explanation": "Elastomers below glass transition temperature (Tg) become rigid and brittle. First-stroke dynamic loads crack a brittle seal — causing immediate leakage. Low-temp compounds prevent this." },
+          { "q": "A cylinder on equipment spraying organophosphate herbicides requires:", "answer": "FKM or EPDM evaluated based on specific chemical compatibility — standard PU and NBR may swell", "explanation": "Organophosphate herbicides attack standard PU and NBR. FKM has broad chemical resistance; EPDM resists many polar chemicals. Always check Parker Chemical Resistance Guide." }
+        ]
+      },
+      {
+        "level": 6,
+        "name": "Material Science and Chemical Compatibility",
+        "focus": "Polymer science — compression set, Tg, chemical attack, fluid compatibility.",
+        "question_count": 20,
+        "questions": [
+          { "q": "What is 'compression set' and why does it matter?", "answer": "Permanent deformation after sustained compression — high compression set means the seal loses return force and eventually leaks", "explanation": "Compression set = % of original deflection that becomes permanent. 100% compression set = flat seal, no longer springs back against mating surface. Low compression set = longer seal life." },
+          { "q": "The 'glass transition temperature' (Tg) is significant because:", "answer": "Below Tg, the elastomer becomes rigid and brittle, losing all sealing function", "explanation": "Below Tg, molecular chain mobility stops — material becomes hard and brittle like glass. Seals operating below Tg crack on dynamic loading. Low-Tg compounds specified for cold climates." },
+          { "q": "Why does NBR fail with ketone solvents (acetone, MEK)?", "answer": "Ketones are polar solvents that swell and plasticize NBR, causing rapid loss of mechanical properties", "explanation": "Ketones are polar solvents strongly attracted to nitrile groups in NBR. They penetrate the polymer matrix, causing severe swelling, softening, and dissolution of the seal." },
+          { "q": "EPDM fails rapidly in petroleum hydraulic oil because:", "answer": "Petroleum hydrocarbons cause severe swelling — seal absorbs oil, expands, loses all mechanical integrity", "explanation": "EPDM and petroleum hydrocarbons are incompatible. Non-polar hydrocarbons swell non-polar EPDM. Volume swell can reach 100%+ — the seal becomes shapeless." },
+          { "q": "Increasing acrylonitrile (ACN) content in NBR has what effect?", "answer": "Better oil resistance but worse cold-temperature flexibility (higher Tg)", "explanation": "ACN content spectrum: low ACN (18-22%) = flexible at cold, moderate oil resistance. High ACN (40-50%) = excellent oil/fuel resistance, poor cold flex. Standard grade ~33-36% ACN." },
+          { "q": "FKM's exceptional chemical resistance comes from:", "answer": "High fluorine content and extremely stable C-F bonds (among the strongest bonds in organic chemistry)", "explanation": "C-F bond dissociation energy ~544 kJ/mol vs C-H ~413 kJ/mol. Fluorine's high electronegativity creates a protective shield around the carbon backbone." },
+          { "q": "Volume swell in a seal material — is it always negative?", "answer": "No — slight swell (3-8%) can tighten seal-to-groove fit and improve sealing; excess swell causes extrusion, leakage, and groove lock-up", "explanation": "Slight volume swell is often engineered in — a seal in service swells slightly in oil, increasing interference fit. Problems above ~15-20% swell where seal extrudes or sticks in groove." },
+          { "q": "H₂S (hydrogen sulfide / sour gas) environments require HNBR because:", "answer": "Hydrogenation removes C=C double bonds that H₂S attacks — HNBR resists sour gas where standard NBR fails", "explanation": "H₂S attacks residual double bonds (C=C) in NBR through sulfide attack. Hydrogenating NBR (HNBR) saturates these bonds — drastically improving resistance to H₂S, ozone, and heat." },
+          { "q": "Phosphate ester hydraulic fluids (Skydrol, Fyrquel) require which elastomers?", "answer": "IIR (Butyl) and EPDM", "explanation": "Phosphate esters destroy NBR and polyurethane quickly. IIR (Butyl) and EPDM both resist phosphate esters. Critical for aerospace and fire-resistant hydraulic systems." },
+          { "q": "Ozone cracking occurs because ozone attacks:", "answer": "C=C double bonds in unsaturated elastomers — NBR, NR, SBR most susceptible; FKM, EPDM, VMQ resistant", "explanation": "O₃ is highly reactive with C=C double bonds — cleaves them causing surface cracking perpendicular to stress. EPDM has very few C=C bonds. FKM has none." },
+          { "q": "Biodiesel (B100/high-blend) causes what concern for seals?", "answer": "Severe swelling/degradation of standard NBR and polyurethane; high-ACN NBR or FKM recommended", "explanation": "Biodiesel contains ester compounds and free fatty acids that attack standard NBR and PU. FKM is safest; high-ACN NBR has improved but not complete resistance." },
+          { "q": "A seal fails with cracked, hard surface after 6 months. This indicates:", "answer": "Thermal oxidative degradation — material exceeded continuous temperature rating causing chain scission and hardening", "explanation": "Over-temperature causes oxidative degradation: polymer chains break (scission), material loses plasticizers, becomes hard and brittle, finally cracks. Surface hardening + cracking = thermal signature." },
+          { "q": "Higher crosslink density in vulcanized rubber means:", "answer": "Harder material with better compression set resistance but reduced elongation", "explanation": "More crosslinks = stiffer network = harder, less flexible, better compression set. Fewer crosslinks = more flexible, better elongation, worse compression set." },
+          { "q": "Hot water above 60°C causes polyurethane seal failure because:", "answer": "Water hydrolyzes urethane linkages — chemically breaking the polymer backbone, causing softening, swelling, disintegration (worst for polyester AU)", "explanation": "Hydrolysis = water splitting ester/ether linkages in the polymer chain. Polyester AU most vulnerable. Polyether EU resists hydrolysis better. EPDM is correct for hot water service." },
+          { "q": "Fluorosilicone (FVMQ) improves on standard Silicone (VMQ) by providing:", "answer": "Fuel and aliphatic hydrocarbon resistance that standard silicone lacks, while retaining wide temperature range to −100°F", "explanation": "Standard VMQ: poor resistance to petroleum oils/fuels. FVMQ adds fluorinated side chains for fuel/oil resistance, keeping silicone's exceptional low-temperature flexibility. Used in aerospace fuel systems." },
+          { "q": "When a seal SHRINKS after fluid exposure, this indicates:", "answer": "Fluid is extracting plasticizers — hardening and shrinkage cause loss of sealing contact force", "explanation": "Plasticizer extraction (aggressive solvents or non-polar fluids) hardens and shrinks the elastomer. Seal loses interference fit with mating surfaces and leaks without visible damage." },
+          { "q": "Water-glycol hydraulic fluid (HF-C) requires:", "answer": "EPDM for water-glycol compatibility, paired with PTFE-based wear rings", "explanation": "Water-glycol is water-based — EPDM compatible. NBR and PU swell severely. PTFE wear rings for low friction. Standard for fire-resistant water-glycol hydraulic systems." },
+          { "q": "The ASTM test standard for compression set in rubber is:", "answer": "ASTM D395 (compression set)", "explanation": "ASTM D395 Method B: compress 25% at specified temperature for 22 or 70 hours, release, measure permanent set %. Below 20% generally acceptable for dynamic seals." },
+          { "q": "Higher molecular weight in an elastomer generally results in:", "answer": "Better mechanical properties (higher tensile, elongation, tear) from longer polymer chains that entangle more effectively", "explanation": "Longer polymer chains = more chain entanglements = higher mechanical properties. High-MW NBR or FKM grades show better tensile and tear resistance from physical crosslinks." },
+          { "q": "The Parker ORD 5712 Material Offering Guide is used to:", "answer": "Identify the appropriate Parker compound for a specific chemical, temperature, and application", "explanation": "ORD 5712 is Parker's comprehensive material/compound selector: lists every compound with chemical resistance ratings, temperature ranges, hardness, and application guidelines — the definitive material selection reference." }
+        ]
+      }
+    ]
+  }
+}

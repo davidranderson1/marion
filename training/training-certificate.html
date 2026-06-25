@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Certificate Program | FluidSeal AB</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#c8222a; --red-dark:#9e181f; --yellow:#FFDD00;
+  --dark:#0d0d0d; --dark2:#111a26; --dark3:#1a2535; --dark4:#222f42;
+  --border:rgba(255,255,255,0.08); --text:#e8e4df; --muted:#7a8d9a;
+  --green:#2ecc71; --green-dark:#27ae60;
+  
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--dark2);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{background:#0a1018;padding:8px 32px;font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.topbar-item{display:inline-flex;align-items:center;gap:5px}
+.topbar-sep{margin:0 14px;opacity:.3}
+
+/* ── NAV ── */
+nav{background:#0f1923;border-bottom:1px solid rgba(255,255,255,0.07);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-logo-wrap{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-img{height:38px;width:auto;background:#fff;border-radius:3px;padding:3px 8px 3px 5px}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-back-btn{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--muted);text-decoration:none;border:1px solid rgba(255,255,255,0.12);padding:7px 14px;border-radius:3px;transition:all .2s}
+.nav-back-btn:hover{color:#fff;border-color:rgba(255,255,255,0.3)}
+.nav-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+
+/* ── HERO ── */
+.cert-hero{
+  background:linear-gradient(160deg,#0b1520 0%,#111a26 50%,#0d1118 100%);
+  padding:64px 32px 56px;text-align:center;position:relative;overflow:hidden;
+  border-bottom:1px solid var(--border);
+}
+.cert-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 30%,rgba(200,34,42,0.09),transparent 70%);
+  pointer-events:none;
+}
+.cert-hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(200,34,42,0.12);border:1px solid rgba(200,34,42,0.3);color:#ff6b6b;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-radius:30px;margin-bottom:24px}
+.cert-hero h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(40px,6vw,72px);font-weight:900;line-height:1;margin-bottom:16px;color:#fff}
+.cert-hero h1 em{color:var(--red);font-style:normal;display:block}
+.cert-hero p{font-size:16px;color:var(--muted);max-width:520px;margin:0 auto 40px;line-height:1.7}
+
+/* ── LEVEL CARDS ── */
+.levels-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;max-width:1100px;margin:0 auto;padding:0 32px 64px;position:relative;z-index:1}
+.level-card{
+  background:var(--dark3);border:1px solid var(--border);border-radius:6px;
+  padding:28px 24px;text-align:left;cursor:pointer;transition:all .25s;
+  position:relative;overflow:hidden;
+}
+.level-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.level-card.lv1::before{background:#3a7bd5}
+.level-card.lv2::before{background:#1abc9c}
+.level-card.lv3::before{background:#9b59b6}
+.level-card.lv4::before{background:#e67e22}
+.level-card.lv5::before{background:#c8222a}
+.level-card.lv6::before{background:#c8a000}
+.level-card:hover:not(.locked){transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,0.4);border-color:rgba(255,255,255,0.18)}
+.level-card.locked{opacity:.5;cursor:not-allowed}
+.level-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:56px;line-height:1;margin-bottom:4px}
+.lv1 .level-num{color:#3a7bd5}.lv2 .level-num{color:#1abc9c}.lv3 .level-num{color:#9b59b6}
+.lv4 .level-num{color:#e67e22}.lv5 .level-num{color:#c8222a}.lv6 .level-num{color:#c8a000}
+.level-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;margin-bottom:8px;color:#fff}
+.level-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.level-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.level-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:2px;letter-spacing:.3px}
+.lv1 .level-badge{background:rgba(58,123,213,0.15);color:#7aade8;border:1px solid rgba(58,123,213,0.25)}
+.lv2 .level-badge{background:rgba(26,188,156,0.15);color:#7ae8c8;border:1px solid rgba(26,188,156,0.25)}
+.lv3 .level-badge{background:rgba(155,89,182,0.15);color:#c87ae8;border:1px solid rgba(155,89,182,0.25)}
+.lv4 .level-badge{background:rgba(230,126,34,0.15);color:#e8b07a;border:1px solid rgba(230,126,34,0.25)}
+.lv5 .level-badge{background:rgba(200,34,42,0.15);color:#e87a7a;border:1px solid rgba(200,34,42,0.25)}
+.lv6 .level-badge{background:rgba(200,160,0,0.15);color:#e8c840;border:1px solid rgba(200,160,0,0.25)}
+.level-pass{font-size:12px;color:var(--muted)}
+.level-status{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-top:12px}
+.status-dot{width:8px;height:8px;border-radius:50%}
+.status-unlocked{color:#fff} .status-dot.unlocked{background:var(--green)}
+.status-locked{color:var(--muted)} .status-dot.locked-dot{background:var(--muted)}
+.status-passed{color:var(--green)} .status-dot.passed{background:var(--green)}
+.lock-icon{position:absolute;top:16px;right:16px;opacity:.3;font-size:18px}
+.cert-mini{position:absolute;bottom:16px;right:16px;width:32px;height:24px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.l1 .cert-mini{background:rgba(58,123,213,0.2);color:var(--l1)}
+.l2 .cert-mini{background:rgba(232,168,64,0.2);color:var(--l2)}
+.l3 .cert-mini{background:rgba(200,34,42,0.2);color:var(--l3)}
+
+/* ── QUIZ SCREEN ── */
+.screen{display:none;min-height:100vh}
+.screen.active{display:block}
+
+/* NAME ENTRY */
+.name-screen{display:flex;align-items:center;justify-content:center;min-height:80vh;padding:32px}
+.name-box{background:var(--dark3);border:1px solid var(--border);border-radius:6px;padding:48px;max-width:480px;width:100%;text-align:center}
+.name-box h2{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;margin-bottom:8px}
+.name-box p{font-size:14px;color:var(--muted);margin-bottom:28px;line-height:1.6}
+.name-input{width:100%;background:#0f1923;border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;padding:14px 16px;border-radius:4px;outline:none;transition:border .2s;margin-bottom:8px;text-align:center}
+.name-input:focus{border-color:rgba(200,34,42,0.5)}
+.name-input::placeholder{color:var(--muted)}
+.btn-start{width:100%;margin-top:16px;background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;letter-spacing:1px;padding:14px;border:none;border-radius:4px;cursor:pointer;transition:background .2s}
+.btn-start:hover{background:var(--red-dark)}
+.btn-start:disabled{opacity:.4;cursor:not-allowed}
+
+/* QUIZ */
+.quiz-wrap{max-width:760px;margin:0 auto;padding:40px 24px}
+.quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px}
+.quiz-level-badge{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;padding:6px 14px;border-radius:2px}
+.quiz-progress-wrap{flex:1;max-width:300px}
+.quiz-progress-label{font-size:12px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between}
+.quiz-progress-bar{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.quiz-progress-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.l1-fill{background:var(--l1)} .l2-fill{background:var(--l2)} .l3-fill{background:var(--l3)}
+.timer-wrap{display:flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--text)}
+.timer-icon{font-size:14px;color:var(--muted)}
+.timer-warn{color:#e87a50 !important}
+
+.question-card{background:var(--dark3);border:1px solid var(--border);border-radius:6px;padding:36px;margin-bottom:20px;position:relative;overflow:hidden}
+.question-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
+.l1-q::before{background:var(--l1)} .l2-q::before{background:var(--l2)} .l3-q::before{background:var(--l3)}
+.q-num{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.q-text{font-family:'Barlow Condensed',sans-serif;font-size:clamp(20px,3vw,26px);font-weight:700;line-height:1.3;color:#fff;margin-bottom:4px}
+.q-hint{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic}
+
+.options-grid{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.option-btn{
+  background:#0f1923;border:1px solid var(--border);color:var(--text);
+  font-family:'Barlow',sans-serif;font-size:15px;padding:14px 18px;
+  border-radius:4px;cursor:pointer;transition:all .2s;text-align:left;
+  display:flex;align-items:center;gap:12px;
+}
+.option-btn:hover:not(:disabled){background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.2);transform:translateX(3px)}
+.option-letter{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;width:24px;height:24px;border-radius:2px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:.5px}
+.option-btn.correct{background:rgba(46,204,113,0.12);border-color:#2ecc71;color:#fff}
+.option-btn.correct .option-letter{background:var(--green);color:#fff}
+.option-btn.wrong{background:rgba(200,34,42,0.12);border-color:var(--red);color:#fff}
+.option-btn.wrong .option-letter{background:var(--red);color:#fff}
+.option-btn:disabled{cursor:default;transform:none}
+.feedback-msg{padding:12px 16px;border-radius:4px;font-size:13px;line-height:1.5;margin-top:8px;display:none}
+.feedback-msg.show{display:block}
+.feedback-correct{background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.25);color:#6ee89a}
+.feedback-wrong{background:rgba(200,34,42,0.1);border:1px solid rgba(200,34,42,0.25);color:#e87a7a}
+.btn-next{margin-top:20px;background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:.5px;padding:12px 32px;border:none;border-radius:3px;cursor:pointer;transition:background .2s;display:none}
+.btn-next.show{display:inline-flex;align-items:center;gap:8px}
+.btn-next:hover{background:var(--red-dark)}
+
+/* RESULTS */
+.results-wrap{max-width:640px;margin:0 auto;padding:48px 24px;text-align:center}
+.results-score-ring{width:160px;height:160px;border-radius:50%;margin:0 auto 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.results-score-ring svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.score-num{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;line-height:1}
+.score-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.results-verdict{font-family:'Barlow Condensed',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:800;margin-bottom:12px}
+.results-sub{font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:32px}
+.results-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:32px}
+.stat-box{background:var(--dark3);padding:20px;text-align:center}
+.stat-box-num{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:#fff}
+.stat-box-label{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.5px}
+.results-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-cert{background:var(--green);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:.5px;padding:13px 28px;border:none;border-radius:3px;cursor:pointer;transition:background .2s}
+.btn-cert:hover{background:var(--green-dark)}
+.btn-retry{background:transparent;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:.5px;padding:13px 28px;border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .2s}
+.btn-retry:hover{border-color:rgba(255,255,255,0.3);color:#fff}
+.btn-home-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);text-decoration:none;margin-top:16px;transition:color .2s}
+.btn-home-link:hover{color:#fff}
+
+/* ── CERTIFICATE ── */
+#cert-modal{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+#cert-modal.show{display:flex}
+.cert-outer{max-width:820px;width:100%;margin:auto}
+.cert-controls{display:flex;gap:10px;justify-content:flex-end;margin-bottom:12px}
+.cert-print-btn{background:var(--green);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.5px;padding:10px 24px;border:none;border-radius:3px;cursor:pointer}
+.cert-close-btn{background:transparent;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;padding:10px 24px;border:1px solid rgba(255,255,255,0.2);border-radius:3px;cursor:pointer}
+
+/* The actual printable certificate */
+.certificate{
+  background:#fff;color:#231F20;
+  padding:0;border-radius:4px;overflow:hidden;
+  box-shadow:0 24px 80px rgba(0,0,0,0.6);
+  font-family:'Barlow',sans-serif;
+  position:relative;
+}
+.cert-border-outer{padding:14px;background:#231F20}
+.cert-border-inner{padding:12px;background:#FFDD00}
+.cert-border-content{background:#fff;padding:48px 56px;position:relative}
+
+.cert-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;padding-bottom:24px;border-bottom:2px solid #231F20}
+.cert-logo-area{display:flex;flex-direction:column;gap:2px}
+.cert-company{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;letter-spacing:1px;color:#231F20}
+.cert-company-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#666;font-weight:600}
+.cert-level-badge{text-align:right}
+.cert-level-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:52px;line-height:1;color:#FFDD00;-webkit-text-stroke:2px #231F20;text-stroke:2px #231F20}
+.cert-level-text{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#666;font-weight:700;display:block}
+
+.cert-title-area{text-align:center;margin-bottom:32px}
+.cert-presents{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#666;margin-bottom:8px;font-weight:600}
+.cert-main-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:38px;letter-spacing:-0.5px;color:#231F20;line-height:1.1}
+.cert-of{font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:#c8222a;margin:8px 0 0}
+
+.cert-name-section{text-align:center;margin:28px 0;padding:20px 0;border-top:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5}
+.cert-awarded-to{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:8px;font-weight:600}
+.cert-name{font-family:'Playfair Display',serif;font-size:42px;font-weight:700;color:#231F20;line-height:1.1}
+
+.cert-body-text{text-align:center;font-size:13px;color:#555;line-height:1.7;margin-bottom:28px;max-width:560px;margin-left:auto;margin-right:auto}
+.cert-body-text strong{color:#231F20}
+
+.cert-achievement-row{display:flex;gap:0;justify-content:center;margin-bottom:32px}
+.cert-achievement{text-align:center;padding:16px 28px;border:1px solid #e5e5e5;min-width:160px}
+.cert-achievement:first-child{border-radius:3px 0 0 3px}
+.cert-achievement:last-child{border-radius:0 3px 3px 0}
+.cert-achievement-num{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#231F20}
+.cert-achievement-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-top:2px;font-weight:600}
+
+.cert-footer{display:flex;align-items:flex-end;justify-content:space-between;padding-top:24px;border-top:2px solid #231F20}
+.cert-sig-area{text-align:center}
+.cert-sig-name{font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:#231F20}
+.cert-sig-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-top:4px;font-weight:600}
+.cert-sig-line{width:180px;height:1px;background:#231F20;margin:0 auto 8px}
+.cert-seal{text-align:center}
+.cert-seal-circle{width:80px;height:80px;border-radius:50%;background:#231F20;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 8px}
+.cert-seal-inner{width:64px;height:64px;border-radius:50%;background:#FFDD00;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cert-seal-core{width:32px;height:32px;border-radius:50%;background:#231F20}
+.cert-seal-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#888;font-weight:700}
+.cert-id{font-size:10px;color:#aaa;letter-spacing:.5px;margin-top:4px}
+
+/* ── PRINT STYLES ── */
+@media print {
+  body *{visibility:hidden}
+  #cert-modal,#cert-modal *{visibility:visible}
+  #cert-modal{position:absolute;top:0;left:0;background:white;padding:0}
+  .cert-controls{display:none !important}
+  .cert-outer{margin:0;max-width:100%}
+  .certificate{box-shadow:none;border-radius:0}
+}
+
+/* ── REVIEW LIST ── */
+.review-list{text-align:left;margin-top:28px}
+.review-list h3{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--muted)}
+.review-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:3px;margin-bottom:6px;font-size:13px;line-height:1.5}
+.review-item.r-correct{background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.15)}
+.review-item.r-wrong{background:rgba(200,34,42,0.08);border:1px solid rgba(200,34,42,0.15)}
+.review-icon{font-size:14px;margin-top:1px;flex-shrink:0}
+.review-q{font-weight:600;color:#fff;margin-bottom:2px}
+.review-a{color:var(--muted)}
+.review-correct-a{color:var(--green);font-weight:600}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .levels-grid{padding:0 16px 48px;grid-template-columns:1fr}
+  .quiz-wrap,.results-wrap{padding:24px 16px}
+  .question-card{padding:24px 20px}
+  .cert-border-content{padding:32px 24px}
+  .cert-name{font-size:28px}
+  .cert-main-title{font-size:26px}
+}
+
+/* ── NEXT LEVEL / SHARE BUTTONS ── */
+.btn-next-level{
+  background:linear-gradient(135deg,#1a3a6e,#2a5298);
+  color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;
+  font-size:18px;letter-spacing:.5px;padding:14px 28px;border:2px solid #3a7bd5;
+  border-radius:4px;cursor:pointer;transition:all .25s;
+  display:none;align-items:center;gap:8px;
+}
+.btn-next-level.l2{background:linear-gradient(135deg,#0d3b31,#0e8069);border-color:#1abc9c}
+.btn-next-level.l3{background:linear-gradient(135deg,#2e1050,#6b3099);border-color:#9b59b6}
+.btn-next-level.l4{background:linear-gradient(135deg,#4a2500,#9e5500);border-color:#e67e22}
+.btn-next-level.l5{background:linear-gradient(135deg,#4a0810,#9e181f);border-color:#c8222a}
+.btn-next-level.l6{background:linear-gradient(135deg,#3a2e00,#7a6200);border-color:#c8a000}
+.btn-next-level.show{display:inline-flex}
+.btn-next-level:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.4);filter:brightness(1.15)}
+.btn-share{
+  background:rgba(255,255,255,0.07);color:var(--text);
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:.5px;
+  padding:13px 22px;border:1px solid var(--border);border-radius:3px;
+  cursor:pointer;transition:all .2s;display:none;align-items:center;gap:8px;
+}
+.btn-share.show{display:inline-flex}
+.btn-share:hover{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff}
+
+/* Share modal */
+.share-modal-bg{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;padding:20px}
+.share-modal-bg.show{display:flex}
+.share-modal{background:#1a2535;border:1px solid var(--border);border-radius:6px;padding:36px;max-width:460px;width:100%;position:relative}
+.share-modal h3{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:26px;margin-bottom:8px;color:#fff}
+.share-modal p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+.share-options{display:flex;flex-direction:column;gap:10px}
+.share-opt-btn{
+  display:flex;align-items:center;gap:14px;
+  background:#0f1923;border:1px solid var(--border);border-radius:4px;
+  padding:14px 16px;cursor:pointer;transition:all .2s;width:100%;text-align:left;
+}
+.share-opt-btn:hover{background:#1a2535;border-color:rgba(255,255,255,0.2)}
+.share-opt-icon{width:40px;height:40px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.share-opt-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:#fff}
+.share-opt-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.share-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;transition:color .2s}
+.share-close:hover{color:#fff}
+.share-status{font-size:12px;color:var(--green);margin-top:12px;display:none;text-align:center}
+.share-status.show{display:block}
+
+/* PDF loading overlay */
+.pdf-loading{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.pdf-loading.show{display:flex}
+.pdf-spinner{width:48px;height:48px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pdf-loading p{color:#fff;font-size:14px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px}
+
+/* Cert modal extra buttons */
+.cert-pdf-btn{
+  background:#1a3a6e;color:#fff;font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;font-size:15px;letter-spacing:.5px;padding:10px 20px;
+  border:1px solid #3a7bd5;border-radius:3px;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;gap:6px;
+}
+.cert-pdf-btn:hover{background:#2a5298;border-color:#6fa8e8}
+.cert-email-btn{
+  background:rgba(255,255,255,0.06);color:#fff;font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;font-size:15px;letter-spacing:.5px;padding:10px 20px;
+  border:1px solid rgba(255,255,255,0.15);border-radius:3px;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;gap:6px;
+}
+.cert-email-btn:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.3)}
+.results-actions-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <span class="topbar-item">📍 17309-107 Ave, Edmonton AB</span>
+  <span class="topbar-sep">|</span>
+  <span class="topbar-item">📞 780-414-1871</span>
+  <span class="topbar-sep">|</span>
+  <span class="topbar-item">✉ fluidsealab@sealsonline.com</span>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="https://www.sealsonline.com/en/flabed" target="_blank" class="nav-logo-wrap">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 56" class="nav-logo-img" aria-label="FluidSeal AB">
+      <rect x="0" y="2" width="48" height="48" fill="#231F20"/>
+      <circle cx="24" cy="26" r="15" fill="#FFDD00"/>
+      <circle cx="24" cy="26" r="7.5" fill="#231F20"/>
+      <text x="58" y="34" font-family="Arial Black,Impact,sans-serif" font-weight="900" font-size="26" fill="#231F20" font-style="italic">fluidseal</text>
+      <text x="59" y="48" font-family="Arial,sans-serif" font-weight="700" font-size="10" fill="#555" letter-spacing="1.5">AB Inc.</text>
+    </svg>
+  </a>
+  <span class="nav-title">Certificate Program</span>
+  <div class="nav-right">
+    <a href="product-profiles-training.html" class="nav-back-btn">← Training Guide</a>
+  </div>
+</nav>
+
+<!-- ══════════ SCREEN: HOME ══════════ -->
+<div id="screen-home" class="screen active">
+  <div class="cert-hero">
+    <div class="cert-hero-badge">🎓 Staff Development</div>
+    <h1>Product Profiles<em>Certificate Program</em></h1>
+    <p>Test your knowledge from the training guide. Pass each level to earn your certificate and unlock the next challenge.</p>
+  </div>
+
+  <div class="levels-grid" id="levels-grid">
+
+    <div class="level-card lv1" id="card-l1" onclick="startLevel(1)">
+      <span class="lock-icon" id="lock-1" style="display:none">🔒</span>
+      <div class="cert-mini">L1</div>
+      <div class="level-num">1</div>
+      <div class="level-label">Finding Products in Catalogs</div>
+      <div class="level-desc">Catalog structure, section letters, page references, measurement order, and abbreviations.</div>
+      <div class="level-meta"><span class="level-badge">10 Questions</span><span class="level-badge">8 min</span></div>
+      <div class="level-pass">Pass mark: <strong>80%</strong> (8 of 10)</div>
+      <div class="level-status" id="status-1"><div class="status-dot unlocked"></div><span class="status-unlocked">Ready</span></div>
+    </div>
+
+    <div class="level-card lv2 locked" id="card-l2" onclick="startLevel(2)">
+      <span class="lock-icon" id="lock-2">🔒</span>
+      <div class="cert-mini">L2</div>
+      <div class="level-num">2</div>
+      <div class="level-label">Finding Products on the Website</div>
+      <div class="level-desc">sealsonline.com navigation, URL structure, series search, inch vs metric, and store links.</div>
+      <div class="level-meta"><span class="level-badge">10 Questions</span><span class="level-badge">8 min</span></div>
+      <div class="level-pass">Pass mark: <strong>80%</strong> (8 of 10)</div>
+      <div class="level-status" id="status-2"><div class="status-dot locked-dot"></div><span class="status-locked">Complete L1 to unlock</span></div>
+    </div>
+
+    <div class="level-card lv3 locked" id="card-l3" onclick="startLevel(3)">
+      <span class="lock-icon" id="lock-3">🔒</span>
+      <div class="cert-mini">L3</div>
+      <div class="level-num">3</div>
+      <div class="level-label">Profiles and Shapes</div>
+      <div class="level-desc">Seal profiles, U-cup vs piston, wipers, multi-piece designs, back-up rings, and guiding elements.</div>
+      <div class="level-meta"><span class="level-badge">15 Questions</span><span class="level-badge">12 min</span></div>
+      <div class="level-pass">Pass mark: <strong>80%</strong> (12 of 15)</div>
+      <div class="level-status" id="status-3"><div class="status-dot locked-dot"></div><span class="status-locked">Complete L2 to unlock</span></div>
+    </div>
+
+    <div class="level-card lv4 locked" id="card-l4" onclick="startLevel(4)">
+      <span class="lock-icon" id="lock-4">🔒</span>
+      <div class="cert-mini">L4</div>
+      <div class="level-num">4</div>
+      <div class="level-label">Materials</div>
+      <div class="level-desc">PU, NBR, FKM, EPDM, PTFE and more — properties, Parker codes, durometer, and compatibility basics.</div>
+      <div class="level-meta"><span class="level-badge">15 Questions</span><span class="level-badge">12 min</span></div>
+      <div class="level-pass">Pass mark: <strong>85%</strong> (13 of 15)</div>
+      <div class="level-status" id="status-4"><div class="status-dot locked-dot"></div><span class="status-locked">Complete L3 to unlock</span></div>
+    </div>
+
+    <div class="level-card lv5 locked" id="card-l5" onclick="startLevel(5)">
+      <span class="lock-icon" id="lock-5">🔒</span>
+      <div class="cert-mini">L5</div>
+      <div class="level-num">5</div>
+      <div class="level-label">Applications and Markets</div>
+      <div class="level-desc">Mobile equipment, hydraulic cylinders, food grade, Arctic conditions, pneumatic vs hydraulic, and industry sectors.</div>
+      <div class="level-meta"><span class="level-badge">15 Questions</span><span class="level-badge">15 min</span></div>
+      <div class="level-pass">Pass mark: <strong>85%</strong> (13 of 15)</div>
+      <div class="level-status" id="status-5"><div class="status-dot locked-dot"></div><span class="status-locked">Complete L4 to unlock</span></div>
+    </div>
+
+    <div class="level-card lv6 locked" id="card-l6" onclick="startLevel(6)">
+      <span class="lock-icon" id="lock-6">🔒</span>
+      <div class="cert-mini">L6</div>
+      <div class="level-num">6</div>
+      <div class="level-label">Material Science &amp; Compatibility</div>
+      <div class="level-desc">Compression set, Tg, swell/shrink, crosslink density, chemical attack mechanisms, and fluid compatibility science.</div>
+      <div class="level-meta"><span class="level-badge">20 Questions</span><span class="level-badge">20 min</span></div>
+      <div class="level-pass">Pass mark: <strong>85%</strong> (17 of 20)</div>
+      <div class="level-status" id="status-6"><div class="status-dot locked-dot"></div><span class="status-locked">Complete L5 to unlock</span></div>
+    </div>
+
+  </div>
+
+</div> <!-- end screen-home -->
+
+<!-- ══════════ SCREEN: NAME ══════════ -->
+<div id="screen-name" class="screen">
+  <div class="name-screen">
+    <div class="name-box">
+      <div style="font-size:36px;margin-bottom:12px" id="name-level-icon">📋</div>
+      <h2 id="name-level-title">Level 1 Assessment</h2>
+      <p id="name-level-desc">Enter your full name as it will appear on your certificate.</p>
+      <input type="text" class="name-input" id="name-input" placeholder="Full Name" maxlength="60" oninput="validateName()">
+      <div style="font-size:12px;color:var(--muted);margin-top:8px" id="name-warning"></div>
+      <button class="btn-start" id="btn-begin" onclick="beginQuiz()" disabled>Begin Assessment →</button>
+      <div style="margin-top:16px">
+        <button onclick="showHome()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline">← Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: QUIZ ══════════ -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-wrap">
+    <div class="quiz-header">
+      <span class="quiz-level-badge" id="quiz-level-badge">Level 1</span>
+      <div class="quiz-progress-wrap">
+        <div class="quiz-progress-label">
+          <span id="q-progress-text">Question 1 of 10</span>
+          <span id="q-score-text">Score: 0</span>
+        </div>
+        <div class="quiz-progress-bar">
+          <div class="quiz-progress-fill l1-fill" id="quiz-progress-fill" style="width:10%"></div>
+        </div>
+      </div>
+      <div class="timer-wrap">
+        <span class="timer-icon">⏱</span>
+        <span id="timer-display">8:00</span>
+      </div>
+    </div>
+    <div class="question-card l1-q" id="question-card">
+      <div class="q-num" id="q-num">Question 1</div>
+      <div class="q-text" id="q-text">Loading...</div>
+      <div class="q-hint" id="q-hint" style="display:none"></div>
+      <div class="options-grid" id="options-grid"></div>
+      <div class="feedback-msg" id="feedback-msg"></div>
+    </div>
+    <button class="btn-next" id="btn-next" onclick="nextQuestion()">
+      <span id="btn-next-label">Next Question</span>
+      <span>→</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: RESULTS ══════════ -->
+<div id="screen-results" class="screen">
+  <div class="results-wrap">
+    <div class="results-score-ring" id="results-ring">
+      <svg width="160" height="160" viewBox="0 0 160 160">
+        <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+        <circle cx="80" cy="80" r="70" fill="none" stroke="#c8222a" stroke-width="10"
+                stroke-dasharray="440" stroke-dashoffset="440" id="ring-progress"
+                stroke-linecap="round"/>
+      </svg>
+      <div class="score-num" id="result-score-num">0%</div>
+      <div class="score-label">Score</div>
+    </div>
+    <div class="results-verdict" id="results-verdict">Results</div>
+    <div class="results-sub" id="results-sub"></div>
+    <div class="results-stats">
+      <div class="stat-box"><div class="stat-box-num" id="stat-correct">0</div><div class="stat-box-label">Correct</div></div>
+      <div class="stat-box"><div class="stat-box-num" id="stat-wrong">0</div><div class="stat-box-label">Incorrect</div></div>
+      <div class="stat-box"><div class="stat-box-num" id="stat-time">0:00</div><div class="stat-box-label">Time Taken</div></div>
+    </div>
+    <div class="results-actions-row">
+      <button class="btn-next-level" id="btn-next-level" onclick="goNextLevel()">
+        <span id="btn-next-label-main">Level 2</span><span>→</span>
+      </button>
+      <button class="btn-cert" id="btn-cert" onclick="showCertificate()" style="display:none">🏆 Certificate</button>
+    </div>
+    <div class="results-actions-row">
+      <button class="btn-share" id="btn-share" onclick="openShareModal('results')">📤 Share Results</button>
+      <button class="btn-retry" onclick="retryLevel()">↺ Retry</button>
+    </div>
+    <a href="#" onclick="showHome();return false" class="btn-home-link" style="margin-top:8px;display:inline-block">← Back to Level Selection</a>
+    <div class="review-list" id="review-list"></div>
+  </div>
+</div>
+
+<!-- ══════════ CERTIFICATE MODAL ══════════ -->
+<div id="cert-modal">
+  <div class="cert-outer">
+    <div class="cert-controls">
+      <button class="cert-pdf-btn" onclick="downloadCertPDF()" id="cert-pdf-btn"><span>⬇</span> Download PDF</button>
+      <button class="cert-email-btn" onclick="openShareModal('cert')"><span>✉</span> Share via Email</button>
+      <button class="cert-print-btn" onclick="window.print()">🖨 Print</button>
+      <button class="cert-close-btn" onclick="closeCert()">✕</button>
+    </div>
+    <div class="certificate">
+      <div class="cert-border-outer">
+        <div class="cert-border-inner">
+          <div class="cert-border-content">
+            <div class="cert-header">
+              <div class="cert-logo-area">
+                <div class="cert-company">FLUIDSEAL AB</div>
+                <div class="cert-company-sub">Edmonton · Sealing Solutions</div>
+                <div style="margin-top:8px;font-size:10px;color:#888;letter-spacing:.5px">Training &amp; Development Program</div>
+              </div>
+              <div class="cert-level-badge">
+                <span class="cert-level-num" id="cert-level-num">1</span>
+                <span class="cert-level-text" id="cert-level-text">Level One</span>
+              </div>
+            </div>
+            <div class="cert-title-area">
+              <div class="cert-presents">This certifies that</div>
+              <div class="cert-main-title">Product Profiles</div>
+              <div class="cert-of">Training Certificate</div>
+            </div>
+            <div class="cert-name-section">
+              <div class="cert-awarded-to">is proudly awarded to</div>
+              <div class="cert-name" id="cert-name">Employee Name</div>
+            </div>
+            <div class="cert-body-text" id="cert-body-text">Has successfully completed a level of the FluidSeal AB training program.</div>
+            <div class="cert-achievement-row">
+              <div class="cert-achievement"><div class="cert-achievement-num" id="cert-score">80%</div><div class="cert-achievement-label">Score Achieved</div></div>
+              <div class="cert-achievement"><div class="cert-achievement-num" id="cert-level-full">Level 1</div><div class="cert-achievement-label">Certification Level</div></div>
+              <div class="cert-achievement"><div class="cert-achievement-num" id="cert-date">—</div><div class="cert-achievement-label">Date Issued</div></div>
+            </div>
+            <div class="cert-footer">
+              <div class="cert-sig-area">
+                <div class="cert-sig-name">FluidSeal AB</div>
+                <div class="cert-sig-line"></div>
+                <div class="cert-sig-title">Training Department</div>
+              </div>
+              <div class="cert-seal">
+                <div class="cert-seal-circle"><div class="cert-seal-inner"><div class="cert-seal-core"></div></div></div>
+                <div class="cert-seal-label">Official Seal</div>
+                <div class="cert-id" id="cert-id">ID: #000000</div>
+              </div>
+              <div class="cert-sig-area">
+                <div class="cert-sig-name">Edmonton, AB</div>
+                <div class="cert-sig-line"></div>
+                <div class="cert-sig-title">17309-107 Ave, T5S 1E5</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+const QUESTIONS = {
+  1: [
+    {q:"The FluidSeal AB main seal catalog is Fluid Power Catalog Volume ___",opts:["4","5","6","7"],ans:2,feedback:"The Fluid Power Catalog Vol. 6 covers rod wipers, rod seals, symmetrical seals, piston seals, vee packings, guiding elements, and O-rings."},
+    {q:"In the catalog page reference system, what does the letter 'A' before the page number indicate?",opts:["O-Rings & Accessories","Piston Seals","Rod Wipers","Symmetrical Seals"],ans:2,feedback:"'A' = Rod Wipers section. Example: 'A 2' = AN wiper on page 2. B = Rod Seals, C = Symmetrical, D = Piston Seals, E = Vee Packings."},
+    {q:"What does the catalog section letter 'B' represent?",opts:["Rod Seals","Back-Up Rings","Bearings","Rod Wipers"],ans:0,feedback:"'B' = Rod Seals. Page references like 'B 5' point to rod seal series pages. This is the second section of the Fluid Power Catalog."},
+    {q:"The AN rod wiper is found on catalog page:",opts:["A 1","A 2","B 1","C 2"],ans:1,feedback:"The AN wiper is on catalog page A 2 — section A (Rod Wipers), page 2."},
+    {q:"Which FluidSeal AB catalog specifically covers seal kits?",opts:["Fluid Power Vol. 6","Shaft Seals Catalog","Kits Catalog Vol. 2","O-Ring Technical Handbook"],ans:2,feedback:"The Kits Catalog Vol. 2 covers pre-packaged seal kits."},
+    {q:"When measuring a U-cup rod seal, what is the CORRECT dimension order for catalog lookup?",opts:["o.d. / i.d. / hgt.","i.d. / o.d. / hgt.","c.s. / i.d. / o.d. / hgt.","hgt. / i.d. / o.d."],ans:2,feedback:"For rod seals: c.s. (cross section) first, then i.d., o.d., hgt. This is the universal measurement order for U-cup rod seals."},
+    {q:"For piston seals, catalog dimension listings always start with:",opts:["i.d.","o.d.","hgt.","c.s."],ans:1,feedback:"Piston seals: OD first, then ID, then height. The outer diameter contacts the cylinder bore, so it is the primary identifying dimension."},
+    {q:"Catalog section letter 'D' represents which product family?",opts:["Rod Seals","Symmetrical Seals","Piston Seals","Vee Packings"],ans:2,feedback:"D = Piston Seals. Catalog sections: A=Wipers, B=Rod Seals, C=Symmetrical, D=Piston, E=Vee Packing, F=Guiding, G=O-Rings."},
+    {q:"The abbreviation 'duro.' in the catalog refers to:",opts:["Durability rating","Durometer (Shore hardness)","Duration of seal life","Dimensional tolerance"],ans:1,feedback:"duro. = Durometer — the Shore A hardness of the elastomer. Harder seals (e.g. 90A) resist extrusion better; softer seals (e.g. 70A) seal better at low pressure."},
+    {q:"A catalog page reference of 'E 3' belongs to which product category?",opts:["Piston Seals","Vee Packings","Guiding Elements","O-Rings"],ans:1,feedback:"E = Vee Packings section. E 3 = page 3 of the Vee Packings section."}
+  ],
+  2: [
+    {q:"What is the correct web address for the FluidSeal AB store?",opts:["sealsonline.com/flabed","sealsonline.com/en/flabed","fluidseal.com/en","sealsonline.ca/flabed"],ans:1,feedback:"The FluidSeal AB store URL is sealsonline.com/en/flabed — 'en' for English, 'flabed' for the FluidSeal AB Edmonton branch."},
+    {q:"On sealsonline.com, how are products primarily organized at the top navigation level?",opts:["By material type","By price range","By Inch and Metric standards, then by category","By manufacturer"],ans:2,feedback:"Products split into Inch and Metric standards first, then by category. This mirrors the catalog structure."},
+    {q:"To find the metric RA rod seal on sealsonline.com, which URL path applies?",opts:["/inch/rod-seals/ra","/metric/rod-seals/ra","/metric/rod-wipers/ra","/inch/symmetrical/ra"],ans:1,feedback:"RA is a metric rod seal: /metric/rod-seals/ra. Always confirm inch vs metric — wrong standard gives wrong sizes."},
+    {q:"The AN inch rod wiper URL on sealsonline.com follows the pattern:",opts:["/categories/inch/rod-wipers/an","/categories/metric/rod-wipers/an","/inch/wipers/an","/products/wipers/an"],ans:0,feedback:"Full URL: sealsonline.com/en/flabed/categories/inch/rod-wipers/an. Structure: /categories/[standard]/[category]/[series]."},
+    {q:"On the Product Profiles Training Guide, the Quick Reference Table can be filtered by:",opts:["Price and availability","Standard (Inch/Metric) and Category","Material and durometer","Catalog page and series code"],ans:1,feedback:"The QR table has two dropdowns: Standard (Inch/Metric) and Category. Combine with text search to narrow any series."},
+    {q:"When a product page shows '24 Series' on sealsonline.com, this means:",opts:["The product costs $24","There are 24 size variants available in that series","It is version 24","24-hour lead time"],ans:1,feedback:"'X Series' badge = number of individual size variants stocked. '24 Series' = 24 different sizes available."},
+    {q:"The 'Shop \u2197' link on a product card in the training guide takes you to:",opts:["The PDF catalog download","The FluidSeal AB store page for that specific series","A price request form","The product image full size"],ans:1,feedback:"Every product card has a 'Shop \u2197' link mapped to the exact series URL on sealsonline.com."},
+    {q:"To quickly navigate between product categories without scrolling, you use:",opts:["Browser Ctrl+F search","The sticky category navigation bar","The site map PDF","The catalog index"],ans:1,feedback:"The sticky category nav bar uses scrollspy to highlight the active section and allows one-click jumps between all 8 categories."},
+    {q:"On the Quick Reference Table, clicking the product image thumbnail links to:",opts:["A larger version of the image","The catalog PDF page","The product page on sealsonline.com","The measurement guide"],ans:2,feedback:"Every product image thumbnail in the QR Table is a direct link to that series on sealsonline.com/en/flabed."},
+    {q:"If SERIES_LINKS has no entry for a series, the training guide defaults to:",opts:["Showing an error","Linking to the category page on sealsonline.com, then the main store","Removing the shop button","Linking to a Google search"],ans:1,feedback:"Fallback chain: SERIES_LINKS[series] \u2192 CAT_LINKS[category] \u2192 sealsonline.com/en/flabed. Every series always has a valid store link."}
+  ],
+  3: [
+    {q:"A U-cup seal gets its name because:",opts:["Invented by a man named U. Cup","Its cross-sectional profile resembles the letter U","U stands for Universal","It has uniform contact force"],ans:1,feedback:"The U-cup cross section looks like the letter U. The two lips contact the housing and rod, creating the seal."},
+    {q:"A 'symmetrical' seal can be installed on BOTH rod and piston because:",opts:["Made from harder material","Lip geometry is identical on both sides — sealing direction doesn\\'t matter","It is twice as thick","Two sealing zones face opposite directions"],ans:1,feedback:"Symmetrical seals have mirror-image lips — both sides identical, so the seal works on a rod bore or against a cylinder bore."},
+    {q:"How does a rod wiper differ from a rod seal?",opts:["Wipers are rubber; rod seals are PTFE","Wipers remove contaminants from the rod on outstroke; rod seals prevent fluid from escaping","Wipers are metric; rod seals are inch","Wipers are single-acting; rod seals double-acting"],ans:1,feedback:"The wiper sits outboard of the rod seal and scrapes dirt/moisture off the rod as it retracts, before it can contaminate the rod seal."},
+    {q:"The cross-sectional shape of a standard O-ring is:",opts:["Square","Rectangular","Circular (round)","U-shaped"],ans:2,feedback:"O-rings have a circular (toroidal) cross section. Compression in the groove creates the seal. Quad-Rings have a 4-lobed cross section."},
+    {q:"A vee packing assembly consists of:",opts:["One sealing ring only","Male adaptor + female adaptor + one or more V-rings stacked between them","Two O-rings and a PTFE guide ring","A spring-loaded U-cup"],ans:1,feedback:"Vee packings: male adaptor at bottom, V-rings in middle (add more for higher pressure), female adaptor at top. Gland nut compresses for adjustment."},
+    {q:"Piston seals seal against the:",opts:["Inside diameter (rod bore)","Outside diameter against the cylinder bore","End face of the piston","Threaded section of the rod"],ans:1,feedback:"Piston seals ride the piston OD and seal against the cylinder bore ID. Rod seals sit in the gland and seal against the rod OD."},
+    {q:"The HBY buffer ring profile is:",opts:["A symmetrical U-cup","A solid rectangular ring","A U-cup with an integrated anti-extrusion heel ring","An O-ring with quad energizer"],ans:2,feedback:"HBY is a U-cup buffer ring with an AER built into the heel. Absorbs pressure spikes before they reach the primary rod seal."},
+    {q:"Multi-piece piston seals use PTFE as the outer ring because:",opts:["PTFE is cheapest","PTFE gives low friction and broad chemical resistance; rubber energizer provides radial load since PTFE lacks elasticity","PTFE is harder than steel","PTFE welds to the piston"],ans:1,feedback:"PTFE has excellent low friction and chemical resistance but no elastic recovery. The rubber energizer pushes the PTFE cap against the bore for sealing load."},
+    {q:"The Polypak\u00ae seal profile is best described as:",opts:["A solid rectangular ring","A spring-energized PTFE seal","A U-cup with a loaded shallow-lip profile for both rod and piston applications","A 3-piece metal wiper assembly"],ans:2,feedback:"Polypak\u00ae is a single-piece U-cup with a loaded-lip profile. Standard, Deep, Type B, and Spring-Loaded variants exist."},
+    {q:"Back-up rings are used alongside O-rings to:",opts:["Increase sealing contact area","Prevent the O-ring from extruding into the clearance gap under high pressure","Center the O-ring in the groove","Lubricate the O-ring"],ans:1,feedback:"Under high pressure, O-rings flow into clearance gaps and extrude — eventually cutting and failing. Back-up rings close the gap."},
+    {q:"The PRIMARY purpose of a guiding element / wear ring is:",opts:["Create the hydraulic seal","Absorb radial/side loads and prevent metal-to-metal contact between rod/piston and bore","Wipe contaminants off the rod","Prevent piston rotation"],ans:1,feedback:"Wear rings absorb side loads from machine weight and external forces. Without them, rod/piston contacts bore — causing scoring, seal damage, premature failure."},
+    {q:"A step-cut outer ring on a piston seal has this geometry to:",opts:["Create a labyrinth seal","Prevent rotation in groove","Allow the ring to be compressed for installation into the bore","Match the catalog letter"],ans:2,feedback:"Step-cut rings can be compressed smaller than nominal OD for fitting into the cylinder bore, then spring back to seal."},
+    {q:"A Quad-Ring\\'s advantage over an O-ring in dynamic applications is:",opts:["Always less expensive","4 sealing contact points and resistance to spiral twist failure in reciprocating applications","Requires half the groove depth","Needs no lubrication"],ans:1,feedback:"O-rings in dynamic applications can spiral-twist and fail. The Quad-Ring\\'s 4-lobe cross section resists this twist while providing 4 sealing contact points."},
+    {q:"The DU bearing construction from outside to inside is:",opts:["Solid bronze ring","Rubber outer + PTFE inner","Steel backing + porous bronze layer + PTFE/lead sliding surface","Glass-filled nylon ring"],ans:2,feedback:"DU bearings: steel backing \u2192 sintered porous bronze layer \u2192 PTFE + lead overlay. Never scratch the inside PTFE with caliper points."},
+    {q:"Why is a buffer ring installed outboard of the primary rod seal?",opts:["Acts as a second primary seal","Absorbs hydraulic pressure spikes before they reach the rod seal, extending primary seal life","Provides thermal insulation","Prevents the rod seal being installed backwards"],ans:1,feedback:"High-pressure spikes fatigue and blow out rod seals. The buffer ring absorbs the spike and allows pressure to equalize gradually before it reaches the primary seal."}
+  ],
+  4: [
+    {q:"The most common seal material at FluidSeal AB is:",opts:["NBR (Nitrile)","FKM (Viton\u00ae)","Polyurethane","PTFE"],ans:2,feedback:"Polyurethane is the primary seal material — outstanding abrasion resistance, tensile strength, and good compatibility with mineral hydraulic oil."},
+    {q:"What makes Polyurethane preferred for hydraulic rod seals over NBR?",opts:["Lower cost","Excellent abrasion resistance (3\u20135\u00d7 better than NBR), high tensile strength, and superior extrusion resistance","Ability to withstand steam above 200\u00b0F","Universal chemical resistance"],ans:1,feedback:"PU has dramatically better abrasion resistance than NBR — critical for rod seals exposed to contaminated rods. Higher tensile = better extrusion resistance."},
+    {q:"The ASTM designation for polyester-based polyurethane is:",opts:["FKM","AU","EU","VMQ"],ans:1,feedback:"AU = Polyester-based Polyurethane. EU = Polyether-based. AU is common; EU has better hydrolysis resistance for wet environments."},
+    {q:"Shore A durometer hardness measures:",opts:["Chemical resistance level","Temperature range","Hardness of rubber/elastomeric materials","Tensile strength in PSI"],ans:2,feedback:"Shore A = standard hardness scale for soft elastomers. 40A = very soft, 90A+ = very hard. Most hydraulic seals are 70A\u201395A."},
+    {q:"Compared to 70A, a 90A seal of the same material is:",opts:["Softer, more flexible, better for low pressure","Harder, more extrusion resistant, better for high pressure","Chemically superior","Rated for higher temperatures"],ans:1,feedback:"Higher durometer = harder, stiffer, better extrusion resistance. 90A = high-pressure applications or larger clearance gaps."},
+    {q:"Which elastomer must NEVER be used with petroleum hydraulic oil?",opts:["NBR (Nitrile)","Polyurethane","EPDM (Ethylene Propylene)","FKM (Fluorocarbon)"],ans:2,feedback:"EPDM swells dramatically in petroleum oils — absorbs oil, loses mechanical properties, fails quickly. EPDM is for water/steam/chemical applications ONLY."},
+    {q:"FKM (Viton\u00ae) is preferred over NBR when:",opts:["Low-pressure water application","Standard mineral oil at 20\u00b0C","High temperatures, aggressive chemicals, or aromatic fuels","A very soft, flexible material is needed"],ans:2,feedback:"FKM excels where standard materials fail: temperatures up to 400\u00b0F, aggressive chemicals, aromatic hydrocarbons. High fluorine content = extremely chemically stable."},
+    {q:"PTFE is used as the outer ring in multi-piece piston seals because:",opts:["PTFE is cheapest","Very low friction + broad chemical resistance, with rubber energizer compensating for lack of elastic recovery","It can be vulcanized to metal","It expands under pressure to fill the bore"],ans:1,feedback:"PTFE: near-zero friction, resists virtually all chemicals, but not elastic. Rubber O-ring inside provides the spring force to keep PTFE cap against bore."},
+    {q:"The Parker compound prefix letter for NBR (Nitrile) is:",opts:["V","E","N","K"],ans:2,feedback:"Parker prefixes: N=NBR, V=FKM, E=EPDM, K=HNBR, S=Silicone, L=Fluorosilicone, F=FFKM, B=IIR. Part number starting with N = Nitrile."},
+    {q:"Which elastomer has the widest temperature range?",opts:["NBR (\u221255 to +250\u00b0F)","FKM (\u221220 to +400\u00b0F)","VMQ Silicone (\u2212175 to +450\u00b0F)","FFKM (\u221240 to +608\u00b0F)"],ans:2,feedback:"Silicone (VMQ): \u2212175\u00b0F to +450\u00b0F widest range. FFKM reaches +608\u00b0F but has narrower lower limit. Silicone for extreme-cold-to-moderate-heat cycling."},
+    {q:"IIR (Butyl Rubber) is specified for its unique advantage of:",opts:["Highest abrasion resistance","Lowest gas permeability — best for vacuum and gas containment","Best petroleum oil resistance","Widest temperature range"],ans:1,feedback:"Butyl has the lowest gas permeability of any common elastomer — critical for vacuum seals and phosphate ester hydraulic systems. NOT petroleum oil compatible."},
+    {q:"Bronze-filled PTFE (BR.PTFE) is preferred over Glass-filled PTFE (GF.PTFE) when:",opts:["Chemical resistance is the priority","High thermal conductivity and wear resistance for lubricated metallic bore conditions","Application is very low temperature","Cost reduction is required"],ans:1,feedback:"BR.PTFE = better thermal conductivity and wear resistance in lubricated conditions. GF.PTFE = better chemical resistance in dry or chemical environments."},
+    {q:"'AU 90A' on a seal specification means:",opts:["Australian grade, 90 PSI","Polyester-based Polyurethane, Shore 90A hardness","Automatic Urethane, 90 series","Any Urethane, 90 durometer"],ans:1,feedback:"AU = Polyester-based Polyurethane (ASTM AU). 90A = Shore A hardness 90. Standard hydraulic rod seal grade."},
+    {q:"Nylon (Polyamide / PA) is used in seal assemblies primarily as:",opts:["Primary sealing lip in U-cups","Anti-extrusion rings and wear rings due to stiffness and dimensional stability","Energizer in multi-piece seals","O-ring substitute for rectangular grooves"],ans:1,feedback:"Nylon\\'s stiffness and dimensional stability make it ideal for anti-extrusion rings and wear rings — non-deforming bearing and gap-closing surfaces."},
+    {q:"AEM (Vamac\u00ae / Ethylene Acrylate) compared to ACM (Polyacrylate) offers:",opts:["Higher temperature above 350\u00b0F","Better low-temperature flexibility to \u221240\u00b0F while retaining heat-in-oil resistance","Lower cost in all applications","Better steam resistance than EPDM"],ans:1,feedback:"ACM: great oil at high temp, poor cold. AEM adds cold flexibility to \u221240\u00b0F while keeping similar oil resistance. Key advantage for cold-climate equipment."}
+  ],
+  5: [
+    {q:"A hydraulic cylinder in a mobile excavator would typically use:",opts:["EPDM U-cups for weather","Polyurethane U-cup rod seal + rod wiper for dirt/contaminant protection","Viton O-rings throughout","Silicone lip seals"],ans:1,feedback:"Mobile equipment cylinders use PU rod seals for abrasion resistance and a rod wiper to scrape dirt/mud/ice off the rod before it reaches the rod seal."},
+    {q:"In a double-acting hydraulic cylinder, where is sealing required?",opts:["Rod side only","Piston side only","Both sides of the piston AND on the rod","Only at the end caps"],ans:2,feedback:"Double-acting = powered both ways. Requires: piston seal (both sides), rod seal, rod wiper, and wear rings for lateral load support."},
+    {q:"For a hydraulic cylinder in food processing, the critical material requirement is:",opts:["Maximum pressure rating","FDA-approved materials (VMQ silicone, FKM) for incidental food contact","Seal must be red for HACCP visibility","Standard NBR is always acceptable"],ans:1,feedback:"Food-grade = FDA-compliant materials (21 CFR). FDA-grade silicone, FKM, and specific NBR compounds. Standard seals may contain non-approved carbon black or plasticizers."},
+    {q:"FFKM (Perfluoroelastomer) seals are specified for:",opts:["Standard mobile hydraulic loader cylinder","Semiconductor plasma etching with aggressive process chemicals","Standard pneumatic door actuator","A water pump at room temperature"],ans:1,feedback:"FFKM = most chemically resistant elastomer. Used where all others fail: semiconductor fabs, aggressive pharma CIP/SIP, high-temp chemical reactors. Cost 10\u201350\u00d7 standard FKM."},
+    {q:"Vee packing seals are best suited for:",opts:["High-speed rotary shaft sealing","Slow-speed reciprocating high-pressure applications where gland adjustment is possible","Short-stroke pneumatic cylinders","Submersible pump face seals"],ans:1,feedback:"Vee packings excel in slow, high-pressure reciprocating service (presses, jacks). Adjustable gland compensates for wear. Not suited for fast-cycling unattended applications."},
+    {q:"A buffer ring (HBY) is installed to:",opts:["Replace the rod seal in low-pressure applications","Absorb pressure spikes before they reach the rod seal, extending primary seal life","Add lubrication to the rod","Prevent axial piston movement"],ans:1,feedback:"High-pressure spikes from fast valve switching or sudden load changes fatigue rod seals. Buffer ring absorbs the spike, allows pressure to equalize gradually."},
+    {q:"For a cylinder in Arctic conditions below \u221240\u00b0F, specify:",opts:["Standard Polyurethane AU 90A","Low-temperature FKM compound or Fluorosilicone (FVMQ) rated to \u2212100\u00b0F","ACM Polyacrylate","Standard NBR"],ans:1,feedback:"Standard PU and NBR become brittle below \u221240\u00b0F. FVMQ goes to \u2212100\u00b0F. Low-temp FKM compounds also handle Arctic conditions while maintaining chemical resistance."},
+    {q:"Wear rings in a hydraulic cylinder primarily manage:",opts:["Sealing under high pressure","Radial/lateral loads on rod and piston, preventing metal-to-metal contact","Torsional loads on the rod","Vacuum during retraction"],ans:1,feedback:"Without wear rings, off-center loads from machine weight or tooling cause rod/piston to contact bore — scoring, seal damage, rapid failure."},
+    {q:"Pneumatic cylinders differ from hydraulic in that they require:",opts:["Oil lubrication throughout","Low-friction seals for compressed air (lower pressure, cleaner environment), less emphasis on extrusion resistance","No seals at all","Only PTFE seals"],ans:1,feedback:"Pneumatic: compressed air, typically 8\u201312 bar, clean environment, low friction priority. Hydraulic: oil, 150\u2013350 bar, contaminated environment, extrusion resistance priority."},
+    {q:"The largest volume user of hydraulic cylinder seals in North America is:",opts:["Aerospace","Food processing","Mobile equipment (construction, agriculture, forestry, mining)","Pharmaceutical manufacturing"],ans:2,feedback:"Mobile equipment is by far the largest seal market: excavators, loaders, agricultural equipment, forestry machines, and mining all use extensive hydraulic cylinder systems."},
+    {q:"For a forestry mulcher in extreme abrasion, the ideal seal specification prioritizes:",opts:["Minimum friction","High durometer polyurethane with multi-lip wiper for bark, rocks, debris","Low-temperature flexibility","FDA food-grade compliance"],ans:1,feedback:"Forestry: extreme abrasion from bark/rocks/wire. Hard PU (90A+) for extrusion resistance; multi-lip wiper (H-series or BW/S metal wiper) to remove aggressive contaminants."},
+    {q:"A hydraulic press at 420 bar (6000 PSI) needs:",opts:["A single O-ring","Multi-piece seal with PTFE cap + AER anti-extrusion rings + elastomeric energizer","A standard wiper ring only","A DU bearing as a seal"],ans:1,feedback:"At very high pressure, single-piece seals extrude. Multi-piece seals (P4A, CTS, CAT-TYPE-4) combine PTFE sealing with AERs to handle extreme pressures reliably."},
+    {q:"Rotary shaft sealing requires different seal types than reciprocating seals because:",opts:["Rotary always uses hydraulic oil","Rotary requires lip seals for continuous 360\u00b0 contact at speed, not U-cups designed for linear stroke","Rotary seals are always larger","Rotary seals don\\'t need lubrication"],ans:1,feedback:"U-cup seals cannot handle continuous rotation — the lip would wear quickly and generate heat. Rotary shaft seals have spring-loaded continuous lip geometry optimized for speed."},
+    {q:"A cylinder sitting overnight at \u221230\u00b0F fails on first stroke. Most likely cause:",opts:["Metal housing cracked","Rubber seals below glass transition temperature become brittle and crack on dynamic shock loading","Moisture evaporated, removing lubrication","High pressure built up overnight"],ans:1,feedback:"Elastomers below glass transition temperature (Tg) become rigid and brittle. First-stroke dynamic loads crack a brittle seal — causing immediate leakage. Low-temp compounds prevent this."},
+    {q:"A cylinder on equipment spraying organophosphate herbicides requires:",opts:["Standard PU always acceptable for agriculture","FKM or EPDM evaluated based on specific chemical compatibility — standard PU and NBR may swell","Silicone resists all agricultural chemicals","Use cheapest option since ag equipment is disposable"],ans:1,feedback:"Organophosphate herbicides attack standard PU and NBR. FKM has broad chemical resistance; EPDM resists many polar chemicals. Always check Parker Chemical Resistance Guide."}
+  ],
+  6: [
+    {q:"What is 'compression set' and why does it matter?",opts:["Force required to install a seal","Permanent deformation after sustained compression — high compression set means the seal loses return force and eventually leaks","Compression ratio in the hydraulic system","How much a seal compresses under operating pressure"],ans:1,feedback:"Compression set = % of original deflection that becomes permanent. 100% compression set = flat seal, no longer springs back against mating surface. Low compression set = longer seal life."},
+    {q:"The 'glass transition temperature' (Tg) is significant because:",opts:["It is the melting point","Below Tg, the elastomer becomes rigid and brittle, losing all sealing function","Above Tg, all elastomers have identical properties","Tg only applies to PTFE"],ans:1,feedback:"Below Tg, molecular chain mobility stops — material becomes hard and brittle like glass. Seals operating below Tg crack on dynamic loading. Low-Tg compounds specified for cold climates."},
+    {q:"Why does NBR fail with ketone solvents (acetone, MEK)?",opts:["Ketones freeze NBR","Ketones are polar solvents that swell and plasticize NBR, causing rapid loss of mechanical properties","Ketones oxidize carbon black","Ketones harden NBR excessively"],ans:1,feedback:"Ketones are polar solvents strongly attracted to nitrile groups in NBR. They penetrate the polymer matrix, causing severe swelling, softening, and dissolution of the seal."},
+    {q:"EPDM fails rapidly in petroleum hydraulic oil because:",opts:["Oil shrinks EPDM","Petroleum hydrocarbons cause severe swelling — seal absorbs oil, expands, loses all mechanical integrity","Oil dissolves EPDM sulfur crosslinks","EPDM reacts with paraffin to form brittle compound"],ans:1,feedback:"EPDM and petroleum hydrocarbons are incompatible. Non-polar hydrocarbons swell non-polar EPDM. Volume swell can reach 100%+ — the seal becomes shapeless."},
+    {q:"Increasing acrylonitrile (ACN) content in NBR has what effect?",opts:["Better cold flexibility, same oil resistance","Better oil resistance but worse cold-temperature flexibility (higher Tg)","Only changes color","Better steam resistance"],ans:1,feedback:"ACN content spectrum: low ACN (18-22%) = flexible at cold, moderate oil resistance. High ACN (40-50%) = excellent oil/fuel resistance, poor cold flex. Standard grade ~33-36% ACN."},
+    {q:"FKM\\'s exceptional chemical resistance comes from:",opts:["High carbon black content","High fluorine content and extremely stable C-F bonds (among the strongest bonds in organic chemistry)","Its high molecular weight","Sulfur crosslinks"],ans:1,feedback:"C-F bond dissociation energy ~544 kJ/mol vs C-H ~413 kJ/mol. Fluorine\\'s high electronegativity creates a protective shield around the carbon backbone."},
+    {q:"Volume swell in a seal material — is it always negative?",opts:["Yes — any swell means immediate failure","No — slight swell (3-8%) can tighten seal-to-groove fit and improve sealing; excess swell causes extrusion, leakage, and groove lock-up","Swell only occurs with PTFE","Volume swell only matters above 200\u00b0F"],ans:1,feedback:"Slight volume swell is often engineered in — a seal in service swells slightly in oil, increasing interference fit. Problems above ~15-20% swell where seal extrudes or sticks in groove."},
+    {q:"H\u2082S (hydrogen sulfide / sour gas) environments require HNBR because:",opts:["HNBR is always less expensive for oil field","Hydrogenation removes C=C double bonds that H\u2082S attacks — HNBR resists sour gas where standard NBR fails","HNBR has different carbon black","HNBR is the only high-pressure rated material"],ans:1,feedback:"H\u2082S attacks residual double bonds (C=C) in NBR through sulfide attack. Hydrogenating NBR (HNBR) saturates these bonds — drastically improving resistance to H\u2082S, ozone, and heat."},
+    {q:"Phosphate ester hydraulic fluids (Skydrol, Fyrquel) require which elastomers?",opts:["NBR and Polyurethane","IIR (Butyl) and EPDM","FKM and NBR","Polyurethane only"],ans:1,feedback:"Phosphate esters destroy NBR and polyurethane quickly. IIR (Butyl) and EPDM both resist phosphate esters. Critical for aerospace and fire-resistant hydraulic systems."},
+    {q:"Ozone cracking occurs because ozone attacks:",opts:["All elastomers equally","C=C double bonds in unsaturated elastomers — NBR, NR, SBR most susceptible; FKM, EPDM, VMQ resistant","Metal fillers in elastomers","Only elastomers in UV light"],ans:1,feedback:"O\u2083 is highly reactive with C=C double bonds — cleaves them causing surface cracking perpendicular to stress. EPDM has very few C=C bonds. FKM has none."},
+    {q:"Biodiesel (B100/high-blend) causes what concern for seals?",opts:["Behaves exactly like mineral oil — all standard seals work","Severe swelling/degradation of standard NBR and polyurethane; high-ACN NBR or FKM recommended","Safe for all elastomers because plant-based","Only metallic seals can withstand biodiesel"],ans:1,feedback:"Biodiesel contains ester compounds and free fatty acids that attack standard NBR and PU. FKM is safest; high-ACN NBR has improved but not complete resistance."},
+    {q:"A seal fails with cracked, hard surface after 6 months. This indicates:",opts:["Chemical swelling","Thermal oxidative degradation — material exceeded continuous temperature rating causing chain scission and hardening","Abrasion from contamination","Incorrect groove dimensions"],ans:1,feedback:"Over-temperature causes oxidative degradation: polymer chains break (scission), material loses plasticizers, becomes hard and brittle, finally cracks. Surface hardening + cracking = thermal signature."},
+    {q:"Higher crosslink density in vulcanized rubber means:",opts:["Softer, more flexible material","Harder material with better compression set resistance but reduced elongation","Only changes color","Always improves chemical resistance"],ans:1,feedback:"More crosslinks = stiffer network = harder, less flexible, better compression set. Fewer crosslinks = more flexible, better elongation, worse compression set."},
+    {q:"Hot water above 60\u00b0C causes polyurethane seal failure because:",opts:["Water freezes around the seal","Water hydrolyzes urethane linkages — chemically breaking the polymer backbone, causing softening, swelling, disintegration (worst for polyester AU)","Water makes PU too hard","Water oxidizes carbon black"],ans:1,feedback:"Hydrolysis = water splitting ester/ether linkages in the polymer chain. Polyester AU most vulnerable. Polyether EU resists hydrolysis better. EPDM is correct for hot water service."},
+    {q:"Fluorosilicone (FVMQ) improves on standard Silicone (VMQ) by providing:",opts:["Higher temperature above 450\u00b0F","Fuel and aliphatic hydrocarbon resistance that standard silicone lacks, while retaining wide temperature range to \u2212100\u00b0F","Better mechanical/abrasion resistance","Lower cost"],ans:1,feedback:"Standard VMQ: poor resistance to petroleum oils/fuels. FVMQ adds fluorinated side chains for fuel/oil resistance, keeping silicone\\'s exceptional low-temperature flexibility. Used in aerospace fuel systems."},
+    {q:"When a seal SHRINKS after fluid exposure, this indicates:",opts:["Seal is too large","Fluid is extracting plasticizers — hardening and shrinkage cause loss of sealing contact force","Operating temperature below freezing","Seal is performing correctly"],ans:1,feedback:"Plasticizer extraction (aggressive solvents or non-polar fluids) hardens and shrinks the elastomer. Seal loses interference fit with mating surfaces and leaks without visible damage."},
+    {q:"Water-glycol hydraulic fluid (HF-C) requires:",opts:["Standard Polyurethane and NBR","EPDM for water-glycol compatibility, paired with PTFE-based wear rings","VMQ silicone throughout","IIR (Butyl) and Neoprene (CR)"],ans:1,feedback:"Water-glycol is water-based — EPDM compatible. NBR and PU swell severely. PTFE wear rings for low friction. Standard for fire-resistant water-glycol hydraulic systems."},
+    {q:"The ASTM test standard for compression set in rubber is:",opts:["ASTM D412 (tensile)","ASTM D395 (compression set)","ASTM D2240 (durometer)","ASTM D624 (tear)"],ans:1,feedback:"ASTM D395 Method B: compress 25% at specified temperature for 22 or 70 hours, release, measure permanent set %. Below 20% generally acceptable for dynamic seals."},
+    {q:"Higher molecular weight in an elastomer generally results in:",opts:["Softer, lower durometer material","Better mechanical properties (higher tensile, elongation, tear) from longer polymer chains that entangle more effectively","No change in performance","Higher compression set"],ans:1,feedback:"Longer polymer chains = more chain entanglements = higher mechanical properties. High-MW NBR or FKM grades show better tensile and tear resistance from physical crosslinks."},
+    {q:"The Parker ORD 5712 Material Offering Guide is used to:",opts:["Select correct seal size from dimensional tables","Identify the appropriate Parker compound for a specific chemical, temperature, and application","Calculate hydraulic cylinder bore dimensions","Order replacement O-ring kits"],ans:1,feedback:"ORD 5712 is Parker\\'s comprehensive material/compound selector: lists every compound with chemical resistance ratings, temperature ranges, hardness, and application guidelines — the definitive material selection reference."}
+  ]
+};
+
+// Pass thresholds & config
+const PASS  = { 1: 8,  2: 8,  3: 12, 4: 13, 5: 13, 6: 17 };
+const TOTAL = { 1: 10, 2: 10, 3: 15, 4: 15, 5: 15, 6: 20 };
+const TIME_LIMIT = { 1: 8*60, 2: 8*60, 3: 12*60, 4: 12*60, 5: 15*60, 6: 20*60 };
+const LEVEL_COLORS = { 1:'#3a7bd5', 2:'#1abc9c', 3:'#9b59b6', 4:'#e67e22', 5:'#c8222a', 6:'#c8a000' };
+const LEVEL_NAMES_TEXT = {
+  1:'Level 1 \u2014 Catalog Navigation', 2:'Level 2 \u2014 Website Navigation',
+  3:'Level 3 \u2014 Profiles & Shapes',  4:'Level 4 \u2014 Materials',
+  5:'Level 5 \u2014 Applications',       6:'Level 6 \u2014 Material Science'
+};
+const LEVEL_NAMES_SHORT = {
+  1:'Catalog Navigation', 2:'Website Navigation', 3:'Profiles & Shapes',
+  4:'Materials', 5:'Applications', 6:'Material Science'
+};
+
+// State
+let currentLevel=1,currentQ=0,score=0,employeeName='',timerInterval=null;
+let timeLeft=0,timeUsed=0,answered=[],questionOrder=[];
+
+function getPassedLevels(){try{return JSON.parse(localStorage.getItem('flabed_passed')||'{}');}catch{return {};}}
+function savePassedLevel(level,scoreVal,name){
+  const data=getPassedLevels();
+  data[level]={score:scoreVal,name:name,date:new Date().toLocaleDateString('en-CA')};
+  localStorage.setItem('flabed_passed',JSON.stringify(data));
+}
+
+function initLevelCards(){
+  const passed=getPassedLevels();
+  [1,2,3,4,5,6].forEach(l=>{
+    const card=document.getElementById('card-l'+l);
+    const status=document.getElementById('status-'+l);
+    const lock=document.getElementById('lock-'+l);
+    if(!card) return;
+    if(passed[l]){
+      card.classList.remove('locked');
+      if(lock) lock.style.display='none';
+      const pct=Math.round((passed[l].score/TOTAL[l])*100);
+      status.innerHTML=`<div class="status-dot passed"></div><span class="status-passed">✓ Passed — ${pct}% — ${passed[l].date}</span>`;
+    } else if(l===1||passed[l-1]){
+      card.classList.remove('locked');
+      if(lock) lock.style.display='none';
+      status.innerHTML=`<div class="status-dot unlocked"></div><span class="status-unlocked">Ready to attempt</span>`;
+    } else {
+      card.classList.add('locked');
+      if(lock) lock.style.display='block';
+      status.innerHTML=`<div class="status-dot locked-dot"></div><span class="status-locked">Complete Level ${l-1} to unlock</span>`;
+    }
+  });
+}
+
+function startLevel(level){
+  const passed=getPassedLevels();
+  if(level>1&&!passed[level-1]) return;
+  currentLevel=level;
+  document.getElementById('screen-home').classList.remove('active');
+  document.getElementById('screen-name').classList.add('active');
+  const icons={1:'📋',2:'🌐',3:'🔩',4:'🧪',5:'🏗️',6:'🔬'};
+  const descs={
+    1:`10 questions · 8 minutes · Pass mark: 80% · Finding Products in Catalogs`,
+    2:`10 questions · 8 minutes · Pass mark: 80% · Finding Products on the Website`,
+    3:`15 questions · 12 minutes · Pass mark: 80% · Profiles and Shapes`,
+    4:`15 questions · 12 minutes · Pass mark: 85% · Materials`,
+    5:`15 questions · 15 minutes · Pass mark: 85% · Applications and Markets`,
+    6:`20 questions · 20 minutes · Pass mark: 85% · Material Science & Compatibility`
+  };
+  document.getElementById('name-level-icon').textContent=icons[level];
+  document.getElementById('name-level-title').textContent=`Level ${level} Assessment`;
+  document.getElementById('name-level-desc').innerHTML=descs[level]+'<br><br>Enter your full name as it will appear on your certificate.';
+  const existing=passed[level];
+  if(existing&&existing.name){
+    document.getElementById('name-input').value=existing.name;
+    document.getElementById('btn-begin').disabled=false;
+  } else {
+    document.getElementById('name-input').value=employeeName||'';
+    validateName();
+  }
+}
+
+function validateName(){
+  const val=document.getElementById('name-input').value.trim();
+  document.getElementById('btn-begin').disabled=val.length<2;
+  document.getElementById('name-warning').textContent=val.length&&val.length<2?'Please enter your full name':'';
+}
+
+function beginQuiz(){
+  employeeName=document.getElementById('name-input').value.trim();
+  if(!employeeName||employeeName.length<2) return;
+  const qs=[...QUESTIONS[currentLevel]];
+  for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}
+  questionOrder=qs;currentQ=0;score=0;answered=[];
+  timeLeft=TIME_LIMIT[currentLevel];timeUsed=0;
+  document.getElementById('screen-name').classList.remove('active');
+  document.getElementById('screen-quiz').classList.add('active');
+  const col=LEVEL_COLORS[currentLevel];
+  const badge=document.getElementById('quiz-level-badge');
+  badge.textContent=`Level ${currentLevel}: ${LEVEL_NAMES_SHORT[currentLevel]}`;
+  badge.style.cssText=`background:${col}22;color:${col};border:1px solid ${col}44`;
+  const fill=document.getElementById('quiz-progress-fill');
+  fill.style.background=col;
+  document.getElementById('question-card').style.borderLeftColor=col;
+  startTimer();renderQuestion();
+}
+
+function renderQuestion(){
+  const q=questionOrder[currentQ],total=TOTAL[currentLevel];
+  document.getElementById('q-num').textContent=`Question ${currentQ+1} of ${total}`;
+  document.getElementById('q-progress-text').textContent=`Question ${currentQ+1} of ${total}`;
+  document.getElementById('q-score-text').textContent=`Score: ${score}`;
+  document.getElementById('quiz-progress-fill').style.width=((currentQ+1)/total*100)+'%';
+  document.getElementById('q-text').textContent=q.q;
+  const hint=document.getElementById('q-hint');
+  if(q.hint){hint.textContent=q.hint;hint.style.display='block';}else{hint.style.display='none';}
+  const grid=document.getElementById('options-grid');
+  grid.innerHTML='';
+  ['A','B','C','D'].forEach((letter,i)=>{
+    const btn=document.createElement('button');
+    btn.className='option-btn';
+    btn.innerHTML=`<span class="option-letter">${letter}</span><span>${q.opts[i]}</span>`;
+    btn.onclick=()=>selectAnswer(i);
+    grid.appendChild(btn);
+  });
+  document.getElementById('feedback-msg').className='feedback-msg';
+  document.getElementById('btn-next').className='btn-next';
+  document.getElementById('btn-next-label').textContent=currentQ===questionOrder.length-1?'See Results':'Next Question';
+}
+
+function selectAnswer(idx){
+  const q=questionOrder[currentQ];
+  const btns=document.querySelectorAll('.option-btn');
+  btns.forEach(b=>b.disabled=true);
+  const correct=idx===q.ans;
+  if(correct) score++;
+  answered.push({q:q.q,selected:idx,correct:q.ans,isCorrect:correct,feedback:q.feedback,opts:q.opts});
+  btns.forEach((btn,i)=>{
+    if(i===q.ans) btn.classList.add('correct');
+    else if(i===idx&&!correct) btn.classList.add('wrong');
+  });
+  const fb=document.getElementById('feedback-msg');
+  fb.textContent=(correct?'✓ Correct! ':'✗ Incorrect. ')+q.feedback;
+  fb.className='feedback-msg show '+(correct?'feedback-correct':'feedback-wrong');
+  document.getElementById('btn-next').className='btn-next show';
+  document.getElementById('q-score-text').textContent=`Score: ${score}`;
+}
+
+function nextQuestion(){currentQ++;if(currentQ>=questionOrder.length)showResults();else renderQuestion();}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    timeLeft--;timeUsed++;
+    const m=Math.floor(timeLeft/60),s=timeLeft%60;
+    const el=document.getElementById('timer-display');
+    el.textContent=`${m}:${s<10?'0':''}${s}`;
+    el.className=timeLeft<=60?'timer-warn':'';
+    if(timeLeft<=0){clearInterval(timerInterval);showResults();}
+  },1000);
+}
+
+function showResults(){
+  clearInterval(timerInterval);
+  const total=TOTAL[currentLevel],passScore=PASS[currentLevel];
+  const pct=Math.round(score/total*100),passed=score>=passScore;
+  document.getElementById('screen-quiz').classList.remove('active');
+  document.getElementById('screen-results').classList.add('active');
+  const circ=440,offset=circ-(pct/100)*circ;
+  const ring=document.getElementById('ring-progress');
+  ring.style.strokeDashoffset=circ;
+  ring.style.stroke=passed?'#2ecc71':'#c8222a';
+  setTimeout(()=>{ring.style.transition='stroke-dashoffset 1.2s ease';ring.style.strokeDashoffset=offset;},100);
+  document.getElementById('result-score-num').textContent=pct+'%';
+  document.getElementById('stat-correct').textContent=score;
+  document.getElementById('stat-wrong').textContent=total-score;
+  const um=Math.floor(timeUsed/60),us=timeUsed%60;
+  document.getElementById('stat-time').textContent=`${um}:${us<10?'0':''}${us}`;
+  if(passed){
+    document.getElementById('results-verdict').textContent='\uD83C\uDFC6 Passed!';
+    document.getElementById('results-verdict').style.color='#2ecc71';
+    document.getElementById('results-sub').textContent=`Congratulations ${employeeName}! You passed Level ${currentLevel} with ${pct}%. Your certificate is ready.`;
+    document.getElementById('btn-cert').style.display='inline-flex';
+    savePassedLevel(currentLevel,score,employeeName);
+  } else {
+    const needed=passScore-score;
+    document.getElementById('results-verdict').textContent=`Not Quite — ${pct}%`;
+    document.getElementById('results-verdict').style.color='#e87a50';
+    document.getElementById('results-sub').textContent=`You needed ${passScore}/${total}. You scored ${score}/${total}. You need ${needed} more correct answer${needed>1?'s':''}.`;
+    document.getElementById('btn-cert').style.display='none';
+  }
+  // Next Level button
+  const nextBtn=document.getElementById('btn-next-level');
+  const nextLabel=document.getElementById('btn-next-label-main');
+  if(passed&&currentLevel<6){
+    nextLabel.textContent=`Next: Level ${currentLevel+1}`;
+    nextBtn.className=`btn-next-level l${currentLevel+1} show`;
+  } else {
+    nextBtn.className='btn-next-level';
+  }
+  document.getElementById('btn-share').className='btn-share show';
+  // Review
+  const rl=document.getElementById('review-list');
+  rl.innerHTML='<h3>Answer Review</h3>';
+  answered.forEach((a,i)=>{
+    const div=document.createElement('div');
+    div.className=`review-item ${a.isCorrect?'r-correct':'r-wrong'}`;
+    div.innerHTML=`<span class="review-icon">${a.isCorrect?'✓':'✗'}</span><div>
+      <div class="review-q">Q${i+1}: ${a.q}</div>
+      ${!a.isCorrect?`<div class="review-a">Your answer: ${a.opts[a.selected]}</div>`:''}
+      <div class="review-correct-a">✓ ${a.opts[a.correct]}</div>
+      <div class="review-a" style="margin-top:4px;font-size:12px">${a.feedback}</div>
+    </div>`;
+    rl.appendChild(div);
+  });
+}
+
+function retryLevel(){document.getElementById('screen-results').classList.remove('active');startLevel(currentLevel);}
+function showHome(){
+  ['screen-name','screen-quiz','screen-results'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('screen-home').classList.add('active');
+  clearInterval(timerInterval);initLevelCards();
+}
+function goNextLevel(){
+  const next=currentLevel+1;if(next>6)return;
+  document.getElementById('screen-results').classList.remove('active');startLevel(next);
+}
+
+function showCertificate(){
+  const total=TOTAL[currentLevel],pct=Math.round(score/total*100);
+  const certId='FS-'+currentLevel+'-'+Date.now().toString(36).toUpperCase().slice(-6);
+  const today=new Date().toLocaleDateString('en-CA');
+  const col=LEVEL_COLORS[currentLevel];
+  document.getElementById('cert-name').textContent=employeeName;
+  document.getElementById('cert-level-num').textContent=currentLevel;
+  document.getElementById('cert-level-num').style.color=col;
+  document.getElementById('cert-level-text').textContent=LEVEL_NAMES_SHORT[currentLevel];
+  document.getElementById('cert-level-full').textContent=`Level ${currentLevel}`;
+  document.getElementById('cert-score').textContent=pct+'%';
+  document.getElementById('cert-date').textContent=today;
+  document.getElementById('cert-id').textContent='ID: #'+certId;
+  const bodies={
+    1:'Has successfully demonstrated <strong>foundational catalog knowledge</strong> — including catalog structure, section navigation, page references, and dimensional measurement conventions.',
+    2:'Has demonstrated <strong>proficiency navigating the FluidSeal AB digital platform</strong> — including sealsonline.com product search, URL structure, Inch/Metric navigation, and the Product Profiles Training Guide.',
+    3:'Has demonstrated <strong>applied knowledge of hydraulic seal profiles and shapes</strong> — including U-cup, piston, wiper, multi-piece, guiding element profiles, and functional identification across all product families.',
+    4:'Has demonstrated <strong>comprehensive materials knowledge</strong> — including elastomer families, polymer properties, durometer, Parker compound coding, and fundamental chemical compatibility principles.',
+    5:'Has demonstrated <strong>applied market and application knowledge</strong> — including hydraulic system sealing requirements, industry sectors, environmental conditions, and application-specific material selection.',
+    6:'Has demonstrated <strong>expert-level material science and chemical compatibility knowledge</strong> — including polymer physics, degradation mechanisms, chemical resistance science, and advanced compound selection methodology.'
+  };
+  document.getElementById('cert-body-text').innerHTML=bodies[currentLevel];
+  document.getElementById('cert-modal').classList.add('show');
+}
+function closeCert(){document.getElementById('cert-modal').classList.remove('show');}
+document.getElementById('cert-modal').addEventListener('click',function(e){if(e.target===this)closeCert();});
+
+// Share
+let shareContext='results';
+function openShareModal(ctx){
+  shareContext=ctx;
+  const total=TOTAL[currentLevel],pct=Math.round(score/total*100);
+  document.getElementById('share-modal-desc').textContent=`Share your Level ${currentLevel} results — ${pct}% (${score}/${total} correct).`;
+  document.getElementById('share-status').className='share-status';
+  document.getElementById('share-modal-bg').classList.add('show');
+}
+function closeShareModal(){document.getElementById('share-modal-bg').classList.remove('show');}
+document.getElementById('share-modal-bg').addEventListener('click',function(e){if(e.target===this)closeShareModal();});
+
+function shareViaEmail(){
+  const total=TOTAL[currentLevel],pct=Math.round(score/total*100);
+  const passed=score>=PASS[currentLevel];
+  const today=new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+  const certId='FS-'+currentLevel+'-'+Date.now().toString(36).toUpperCase().slice(-6);
+  const subject=passed?`Certificate — FluidSeal AB Level ${currentLevel} — ${employeeName}`:`Training Results — FluidSeal AB Level ${currentLevel} — ${employeeName}`;
+  const body=passed
+    ?`Dear Team,\n\n${employeeName} has successfully completed Level ${currentLevel}: ${LEVEL_NAMES_TEXT[currentLevel]}.\n\nRESULT SUMMARY\n───────────────────────────\nEmployee:    ${employeeName}\nLevel:       ${LEVEL_NAMES_TEXT[currentLevel]}\nScore:       ${pct}% (${score} of ${total})\nDate:        ${today}\nCertificate: ${certId}\n───────────────────────────\n${currentLevel<6?`Level ${currentLevel+1} is now unlocked.`:'All 6 levels completed. Full Certification achieved.'}\n\nFluidSeal AB Training Department\n17309-107 Ave, Edmonton AB\n780-414-1871 | fluidsealab@sealsonline.com`
+    :`Dear Team,\n\n${employeeName} attempted Level ${currentLevel}: ${LEVEL_NAMES_TEXT[currentLevel]}.\n\nRESULT\n───────────────────────────\nEmployee: ${employeeName}\nScore:    ${pct}% (${score} of ${total}) — Not passed\nDate:     ${today}\n───────────────────────────\n\nFluidSeal AB Training Department`;
+  window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  closeShareModal();
+}
+
+function copyResultsText(){
+  const total=TOTAL[currentLevel],pct=Math.round(score/total*100);
+  const text=`FluidSeal AB Certificate Program\n${score>=PASS[currentLevel]?'✓ PASSED':'✗ NOT PASSED'} — Level ${currentLevel}: ${LEVEL_NAMES_SHORT[currentLevel]}\nEmployee: ${employeeName}\nScore: ${pct}% (${score}/${total})\nDate: ${new Date().toLocaleDateString('en-CA')}`;
+  navigator.clipboard.writeText(text).then(()=>{
+    const el=document.getElementById('share-status');
+    el.textContent='✓ Copied to clipboard!';el.className='share-status show';
+    setTimeout(()=>el.className='share-status',2500);
+  }).catch(()=>{
+    const el=document.getElementById('share-status');
+    el.textContent='Copy failed — please copy manually';el.style.color='#e87a50';el.className='share-status show';
+  });
+}
+
+async function downloadCertPDF(){
+  closeShareModal();
+  const certModal=document.getElementById('cert-modal');
+  const wasHidden=!certModal.classList.contains('show');
+  if(wasHidden){showCertificate();await new Promise(r=>setTimeout(r,300));}
+  const loader=document.getElementById('pdf-loading');
+  loader.classList.add('show');
+  const controls=document.querySelector('.cert-controls');
+  controls.style.display='none';
+  try{
+    const canvas=await html2canvas(document.querySelector('.certificate'),{scale:2.5,backgroundColor:'#ffffff',useCORS:true,logging:false});
+    const imgData=canvas.toDataURL('image/jpeg',0.95);
+    const{jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+    const ratio=canvas.width/canvas.height;
+    let dw=pw,dh=pw/ratio;
+    if(dh>ph){dh=ph;dw=ph*ratio;}
+    pdf.addImage(imgData,'JPEG',(pw-dw)/2,(ph-dh)/2,dw,dh);
+    pdf.save(`FluidSeal_Certificate_L${currentLevel}_${employeeName.replace(/[^a-zA-Z0-9]/g,'_')}.pdf`);
+  } catch(e){alert('PDF generation failed. Please use Print instead.');console.error(e);}
+  finally{controls.style.display='';loader.classList.remove('show');if(wasHidden)closeCert();}
+}
+
+// Init
+initLevelCards();
+
+</script>
+
+<!-- Share Modal -->
+<div id="share-modal-bg" class="share-modal-bg">
+  <div class="share-modal">
+    <button class="share-close" onclick="closeShareModal()">✕</button>
+    <div style="font-size:28px;margin-bottom:10px">📤</div>
+    <h3>Share Your Achievement</h3>
+    <p id="share-modal-desc">Share your results.</p>
+    <div class="share-options">
+      <button class="share-opt-btn" onclick="shareViaEmail()">
+        <div class="share-opt-icon" style="background:rgba(58,123,213,0.15);color:#7aade8">✉</div>
+        <div><div class="share-opt-title">Send via Email</div><div class="share-opt-desc">Opens your email client with a pre-filled achievement summary</div></div>
+      </button>
+      <button class="share-opt-btn" onclick="downloadCertPDF()">
+        <div class="share-opt-icon" style="background:rgba(200,34,42,0.15);color:#e87a7a">📄</div>
+        <div><div class="share-opt-title">Download Certificate PDF</div><div class="share-opt-desc">Save a printable PDF of your official certificate</div></div>
+      </button>
+      <button class="share-opt-btn" onclick="copyResultsText()">
+        <div class="share-opt-icon" style="background:rgba(46,204,113,0.15);color:#6ee89a">📋</div>
+        <div><div class="share-opt-title">Copy to Clipboard</div><div class="share-opt-desc">Copy a text summary of your results to paste anywhere</div></div>
+      </button>
+    </div>
+    <div class="share-status" id="share-status">✓ Copied!</div>
+  </div>
+</div>
+<div class="pdf-loading" id="pdf-loading">
+  <div class="pdf-spinner"></div>
+  <p>Generating Certificate PDF...</p>
+</div>
+</body></html>
