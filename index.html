@@ -436,7 +436,7 @@
    ============================================================ */
 
 const MARION = {
-  knowledge: { company:null, groups:[], profiles:[], products:[], manifest:null, parents:[], xrefIndex:null, anyseals:[] },
+  knowledge: { company:null, groups:[], profiles:[], products:[], manifest:null, parents:[], xrefIndex:null, anyseals:[], training:null },
   apiKey: null,
   history: [],          // {role, content} for API continuity
   ready: false
@@ -452,6 +452,7 @@ HOW YOU HELP
 2. Match to real products from the PRODUCTS knowledge below. Compare the customer's pressure, temperature and speed against each profile's operating limits. Recommend profiles that fit; say plainly when a requirement exceeds a product's rating.
 3. Give direct links from the PRODUCT GROUPS / PROFILE LINKS knowledge when you name something.
 4. Quotes (later phase): gather parts, quantity, contact details and hand off.
+5. Staff training & certification. You carry a TRAINING knowledge layer (how to measure seals with a caliper, the correct dimension order for rod vs piston seals, material & chemical-compatibility guidance, the catalog A-G reference system, and the full 6-level certification curriculum). When someone asks a how-do-I-measure / identify / select question, answer from TRAINING. When a fuller walkthrough would help, point them to the matching interactive module using the URLs in TRAINING.destinations (the Staff Training Hub at marion.fluidsealab.com/training/, the caliper module, or the certification program). These training pages are primarily for Fluidseal employees.
 
 CROSS-REFERENCE / NORMALIZATION
 Fluidseal normalizes every manufacturer into its own parent profiles. The PARENT PROFILES knowledge maps a canonical parent_profile (e.g. PS101, RS117) to the Fluidseal/SSG profile (with URL), plus equivalent codes from Fluidseal Xpress, DMH, Parker, Hallite, Freudenberg and Maxspare. The ANYSEALS CROSSREF knowledge is a brand-to-brand table from the distributor Anyseals, mapping Anyseals design codes (OS-/PS-/RS-/WS-/GS-) to Simrit (=Freudenberg), Trelleborg, Forsheda/Stefa, Eriks, Dichtomatik, Parker and Taiwan/China equivalents; some records carry a fluidseal_bridge linking them to a Fluidseal parent_profile via a shared OEM code. When a customer gives any competitor or vendor part number or profile, translate it: find the parent profile and give the Fluidseal/SSG equivalent and its page; if it only appears in the Anyseals table, give the brand equivalents and say a direct Fluidseal link will follow once that brand's comparable list is loaded. Treat Simrit and Freudenberg as the same brand. SSG and Fluidseal share profiles. Anyseals equivalences are orientation-only — tell the customer to verify before quoting. Never invent an equivalence that isn't in the knowledge.
@@ -508,6 +509,14 @@ async function loadKnowledge(){
         MARION.knowledge.anyseals = an.crossrefs || [];
       }catch(e){ MARION.knowledge.anyseals=[]; }
     }
+    // Staff-training knowledge layer (caliper, materials, certification curriculum)
+    if(manifest.shared && manifest.shared.training){
+      try{
+        const tr = await fetchJSON(base+manifest.shared.training);
+        MARION.knowledge.training = tr;
+      }catch(e){ MARION.knowledge.training=null; }
+    }
+
     MARION.knowledge.xrefIndex = buildXrefIndex(MARION.knowledge.parents, MARION.knowledge.anyseals);
 
     MARION.ready = true;
@@ -913,7 +922,8 @@ async function answerViaAPI(userText){
     profile_links: MARION.knowledge.profiles,
     products: MARION.knowledge.products,
     parent_profiles: MARION.knowledge.parents,
-    anyseals_crossref: MARION.knowledge.anyseals
+    anyseals_crossref: MARION.knowledge.anyseals,
+    training: MARION.knowledge.training
   };
   const sys = SYSTEM_PROMPT + "\n\n=== KNOWLEDGE BASE (your only source of truth) ===\n" + JSON.stringify(kb);
   MARION.history.push({role:'user',content:userText});
