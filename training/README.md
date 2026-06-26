@@ -10,14 +10,9 @@ absorb them) when handing a customer or staff member off to a full interactive m
 |------|---------------|--------|
 | `index.html` | `/training/` | Hub landing page (links the 3 modules) |
 | `product-profiles-training.html` | `/training/product-profiles-training.html` | Module 1 — Product Profiles Guide (130+ series). ~3.5 MB. |
+| `fluidseal_training.html` | `/training/fluidseal_training.html` | Module 2 — Caliper & Measurement microsite (labelled diagram, video, quiz). |
 | `training-certificate.html` | `/training/training-certificate.html` | Module 3 — 6-level staff certification (85 Q, PDF certificate). |
-| `fluidseal_training_video.html` | `/training/fluidseal_training_video.html` | Module 2 — caliper training video (interim). |
-
-### Known gap
-The full **caliper training microsite** (`fluidseal_training.html` — labelled diagram, parts
-cards, reading guide, quiz) is not yet in this folder; only the video version is. Regenerate it
-and drop it in as `fluidseal_training.html`, then the Module 2 card in `index.html` and the
-`caliper_measurement` destination in `knowledge/training.json` already point to that filename.
+| `fluidseal_training_video.html` | `/training/fluidseal_training_video.html` | Standalone caliper video. The same video is embedded inside Module 2, so the hub no longer links here directly; kept as a spare asset. |
 
 ## How this connects to Marion's brain
 
