@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training | FluidSeal AB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  color: #2d2d2d;
+  background: #fff;
+  line-height: 1.6;
+}
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; display: block; }
+
+/* ── BRAND COLOURS (from FluidSeal AB / SealsOnline) ── */
+/* Primary navy: #0f1923  |  Red accent: #c8222a  |  Light grey bg: #f5f5f5 */
+
+/* ── TOP BAR (Product Profiles style) ── */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+.topbar {
+  background: #0d1219;
+  color: #6a8090;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  padding: 7px 0;
+  text-align: center;
+  letter-spacing: 0.2px;
+  border-bottom: 1px solid #1a2530;
+}
+.topbar .tb-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: center; gap: 0;
+}
+.topbar .tb-item {
+  display: flex; align-items: center; gap: 6px;
+  color: #6a8090; padding: 0 18px;
+  border-right: 1px solid #1e2e3a;
+}
+.topbar .tb-item:last-child { border-right: none; }
+.topbar .tb-item svg { opacity: .6; flex-shrink: 0; }
+.topbar a { color: #6a8090; transition: color .15s; }
+.topbar a:hover { color: #c8222a; }
+
+/* ── MAIN HEADER (Product Profiles style) ── */
+.site-header {
+  background: #131b24;
+  border-bottom: 1px solid #1e2d3a;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,.35);
+}
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-right: 28px;
+  text-decoration: none;
+  background: #fff;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+.logo-svg {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
+/* Primary nav (Shop / Products / About / Training / Contact) */
+.nav-primary {
+  display: flex; align-items: center; gap: 2px;
+}
+.nav-primary a {
+  color: #8a9eae;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px; font-weight: 500;
+  padding: 0 14px; height: 62px;
+  display: flex; align-items: center;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.nav-primary a:hover { color: #fff; border-bottom-color: rgba(200,34,42,.4); }
+.nav-primary a.active {
+  color: #fff;
+  border-bottom-color: #c8222a;
+}
+
+/* Divider between nav groups (unused — kept for potential reuse) */
+
+/* Section nav now uses .nav-primary styling above */
+
+/* Right side actions */
+.nav-actions {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 10px;
+}
+.btn-caliper {
+  display: flex; align-items: center; gap: 7px;
+  background: transparent;
+  border: 1px solid #2a3d4e;
+  color: #8aaac0;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 600;
+  padding: 7px 14px; border-radius: 5px;
+  transition: border-color .15s, color .15s, background .15s;
+  white-space: nowrap; cursor: pointer; text-decoration: none;
+}
+.btn-caliper:hover { border-color: #c8222a; color: #fff; background: rgba(200,34,42,.08); }
+.btn-caliper svg { opacity: .7; }
+.btn-shop {
+  background: #c8222a; color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 600;
+  padding: 8px 20px; border-radius: 5px;
+  border: none; cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap; text-decoration: none;
+  letter-spacing: 0.2px;
+}
+.btn-shop:hover { background: #a81a20; }
+
+/* ── HERO BANNER ── */
+.training-hero {
+  background: linear-gradient(135deg, #0f1923 0%, #1a2e3f 50%, #0d2233 100%);
+  padding: 64px 24px 56px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.training-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 60% 50%, rgba(200,34,42,.12) 0%, transparent 70%);
+}
+.hero-badge {
+  display: inline-block;
+  background: rgba(200,34,42,.15);
+  border: 1px solid rgba(200,34,42,.35);
+  color: #e87a7e;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 5px 14px; border-radius: 20px;
+  margin-bottom: 18px;
+}
+.training-hero h1 {
+  font-size: clamp(28px, 5vw, 46px);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  position: relative;
+}
+.training-hero h1 span { color: #e86368; }
+.training-hero p {
+  font-size: 16px; color: #8aa0b0;
+  max-width: 560px; margin: 0 auto 28px;
+  line-height: 1.7;
+  position: relative;
+}
+.hero-pills {
+  display: flex; flex-wrap: wrap;
+  justify-content: center; gap: 10px;
+  position: relative;
+}
+.pill {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: #8aa0b0; font-size: 12px;
+  padding: 5px 14px; border-radius: 20px;
+  display: flex; align-items: center; gap: 6px;
+}
+.pill svg { opacity: .7; }
+
+/* ── SECTION WRAPPER ── */
+.section { padding: 60px 24px; }
+.section.alt { background: #f6f8fa; }
+.container { max-width: 1100px; margin: 0 auto; }
+.section-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: #c8222a; margin-bottom: 8px;
+}
+.section-title {
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 700; color: #0f1923;
+  margin-bottom: 12px; line-height: 1.25;
+}
+.section-desc {
+  font-size: 15px; color: #5a6a78;
+  max-width: 620px; line-height: 1.7;
+  margin-bottom: 36px;
+}
+
+/* ── VIDEO SECTION ── */
+.video-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 40px;
+  align-items: start;
+}
+@media(max-width:860px){ .video-layout { grid-template-columns: 1fr; } }
+
+.video-thumb-wrap {
+  display: block;
+  position: relative;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,.22);
+  background: #000;
+  text-decoration: none;
+  aspect-ratio: 16/9;
+  cursor: pointer;
+}
+.video-thumb-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .4s ease, filter .4s ease;
+  filter: brightness(.92);
+}
+.video-thumb-wrap:hover .video-thumb-img {
+  transform: scale(1.03);
+  filter: brightness(.7);
+}
+.play-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px;
+  background: linear-gradient(to top, rgba(0,0,0,.55) 0%, transparent 50%);
+  transition: background .3s ease;
+}
+.video-thumb-wrap:hover .play-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,.7) 0%, rgba(0,0,0,.15) 100%);
+}
+.play-btn {
+  width: 72px; height: 72px;
+  filter: drop-shadow(0 4px 16px rgba(0,0,0,.5));
+  transition: transform .2s ease;
+}
+.play-btn svg { width: 72px; height: 72px; }
+.video-thumb-wrap:hover .play-btn { transform: scale(1.12); }
+.play-label {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  position: absolute; bottom: 20px; left: 0; right: 0;
+}
+.play-yt {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,.75); color: #fff;
+  font-size: 13px; font-weight: 600;
+  padding: 7px 16px; border-radius: 5px;
+  letter-spacing: .2px;
+  border: 1px solid rgba(255,255,255,.12);
+}
+.play-title {
+  color: rgba(255,255,255,.55);
+  font-size: 11.5px; letter-spacing: .3px;
+}
+
+.video-meta { display: flex; flex-direction: column; gap: 20px; }
+.vmeta-card {
+  background: #fff;
+  border: 1px solid #e4e8ed;
+  border-radius: 8px;
+  padding: 20px;
+}
+.vmeta-card h3 {
+  font-size: 14px; font-weight: 600; color: #0f1923;
+  margin-bottom: 12px; letter-spacing: 0.2px;
+  display: flex; align-items: center; gap: 8px;
+}
+.vmeta-card h3 svg { color: #c8222a; flex-shrink: 0; }
+.checklist { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.checklist li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 13.5px; color: #3a4a58; line-height: 1.4;
+}
+.check-icon {
+  width: 18px; height: 18px;
+  background: #edf8f0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.check-icon svg { width: 10px; color: #2e9e5a; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  background: #f0f4f8; color: #3a5268;
+  font-size: 11.5px; font-weight: 500;
+  padding: 4px 10px; border-radius: 4px;
+  border: 1px solid #dde4ec;
+}
+
+/* ── PARTS DIAGRAM SECTION ── */
+.diagram-wrap {
+  position: relative;
+  background: #f0f4f7;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+}
+.diagram-wrap img {
+  width: 100%; display: block;
+}
+/* SVG labels overlay */
+.diagram-wrap svg.labels {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+}
+
+/* ── PARTS GRID ── */
+.parts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+.part-card {
+  background: #fff;
+  border: 1px solid #e4e8ed;
+  border-radius: 8px;
+  padding: 18px 16px;
+  transition: box-shadow .15s, border-color .15s;
+}
+.part-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); border-color: #c8222a; }
+.part-num {
+  width: 28px; height: 28px;
+  background: #0f1923; color: #fff;
+  border-radius: 50%; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px;
+}
+.part-card h4 { font-size: 13.5px; font-weight: 600; color: #0f1923; margin-bottom: 4px; }
+.part-card p  { font-size: 12px; color: #5a6a78; line-height: 1.5; }
+
+/* ── TIPS SECTION ── */
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+.tip-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 24px;
+  border: 1px solid #e4e8ed;
+  border-top: 3px solid #c8222a;
+}
+.tip-icon {
+  width: 40px; height: 40px;
+  background: #fff0f0; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+}
+.tip-card h3 { font-size: 15px; font-weight: 600; color: #0f1923; margin-bottom: 8px; }
+.tip-card p  { font-size: 13px; color: #5a6a78; line-height: 1.6; }
+
+/* ── HOW TO READ ── */
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step {
+  display: flex; gap: 24px;
+  padding: 28px 0;
+  border-bottom: 1px solid #edf0f3;
+}
+.step:last-child { border-bottom: none; }
+.step-num {
+  width: 44px; height: 44px; flex-shrink: 0;
+  background: #0f1923; color: #fff;
+  border-radius: 50%; font-size: 17px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.step-body h3 { font-size: 16px; font-weight: 600; color: #0f1923; margin-bottom: 6px; }
+.step-body p  { font-size: 14px; color: #5a6a78; line-height: 1.6; }
+.step-body .formula {
+  display: inline-block;
+  background: #0f1923; color: #7ec8f0;
+  font-family: monospace; font-size: 13px;
+  padding: 6px 14px; border-radius: 5px;
+  margin-top: 10px; letter-spacing: 0.5px;
+}
+
+/* ── QUIZ SECTION ── */
+.quiz-wrap {
+  background: #0f1923;
+  border-radius: 12px;
+  padding: 40px;
+  color: #fff;
+}
+.quiz-wrap h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.quiz-wrap .qdesc { font-size: 14px; color: #6a8090; margin-bottom: 28px; }
+.quiz-q { margin-bottom: 24px; }
+.quiz-q p { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
+.quiz-options { display: flex; flex-direction: column; gap: 8px; }
+.quiz-options label {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 6px; padding: 11px 14px;
+  font-size: 14px; color: #b0c0cc;
+  cursor: pointer; transition: border-color .15s, background .15s;
+}
+.quiz-options label:hover { background: rgba(255,255,255,.09); border-color: rgba(200,34,42,.5); }
+.quiz-options input[type=radio] { accent-color: #c8222a; }
+.quiz-submit {
+  background: #c8222a; color: #fff;
+  border: none; border-radius: 6px;
+  padding: 12px 28px; font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-top: 8px;
+  transition: background .15s;
+}
+.quiz-submit:hover { background: #a81a20; }
+#quiz-result {
+  margin-top: 16px; font-size: 14px; font-weight: 500;
+  padding: 12px 16px; border-radius: 6px; display: none;
+}
+#quiz-result.pass { background: rgba(46,158,90,.15); color: #5dd48a; border: 1px solid rgba(46,158,90,.3); }
+#quiz-result.fail { background: rgba(200,34,42,.12); color: #f08080; border: 1px solid rgba(200,34,42,.3); }
+
+/* ── FOOTER ── */
+.site-footer {
+  background: #0a1219;
+  color: #5a7080;
+  padding: 48px 24px 24px;
+  margin-top: 0;
+}
+.footer-grid {
+  max-width: 1100px; margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid #162030;
+}
+@media(max-width:760px){ .footer-grid { grid-template-columns: 1fr 1fr; } }
+.footer-brand .brand-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.footer-brand p { font-size: 13px; line-height: 1.7; max-width: 240px; margin-bottom: 16px; }
+.footer-brand .contact-item { display: flex; gap: 8px; font-size: 12.5px; margin-bottom: 5px; }
+.footer-brand .contact-item a { color: #5a7080; }
+.footer-brand .contact-item a:hover { color: #c8222a; }
+.footer-col h4 { font-size: 12px; font-weight: 600; color: #8aa0b0; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px; }
+.footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.footer-col li a { font-size: 13px; color: #5a7080; }
+.footer-col li a:hover { color: #fff; }
+.footer-bottom {
+  max-width: 1100px; margin: 20px auto 0;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; flex-wrap: wrap; gap: 8px;
+}
+.footer-bottom .copy { color: #304050; }
+.footer-bottom .training-badge {
+  background: rgba(200,34,42,.12);
+  border: 1px solid rgba(200,34,42,.25);
+  color: #e87a7e; font-size: 11px; font-weight: 600;
+  padding: 4px 12px; border-radius: 12px; letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-inner">
+    <div class="tb-item">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      17309-107 Ave, Edmonton AB
+    </div>
+    <div class="tb-item">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <a href="tel:17804141871">780-414-1871</a>
+    </div>
+    <div class="tb-item">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <a href="mailto:fluidsealab@sealsonline.com">fluidsealab@sealsonline.com</a>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+
+    <!-- Logo -->
+    <a href="https://www.sealsonline.com/en/flabed" class="logo" target="_blank">
+      <svg class="logo-svg" viewBox="0 0 110 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Black square background with yellow circle -->
+        <rect x="0" y="2" width="44" height="44" rx="2" fill="#111"/>
+        <circle cx="22" cy="24" r="13" fill="#f0c020"/>
+        <!-- fluidseal wordmark -->
+        <text x="50" y="29" font-family="'Arial Black','Barlow Condensed',Impact,sans-serif"
+              font-size="19" font-weight="900" fill="#111" letter-spacing="-0.5">fluidseal</text>
+        <!-- AB Inc. -->
+        <text x="50" y="40" font-family="'Arial','Segoe UI',sans-serif"
+              font-size="8" font-weight="600" fill="#444" letter-spacing="1">AB Inc.</text>
+      </svg>
+    </a>
+
+    <!-- Section nav (this page's modules) -->
+    <nav class="nav-primary">
+      <a href="#video">Video</a>
+      <a href="#parts">Parts</a>
+      <a href="#reading">Reading</a>
+      <a href="#tips">Tips</a>
+      <a href="#quiz">Quiz</a>
+    </nav>
+
+    <!-- Right actions -->
+    <div class="nav-actions">
+      <a href="index.html" class="btn-caliper">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Training Hub
+      </a>
+    </div>
+
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="training-hero">
+  <div class="hero-badge">Staff Training Program</div>
+  <h1>Precision Measurement<br><span>Tool Training</span></h1>
+  <p>Master the tools of the trade. This module covers the Mitutoyo dial caliper — how it works, how to read it, and how to use it correctly in a seal & fluid power environment.</p>
+  <div class="hero-pills">
+    <div class="pill">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ~12 min watch
+    </div>
+    <div class="pill">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Beginner friendly
+    </div>
+    <div class="pill">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Quiz included
+    </div>
+    <div class="pill">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Mitutoyo 505-Series
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO SECTION -->
+<section class="section" id="video">
+  <div class="container">
+    <div class="section-label">Module 1</div>
+    <h2 class="section-title">Watch: Why Use Dial Calipers?</h2>
+    <p class="section-desc">Start with this hands-on walkthrough from HTM Workshop. It covers the anatomy of a dial caliper and demonstrates proper measurement technique.</p>
+
+    <div class="video-layout">
+      <a href="https://youtu.be/7LWIBQo7fZI?si=Hc_eOELeZ2qo4fgo" target="_blank" class="video-thumb-wrap">
+        <!-- YouTube thumbnail (maxresdefault loads fine externally) -->
+        <img
+          src="https://img.youtube.com/vi/7LWIBQo7fZI/maxresdefault.jpg"
+          alt="Why use Dial Calipers? – HTM Workshop"
+          class="video-thumb-img"
+          onerror="this.src='https://img.youtube.com/vi/7LWIBQo7fZI/hqdefault.jpg'"
+        >
+        <!-- Play button overlay -->
+        <div class="play-overlay">
+          <div class="play-btn">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.7)"/>
+              <polygon points="9.5,7 9.5,17 18,12" fill="#fff"/>
+            </svg>
+          </div>
+          <div class="play-label">
+            <span class="play-yt">
+              <svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.6 2.03A2.26 2.26 0 0 0 16.01.42C14.62 0 9 0 9 0S3.38 0 1.99.42A2.26 2.26 0 0 0 .4 2.03C0 3.44 0 6.5 0 6.5s0 3.06.4 4.47a2.26 2.26 0 0 0 1.59 1.6C3.38 13 9 13 9 13s5.62 0 7.01-.43a2.26 2.26 0 0 0 1.59-1.6C18 9.56 18 6.5 18 6.5s0-3.06-.4-4.47z" fill="#FF0000"/>
+                <polygon points="7.2,9.3 11.9,6.5 7.2,3.7" fill="#fff"/>
+              </svg>
+              Watch on YouTube
+            </span>
+            <span class="play-title">Why use Dial Calipers? · HTM Workshop · ~12 min</span>
+          </div>
+        </div>
+      </a>
+
+      <div class="video-meta">
+        <div class="vmeta-card">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            What you'll learn
+          </h3>
+          <ul class="checklist">
+            <li><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Identify all parts of a dial caliper</li>
+            <li><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Understand inside vs. outside measurements</li>
+            <li><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Read the dial face accurately to 0.001″</li>
+            <li><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Use the depth rod for step measurements</li>
+            <li><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Zero and maintain the caliper properly</li>
+            <li><div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Apply measurements to seal selection</li>
+          </ul>
+        </div>
+
+        <div class="vmeta-card">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Key specs — Mitutoyo 505
+          </h3>
+          <div class="tag-list">
+            <span class="tag">Range: 0–8″ / 200mm</span>
+            <span class="tag">Grad: 0.001″</span>
+            <span class="tag">Accuracy: ±0.001″</span>
+            <span class="tag">0.1″ per revolution</span>
+            <span class="tag">Shock-proof dial</span>
+            <span class="tag">Stainless steel</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PARTS DIAGRAM SECTION -->
+<section class="section alt" id="parts">
+  <div class="container">
+    <div class="section-label">Module 2</div>
+    <h2 class="section-title">Parts of a Dial Caliper</h2>
+    <p class="section-desc">Familiarise yourself with each component before taking a measurement. Hover over the labels below.</p>
+
+    <!-- Labeled image -->
+    <div class="diagram-wrap" style="margin-bottom:40px;">
+      <img src="data:image/png;base64,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" alt="Mitutoyo dial caliper with labeled parts">
+      <svg class="labels" viewBox="0 0 1082 378" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="2.5" stroke-linecap="round"/>
+          </marker>
+        </defs>
+        <style>
+          .l { stroke:#fff; stroke-width:1.4; stroke-dasharray:5 4; fill:none; stroke-opacity:.85; marker-end:url(#a); }
+          .lb { fill:#0f1923; fill-opacity:.9; stroke:#c8222a; stroke-width:1; rx:5; }
+          .lt { font:bold 13px "Segoe UI",Arial; fill:#fff; text-anchor:middle; dominant-baseline:middle; }
+          .ls { font:10px "Segoe UI",Arial; fill:#9aa5af; text-anchor:middle; dominant-baseline:middle; }
+          .d  { fill:#e8f0ff; }
+        </style>
+        <!-- Internal Jaws -->
+        <circle class="d" cx="116" cy="44" r="5"/>
+        <line class="l" x1="114" y1="40" x2="55" y2="6"/>
+        <rect class="lb" x="2" y="-6" width="148" height="44" rx="5"/>
+        <text class="lt" x="76" y="11">INTERNAL JAWS</text>
+        <text class="ls" x="76" y="27">Inside dia. &amp; grooves</text>
+        <!-- External Jaws -->
+        <circle class="d" cx="102" cy="330" r="5"/>
+        <line class="l" x1="100" y1="335" x2="55" y2="368"/>
+        <rect class="lb" x="2" y="346" width="148" height="44" rx="5"/>
+        <text class="lt" x="76" y="363">EXTERNAL JAWS</text>
+        <text class="ls" x="76" y="379">OD, width &amp; length</text>
+        <!-- Dial -->
+        <circle class="d" cx="248" cy="183" r="5"/>
+        <line class="l" x1="248" y1="178" x2="248" y2="6"/>
+        <rect class="lb" x="168" y="-6" width="160" height="44" rx="5"/>
+        <text class="lt" x="248" y="11">DIAL</text>
+        <text class="ls" x="248" y="27">0.001″ resolution</text>
+        <!-- Bezel Nut -->
+        <circle class="d" cx="214" cy="72" r="5"/>
+        <line class="l" x1="210" y1="70" x2="164" y2="8"/>
+        <rect class="lb" x="46" y="52" width="130" height="44" rx="5"/>
+        <text class="lt" x="111" y="69">BEZEL NUT</text>
+        <text class="ls" x="111" y="85">Zero / rotate dial</text>
+        <!-- Lock Screw -->
+        <circle class="d" cx="322" cy="94" r="5"/>
+        <line class="l" x1="325" y1="90" x2="384" y2="6"/>
+        <rect class="lb" x="336" y="-6" width="130" height="44" rx="5"/>
+        <text class="lt" x="401" y="11">LOCK SCREW</text>
+        <text class="ls" x="401" y="27">Freeze the slide</text>
+        <!-- Thumb Wheel -->
+        <circle class="d" cx="338" cy="254" r="5"/>
+        <line class="l" x1="342" y1="258" x2="430" y2="338"/>
+        <rect class="lb" x="352" y="320" width="148" height="44" rx="5"/>
+        <text class="lt" x="426" y="337">THUMB WHEEL</text>
+        <text class="ls" x="426" y="353">Smooth slide advance</text>
+        <!-- Clamp Screw -->
+        <circle class="d" cx="354" cy="136" r="5"/>
+        <line class="l" x1="358" y1="133" x2="468" y2="52"/>
+        <rect class="lb" x="432" y="32" width="140" height="44" rx="5"/>
+        <text class="lt" x="502" y="49">CLAMP SCREW</text>
+        <text class="ls" x="502" y="65">Quick-lock slide</text>
+        <!-- Scale Beam -->
+        <circle class="d" cx="720" cy="168" r="5"/>
+        <line class="l" x1="720" y1="163" x2="720" y2="6"/>
+        <rect class="lb" x="640" y="-6" width="160" height="44" rx="5"/>
+        <text class="lt" x="720" y="11">SCALE BEAM</text>
+        <text class="ls" x="720" y="27">Main rule — in. &amp; mm</text>
+        <!-- Depth Rod -->
+        <circle class="d" cx="1052" cy="208" r="5"/>
+        <line class="l" x1="1052" y1="203" x2="1010" y2="52"/>
+        <rect class="lb" x="924" y="32" width="140" height="44" rx="5"/>
+        <text class="lt" x="994" y="49">DEPTH ROD</text>
+        <text class="ls" x="994" y="65">Depth &amp; step measure</text>
+      </svg>
+    </div>
+
+    <!-- Parts cards -->
+    <div class="parts-grid">
+      <div class="part-card"><div class="part-num">1</div><h4>External Jaws</h4><p>Measure outside diameters, widths, and lengths. The most-used jaw pair.</p></div>
+      <div class="part-card"><div class="part-num">2</div><h4>Internal Jaws</h4><p>Measure inside diameters and groove widths — critical for O-ring groove inspection.</p></div>
+      <div class="part-card"><div class="part-num">3</div><h4>Depth Rod</h4><p>Measures depth of holes, slots, and step heights. Extends from the right end.</p></div>
+      <div class="part-card"><div class="part-num">4</div><h4>Scale Beam</h4><p>The main rule. Upper scale = inches, lower scale = millimetres.</p></div>
+      <div class="part-card"><div class="part-num">5</div><h4>Dial Face</h4><p>100 divisions = 0.001″ each. One full revolution = 0.100″. Read this plus the beam.</p></div>
+      <div class="part-card"><div class="part-num">6</div><h4>Bezel Nut</h4><p>Rotates the dial face. Use only to zero the dial — do not use to "adjust" readings.</p></div>
+      <div class="part-card"><div class="part-num">7</div><h4>Lock Screw</h4><p>Locks the sliding jaw in position so you can read the measurement hands-free.</p></div>
+      <div class="part-card"><div class="part-num">8</div><h4>Thumb Wheel</h4><p>Knurled wheel for smooth, precise sliding movement. Use it for fine positioning.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO READ SECTION -->
+<section class="section" id="reading">
+  <div class="container">
+    <div class="section-label">Module 3</div>
+    <h2 class="section-title">How to Read a Dial Caliper</h2>
+    <p class="section-desc">Reading a dial caliper is a two-step process: read the beam scale first, then add the dial reading. Always combine both.</p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start;">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Zero the caliper</h3>
+            <p>Close the jaws completely. The beam scale should read 0, and the dial needle should point to 0. If the needle is off, rotate the bezel nut until it aligns. Never force it.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Read the beam (main scale)</h3>
+            <p>Look at the inch scale on the beam. Find the last numbered line that the sliding jaw has passed. Each major line = 1 inch; minor lines between = 0.100″ each.</p>
+            <div class="formula">Beam reading = whole inches + 0.1″ per minor line</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Read the dial</h3>
+            <p>Look at where the red needle points on the dial face. Each of the 100 divisions equals 0.001″. If the needle points to 35, dial reads 0.035″.</p>
+            <div class="formula">Dial reading = needle position × 0.001″</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Add them together</h3>
+            <p>Total measurement = beam reading + dial reading. For example: beam shows 1.200″ + dial shows 0.035″ = <strong>1.235″</strong>.</p>
+            <div class="formula">Total = Beam + Dial</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual reading example -->
+      <div style="background:#f6f8fa; border-radius:12px; padding:28px; border:1px solid #e4e8ed;">
+        <p style="font-size:12px;font-weight:600;color:#c8222a;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;">Reading Example</p>
+        <div style="background:#0f1923;border-radius:8px;padding:20px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <span style="color:#6a8090;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Beam Scale</span>
+            <span style="color:#7ec8f0;font-family:monospace;font-size:22px;font-weight:700;">1.200″</span>
+          </div>
+          <!-- Simple beam visual -->
+          <div style="background:#1e3048;border-radius:4px;padding:10px 14px;position:relative;overflow:hidden;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="color:#304860;font-size:9px;">0</span>
+              <span style="color:#304860;font-size:9px;">1</span>
+              <span style="color:#5a9ac0;font-size:9px;font-weight:bold;">1.2</span>
+              <span style="color:#304860;font-size:9px;">2</span>
+            </div>
+            <div style="height:20px;background:#263a50;border-radius:2px;position:relative;">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:60%;border-right:2px solid #c8222a;"></div>
+              <div style="position:absolute;left:0;top:6px;bottom:6px;right:0;background:repeating-linear-gradient(90deg,#304a60 0px,#304a60 1px,transparent 1px,transparent 8px);"></div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#0f1923;border-radius:8px;padding:20px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <span style="color:#6a8090;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Dial Reading</span>
+            <span style="color:#7ec8f0;font-family:monospace;font-size:22px;font-weight:700;">0.035″</span>
+          </div>
+          <!-- SVG Dial graphic -->
+          <svg viewBox="0 0 120 120" style="width:100px;display:block;margin:0 auto;">
+            <circle cx="60" cy="60" r="54" fill="#1e2e40" stroke="#2a4060" stroke-width="1"/>
+            <circle cx="60" cy="60" r="50" fill="#f4f0e8" stroke="#c0c8d0" stroke-width="0.5"/>
+            <circle cx="60" cy="60" r="44" fill="none" stroke="#ddd8cc" stroke-width="0.3"/>
+            <!-- ticks -->
+            <g stroke="#1a2028" stroke-width="0.6">
+              <line x1="60" y1="10" x2="60" y2="18"/>
+              <line x1="60" y1="102" x2="60" y2="110"/>
+              <line x1="10" y1="60" x2="18" y2="60"/>
+              <line x1="102" y1="60" x2="110" y2="60"/>
+            </g>
+            <text x="60" y="26" text-anchor="middle" font-size="8" fill="#1a2028" font-weight="bold" font-family="Arial">0</text>
+            <text x="94" y="64" text-anchor="middle" font-size="7" fill="#1a2028" font-family="Arial">25</text>
+            <text x="60" y="98" text-anchor="middle" font-size="7" fill="#1a2028" font-family="Arial">50</text>
+            <text x="26" y="64" text-anchor="middle" font-size="7" fill="#1a2028" font-family="Arial">75</text>
+            <!-- needle at 35 -->
+            <line x1="60" y1="60" x2="82" y2="27" stroke="#c8222a" stroke-width="2" stroke-linecap="round"/>
+            <line x1="60" y1="60" x2="52" y2="68" stroke="#8a1818" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="60" cy="60" r="3.5" fill="#404a58"/>
+          </svg>
+        </div>
+        <div style="background:#c8222a;border-radius:8px;padding:16px;text-align:center;">
+          <div style="font-size:11px;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">Total Measurement</div>
+          <div style="font-family:monospace;font-size:32px;font-weight:700;color:#fff;letter-spacing:2px;">1.235″</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:4px;">1.200 + 0.035</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIPS SECTION -->
+<section class="section alt" id="tips">
+  <div class="container">
+    <div class="section-label">Best Practices</div>
+    <h2 class="section-title">Tips for Accurate Measurements</h2>
+    <p class="section-desc">Avoid the most common mistakes when using a dial caliper.</p>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c8222a" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>Always zero first</h3>
+        <p>Before every use, close the jaws fully and check that the dial reads zero. If not, rotate the bezel nut — don't adjust the main scale.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c8222a" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <h3>Clean jaws before measuring</h3>
+        <p>Debris on the jaw faces causes false readings. Wipe with a lint-free cloth. Even a chip of swarf can add 0.002–0.005″ of error.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c8222a" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+        <h3>Don't overtighten</h3>
+        <p>Use the thumb wheel for a light, consistent contact force. Squeezing the jaws hard onto a part compresses it and gives a low reading.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c8222a" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <h3>Read perpendicular to the part</h3>
+        <p>Hold the caliper square to the work surface. Reading at an angle (cosine error) will always give a reading that is too large.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c8222a" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+        <h3>Store it properly</h3>
+        <p>Always leave a small gap between the jaws when storing — never close them fully. Store in the case, away from magnets and corrosive materials.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c8222a" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <h3>Record what you measure</h3>
+        <p>For seal work, always note the measurement before releasing the lock screw. Write it down — memory is less reliable than ink.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KNOWLEDGE CHECK -->
+<section class="section" id="quiz">
+  <div class="container">
+    <div class="section-label">Module 4</div>
+    <h2 class="section-title">Knowledge Check</h2>
+    <p class="section-desc">Answer all questions to confirm your understanding of the material.</p>
+
+    <div class="quiz-wrap">
+      <h2>Quick Quiz</h2>
+      <p class="qdesc">3 questions · Select the best answer for each</p>
+
+      <div class="quiz-q">
+        <p>Q1 — The beam scale reads 2.300″ and the dial needle points to 47. What is the total measurement?</p>
+        <div class="quiz-options">
+          <label><input type="radio" name="q1" value="wrong"> 2.347mm</label>
+          <label><input type="radio" name="q1" value="correct"> 2.347″</label>
+          <label><input type="radio" name="q1" value="wrong"> 2.300″</label>
+          <label><input type="radio" name="q1" value="wrong"> 0.047″</label>
+        </div>
+      </div>
+
+      <div class="quiz-q">
+        <p>Q2 — Which jaw pair would you use to measure the inside diameter of an O-ring groove?</p>
+        <div class="quiz-options">
+          <label><input type="radio" name="q2" value="wrong"> External jaws</label>
+          <label><input type="radio" name="q2" value="wrong"> Depth rod</label>
+          <label><input type="radio" name="q2" value="correct"> Internal jaws</label>
+          <label><input type="radio" name="q2" value="wrong"> Bezel nut</label>
+        </div>
+      </div>
+
+      <div class="quiz-q">
+        <p>Q3 — The dial needle does not read zero when the jaws are fully closed. What should you do?</p>
+        <div class="quiz-options">
+          <label><input type="radio" name="q3" value="wrong"> Return the caliper — it is broken</label>
+          <label><input type="radio" name="q3" value="wrong"> Record an offset and subtract it manually</label>
+          <label><input type="radio" name="q3" value="correct"> Rotate the bezel nut until the needle reads zero</label>
+          <label><input type="radio" name="q3" value="wrong"> Adjust the clamp screw</label>
+        </div>
+      </div>
+
+      <button class="quiz-submit" onclick="checkQuiz()">Submit Answers</button>
+      <div id="quiz-result"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="brand-name" style="font-family:'Arial Black',sans-serif;letter-spacing:-0.5px;">fluidseal <span style="font-size:13px;font-weight:400;color:#4a7080;">AB Inc.</span></div>
+      <p>Sealing Solutions with over 65 years of in-house technical expertise, dedicated commitment and premier customer service.</p>
+      <div class="contact-item"><span>📍</span><a href="#">17309-107 Avenue, Edmonton AB T5S 1E5</a></div>
+      <div class="contact-item"><span>📞</span><a href="tel:17804141871">780-414-1871</a></div>
+      <div class="contact-item"><span>📠</span><span>780-487-5419</span></div>
+      <div class="contact-item"><span>✉️</span><a href="mailto:fluidsealab@sealsonline.com">fluidsealab@sealsonline.com</a></div>
+    </div>
+    <div class="footer-col">
+      <h4>Information</h4>
+      <ul>
+        <li><a href="https://www.sealsonline.com/en/flabed/about-us" target="_blank">About Us</a></li>
+        <li><a href="https://www.sealsonline.com/en/flabed/contact-us" target="_blank">Contact Us</a></li>
+        <li><a href="https://www.sealsonline.com/en/flabed/video" target="_blank">Videos</a></li>
+        <li><a href="https://training.fluidsealab.com/fluidseal_training.html">Training</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Policies</h4>
+      <ul>
+        <li><a href="https://www.sealsonline.com/en/flabed/privacy-policy" target="_blank">Privacy Policy</a></li>
+        <li><a href="https://www.sealsonline.com/en/flabed/notice-warranty" target="_blank">Notice &amp; Warranty</a></li>
+        <li><a href="https://www.sealsonline.com/en/flabed/price-policy" target="_blank">Price Policy</a></li>
+        <li><a href="https://www.sealsonline.com/en/flabed/shipping-policy" target="_blank">Shipping Policy</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <ul>
+        <li><a href="https://www.sealsonline.com/en/flabed/categories/inch" target="_blank">Inch Seals</a></li>
+        <li><a href="https://www.sealsonline.com/en/flabed/categories/metric" target="_blank">Metric Seals</a></li>
+        <li><a href="https://www.sealsonline.com/en/flabed/categories/kits" target="_blank">Kits</a></li>
+        <li><a href="https://www.sealsonline.com/en/flabed/categories/accessories" target="_blank">Accessories</a></li>
+        <li><a href="https://www.sealsonline.com/en/flabed/gaskets" target="_blank">Gasket Quote</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="copy">© 2025 FluidSeal AB Inc. · Edmonton, Alberta · All rights reserved.</span>
+    <span class="training-badge">TRAINING MODULE</span>
+  </div>
+</footer>
+
+<script>
+function checkQuiz() {
+  const q1 = document.querySelector('input[name="q1"]:checked');
+  const q2 = document.querySelector('input[name="q2"]:checked');
+  const q3 = document.querySelector('input[name="q3"]:checked');
+  const el = document.getElementById('quiz-result');
+  if (!q1 || !q2 || !q3) {
+    el.style.display = 'block';
+    el.className = 'fail';
+    el.textContent = 'Please answer all 3 questions before submitting.';
+    return;
+  }
+  const score = [q1,q2,q3].filter(q => q.value === 'correct').length;
+  el.style.display = 'block';
+  if (score === 3) {
+    el.className = 'pass';
+    el.textContent = '✓ Perfect score! 3/3 — Great work. You are ready to use a dial caliper on the job.';
+  } else if (score === 2) {
+    el.className = 'pass';
+    el.textContent = `✓ ${score}/3 correct — Good effort. Review the module and try again.`;
+  } else {
+    el.className = 'fail';
+    el.textContent = `✗ ${score}/3 correct — Please re-watch the video and review the reading steps, then try again.`;
+  }
+}
+</script>
+</body>
+</html>
