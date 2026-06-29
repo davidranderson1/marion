@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FluidSeal AB — Staff Training Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#131b24; --navy2:#1b2531; --red:#c8222a; --yellow:#FFDD00;
+    --ink:#0d1319; --muted:#8a97a6; --line:rgba(255,255,255,.08); --card:#1a232f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--navy);color:#eef2f6;line-height:1.55;min-height:100vh}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  header{border-bottom:1px solid var(--line);background:rgba(10,15,20,.6);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10}
+  .nav{display:flex;align-items:center;gap:14px;padding:16px 24px;max-width:1040px;margin:0 auto}
+  .logo{display:flex;align-items:center;gap:10px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:.5px}
+  .logo .mark{width:30px;height:30px;background:var(--ink);border-radius:4px;position:relative;display:grid;place-items:center}
+  .logo .mark::after{content:'';width:14px;height:14px;border-radius:50%;background:var(--yellow)}
+  .logo small{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+  .nav a.back{margin-left:auto;font-size:13px;color:var(--muted);text-decoration:none;font-weight:600}
+  .nav a.back:hover{color:#fff}
+  .hero{padding:64px 0 40px;text-align:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(200,34,42,.12);border:1px solid rgba(200,34,42,.3);color:#ff6b6b;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-radius:30px;margin-bottom:22px}
+  h1{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(36px,6vw,60px);line-height:.98;letter-spacing:.5px}
+  h1 em{color:var(--yellow);font-style:normal}
+  .sub{color:var(--muted);max-width:560px;margin:16px auto 0;font-size:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;padding:24px 0 72px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:26px;display:flex;flex-direction:column;transition:.18s;text-decoration:none;color:inherit}
+  .card:hover{transform:translateY(-3px);border-color:rgba(255,221,0,.3)}
+  .card .num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:2px;color:var(--red);text-transform:uppercase}
+  .card h3{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px;margin:8px 0 10px}
+  .card p{color:var(--muted);font-size:14px;flex:1}
+  .card .go{margin-top:18px;display:inline-flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:var(--yellow);letter-spacing:.5px}
+  .pill{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:3px;margin-top:14px;width:max-content}
+  .pill.live{background:rgba(60,180,90,.12);color:#5fd07f;border:1px solid rgba(60,180,90,.25)}
+  .pill.soon{background:rgba(200,160,0,.12);color:#e8c840;border:1px solid rgba(200,160,0,.2)}
+  footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <div class="logo"><span class="mark"></span> fluidseal <small>AB&nbsp;Inc.</small></div>
+    <a class="back" href="https://marion.fluidsealab.com/">← Back to Marion</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      FluidSeal AB · Internal Staff Training
+    </div>
+    <h1>Staff Training <em>Hub</em></h1>
+    <p class="sub">Your complete internal resource for seal products, measurement, materials, and certification. Pick a module to begin.</p>
+  </section>
+
+  <section class="grid">
+    <a class="card" href="product-profiles-training.html">
+      <span class="num">Module 1</span>
+      <h3>Product Profiles Guide</h3>
+      <p>130+ seal series across 8 categories — geometry, materials, measurement, the Parker Periodic Table of Elastomers, and direct store links.</p>
+      <span class="pill live">Live</span>
+      <span class="go">Open module →</span>
+    </a>
+
+    <a class="card" href="training-calipers.html">
+      <span class="num">Module 2</span>
+      <h3>Caliper &amp; Measurement</h3>
+      <p>Master the Mitutoyo 505 dial caliper — anatomy, reading technique, inside/outside/depth measurement, and the correct dimension order for every seal type. Includes a labelled diagram, video walkthrough, and quiz.</p>
+      <span class="pill live">Live</span>
+      <span class="go">Open module →</span>
+    </a>
+
+    <a class="card" href="training-certificate.html">
+      <span class="num">Module 3</span>
+      <h3>Staff Certification</h3>
+      <p>6-level progressive assessment — 85 questions from catalog navigation to material science. Pass each level to earn an official FluidSeal AB certificate.</p>
+      <span class="pill live">Live</span>
+      <span class="go">Start certification →</span>
+    </a>
+  </section>
+</main>
+
+<footer>
+  FluidSeal AB Inc. · 17309-107 Ave, Edmonton AB · Internal staff training — not for public distribution
+</footer>
+</body>
+</html>

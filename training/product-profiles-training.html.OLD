@@ -4,18 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FluidSeal AB Staff Training | Product Training Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--red:#c8222a;--red-dark:#a81a20;--red-glow:rgba(200,34,42,0.12);--black:#231F20;--yellow:#FFDD00;--yellow-deep:#e8c200;--dark:#f5f6f8;--dark2:#ffffff;--dark3:#eceef1;--dark4:#e4e7eb;--border:#dfe2e6;--text:#231F20;--muted:#5b6066;--gold:#8a7400}
+:root{--red:#c8222a;--red-dark:#9e181f;--red-glow:rgba(200,34,42,0.18);--dark:#0d0d0d;--dark2:#151515;--dark3:#1e1e1e;--dark4:#252525;--border:rgba(255,255,255,0.08);--text:#e8e4df;--muted:#8a8480;--gold:#d4a843}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:var(--dark);color:var(--text);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden}
+body{background:var(--dark);color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden}
 /* ── TOPBAR ── */
 .topbar{
-  background:var(--black);
-  color:#c8ccd0;
+  background:#0f1923;
+  color:#7a8d9a;
   font-size:12px;
   padding:7px 32px;
-  border-bottom:3px solid var(--yellow);
+  border-bottom:1px solid rgba(255,255,255,0.05);
 }
 .topbar-inner{
   max-width:1200px;margin:0 auto;
@@ -23,16 +24,16 @@ body{background:var(--dark);color:var(--text);font-family:'Helvetica Neue',Helve
 }
 .topbar-item{
   display:inline-flex;align-items:center;gap:5px;
-  color:#c8ccd0;text-decoration:none;transition:color .2s;padding:2px 0;
+  color:#7a8d9a;text-decoration:none;transition:color .2s;padding:2px 0;
 }
-.topbar-item:hover{color:var(--yellow)}
+.topbar-item:hover{color:#c8d4dd}
 .topbar-sep{margin:0 14px;opacity:.3}
 
 /* ── MAIN NAV ── */
 nav{
   position:sticky;top:0;left:0;right:0;z-index:100;
-  background:var(--black);
-  box-shadow:0 2px 12px rgba(0,0,0,.18);
+  background:#0f1923;
+  border-bottom:1px solid rgba(255,255,255,0.07);
   height:64px;
 }
 .nav-inner{
@@ -47,48 +48,48 @@ nav{
   border-radius:3px;
   padding:4px 10px 4px 6px;
 }
-.site-logo svg{display:block;height:30px;width:auto}
+.site-logo svg{display:block;height:36px;width:auto}
 .site-logo img{display:block;height:36px;width:auto;border-radius:2px}
 .logo-mark,.logo-text,.logo-name,.logo-sub{display:none}
 /* Site links */
 .nav-site-links{display:flex;align-items:center;gap:0;flex-shrink:0}
 .nav-site-link{
   padding:0 14px;height:64px;line-height:64px;
-  font-size:13.5px;font-weight:600;color:#c8ccd0;
+  font-size:13.5px;font-weight:500;color:#9aabb8;
   text-decoration:none;transition:color .2s;white-space:nowrap;
   border-bottom:2px solid transparent;
 }
 .nav-site-link:hover{color:#fff}
-.nav-site-link--active{color:#fff;border-bottom-color:var(--yellow)}
+.nav-site-link--active{color:#fff;border-bottom-color:#c8222a}
 /* Divider */
 .nav-divider{width:1px;height:28px;background:rgba(255,255,255,0.1);margin:0 20px;flex-shrink:0}
 /* Page links */
 .nav-page-links{display:flex;align-items:center;gap:0;flex:1;overflow:hidden}
 .nav-page-link{
   padding:0 12px;height:64px;line-height:64px;
-  font-size:12.5px;font-weight:500;color:#a9adb2;
+  font-size:12.5px;font-weight:500;color:#6a7d8a;
   text-decoration:none;transition:color .2s;white-space:nowrap;
 }
-.nav-page-link:hover{color:var(--yellow)}
+.nav-page-link:hover{color:#c0ccd4}
 /* Actions */
 .nav-actions{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
 .nav-caliper-btn{
   display:flex;align-items:center;gap:6px;
   font-size:12px;font-weight:600;letter-spacing:.4px;
-  color:#c8ccd0;text-decoration:none;
-  border:1px solid rgba(255,255,255,0.18);
+  color:#9aabb8;text-decoration:none;
+  border:1px solid rgba(255,255,255,0.12);
   padding:7px 14px;border-radius:3px;
   transition:all .2s;white-space:nowrap;
 }
-.nav-caliper-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+.nav-caliper-btn:hover{color:#fff;border-color:rgba(255,255,255,0.3)}
 .nav-shop-btn{
   display:flex;align-items:center;
-  background:var(--yellow);color:var(--black);
-  font-size:13px;font-weight:800;letter-spacing:.3px;
+  background:#c8222a;color:#fff;
+  font-size:13px;font-weight:700;letter-spacing:.3px;
   text-decoration:none;padding:9px 20px;border-radius:3px;
   transition:background .2s;white-space:nowrap;
 }
-.nav-shop-btn:hover{background:var(--yellow-deep)}
+.nav-shop-btn:hover{background:#a81c22}
 /* Hide old nav styles that are now unused */
 .nav-logo,.nav-brand,.nav-links,.nav-back{display:none!important}
 @media(max-width:900px){
@@ -104,7 +105,7 @@ nav{
   padding:40px 32px 48px;
   text-align:center;
   position:relative;overflow:hidden;
-  background:var(--black);
+  background:linear-gradient(160deg,#0b1520 0%,#111a26 40%,#0d1118 100%);
 }
 .hero-bg{
   position:absolute;inset:0;z-index:0;
@@ -119,22 +120,22 @@ nav{
 }
 .hero-badge{
   display:inline-flex;align-items:center;gap:8px;
-  background:var(--yellow);border:1px solid var(--yellow);
-  color:var(--black);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  background:rgba(200,34,42,0.12);border:1px solid rgba(200,34,42,0.3);
+  color:#ff6b6b;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
   padding:7px 16px;border-radius:30px;margin-bottom:32px;
 }
 h1.hero-title{
-  font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;
+  font-family:'Barlow Condensed',sans-serif;
   font-size:clamp(48px,7vw,80px);
   font-weight:900;line-height:1.0;
   letter-spacing:-0.5px;margin-bottom:24px;
   color:#fff;
 }
 h1.hero-title em{
-  display:block;color:var(--yellow);font-style:normal;
+  display:block;color:#c8222a;font-style:normal;
 }
 .hero-sub{
-  font-size:17px;color:#b9bdc2;max-width:560px;line-height:1.75;
+  font-size:17px;color:#8fa3b5;max-width:560px;line-height:1.75;
   margin:0 auto 36px;
 }
 .hero-pills{
@@ -145,7 +146,7 @@ h1.hero-title em{
   display:inline-flex;align-items:center;gap:7px;
   background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.1);
-  color:#b9bdc2;font-size:13px;font-weight:500;
+  color:#8fa3b5;font-size:13px;font-weight:500;
   padding:8px 16px;border-radius:30px;
   letter-spacing:.2px;
 }
@@ -155,9 +156,9 @@ h1.hero-title em{
 }
 .scroll-hint{
   display:flex;align-items:center;justify-content:center;gap:12px;
-  font-size:11px;color:#888c90;letter-spacing:2px;text-transform:uppercase;
+  font-size:11px;color:#4a5f72;letter-spacing:2px;text-transform:uppercase;
 }
-.scroll-line{width:32px;height:1px;background:#888c90}
+.scroll-line{width:32px;height:1px;background:#4a5f72}
 @media(max-width:600px){
   .hero{padding:32px 20px 48px}
   .hero-pills{gap:8px}
@@ -169,7 +170,7 @@ h1.hero-title em{
 .section-full{padding:48px 0;background:var(--dark2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .section-full .section{padding-top:0;padding-bottom:0}
 .section-tag{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:12px}
-.section-title{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:clamp(32px,4vw,48px);font-weight:800;line-height:1.05;margin-bottom:16px}
+.section-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(32px,4vw,48px);font-weight:800;line-height:1.05;margin-bottom:16px}
 .section-sub{font-size:16px;color:var(--muted);max-width:520px;line-height:1.7;margin-bottom:48px}
 /* INTRO GRID WITH IMAGES */
 .intro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden}
@@ -183,22 +184,22 @@ h1.hero-title em{
 .ic-sec img{width:100%;height:100%;object-fit:contain;filter:brightness(0.85)contrast(1.1)saturate(0.8);padding:4px}
 .ic-no-img{background:var(--dark4);display:flex;align-items:center;justify-content:center}
 .ic-body{padding:20px 20px 18px}
-.ic-body h3{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:22px;font-weight:700;margin-bottom:8px}
+.ic-body h3{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px}
 .ic-body p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px}
 .intro-card-count{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--red);text-transform:uppercase}
 /* CAT NAV */
-.cat-nav{position:sticky;top:64px;z-index:50;background:rgba(245,246,248,0.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto}
+.cat-nav{position:sticky;top:64px;z-index:50;background:rgba(13,13,13,0.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto}
 .cat-nav-inner{display:flex;gap:0;max-width:1200px;margin:0 auto;min-width:max-content}
 .cat-tab{display:flex;align-items:center;gap:8px;padding:16px 20px;color:var(--muted);font-size:13px;font-weight:600;letter-spacing:.3px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;transition:color .2s,border-color .2s;white-space:nowrap;cursor:pointer;background:none;position:relative;overflow:hidden}
 .cat-tab:hover{color:var(--text)}
-.cat-tab.active{color:var(--black);border-bottom-color:var(--red)}
+.cat-tab.active{color:#fff;border-bottom-color:var(--red)}
 .cat-tab .dot{width:6px;height:6px;border-radius:50%;background:var(--red);opacity:0;transition:opacity .2s}
 .cat-tab.active .dot{opacity:1}
 /* PRODUCT SECTIONS */
 .prod-section{padding:40px 32px;max-width:1200px;margin:0 auto;scroll-margin-top:130px;opacity:1!important;visibility:visible!important}
 .prod-section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:16px}
 .prod-category-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:2px;margin-bottom:10px}
-.prod-section h2{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:clamp(28px,3vw,40px);font-weight:800;line-height:1}
+.prod-section h2{font-family:'Barlow Condensed',sans-serif;font-size:clamp(28px,3vw,40px);font-weight:800;line-height:1}
 .prod-count{font-size:13px;color:var(--muted)}
 /* PRODUCT CARDS */
 .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden}
@@ -209,7 +210,7 @@ h1.hero-title em{
 .prod-card-img img{width:76px;height:76px;object-fit:contain;filter:brightness(1.05)contrast(1.1)}
 .seal-icon{width:60px;height:60px;display:flex;align-items:center;justify-content:center}
 .prod-card-title-area{flex:1;padding:16px 18px;display:flex;flex-direction:column;justify-content:center}
-.series-code{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:22px;font-weight:800;letter-spacing:.5px;color:var(--black);line-height:1;margin-bottom:4px}
+.series-code{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:.5px;color:#fff;line-height:1;margin-bottom:4px}
 .std-pill{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:2px}
 .std-inch{background:rgba(52,120,200,0.15);color:#6fa8e8;border:1px solid rgba(52,120,200,0.25)}
 .std-metric{background:rgba(52,180,100,0.12);color:#6ec28a;border:1px solid rgba(52,180,100,0.2)}
@@ -219,18 +220,18 @@ h1.hero-title em{
 .prod-desc{font-size:13px;color:var(--muted);line-height:1.65}
 .prod-card-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .measure-tags{display:flex;gap:6px;flex-wrap:wrap}
-.measure-tag{font-size:10px;font-weight:700;letter-spacing:.5px;font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;color:var(--red);background:rgba(200,34,42,0.08);border:1px solid rgba(200,34,42,0.2);padding:3px 8px;border-radius:2px}
+.measure-tag{font-size:10px;font-weight:700;letter-spacing:.5px;font-family:'Barlow Condensed',sans-serif;color:var(--red);background:rgba(200,34,42,0.08);border:1px solid rgba(200,34,42,0.2);padding:3px 8px;border-radius:2px}
 .pg-ref{font-size:11px;color:var(--muted)}
 /* CALLOUT */
 .callout{background:linear-gradient(135deg,rgba(200,34,42,0.12),rgba(200,34,42,0.04));border:1px solid rgba(200,34,42,0.25);border-radius:4px;padding:28px 32px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin:0 0 32px}
 .callout-icon{width:48px;height:48px;background:rgba(200,34,42,0.15);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--red);flex-shrink:0;font-size:22px}
-.callout-text h3{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:700;font-size:20px;margin-bottom:4px}
+.callout-text h3{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;margin-bottom:4px}
 .callout-text p{font-size:13px;color:var(--muted)}
 /* QUICK REF */
 .qr-section{background:var(--dark2);border-top:1px solid var(--border);padding:48px 32px}
 .qr-section .section-inner{max-width:1200px;margin:0 auto}
 .qr-filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;align-items:center}
-.qr-filter-bar input,.qr-filter-bar select{background:var(--dark3);border:1px solid var(--border);color:var(--text);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;padding:9px 14px;border-radius:3px;outline:none;transition:border .2s}
+.qr-filter-bar input,.qr-filter-bar select{background:var(--dark3);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;padding:9px 14px;border-radius:3px;outline:none;transition:border .2s}
 .qr-filter-bar input{width:220px}
 .qr-filter-bar input:focus,.qr-filter-bar select:focus{border-color:rgba(200,34,42,0.5)}
 .qr-filter-bar select option{background:var(--dark2)}
@@ -240,24 +241,24 @@ table.qr-table{width:100%;border-collapse:collapse;font-size:13px}
 .qr-table td{padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text);vertical-align:middle}
 .qr-table tr:last-child td{border-bottom:none}
 .qr-table tr:hover td{background:rgba(255,255,255,0.02)}
-.qr-series{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:700;font-size:15px;color:var(--black);transition:color .2s}.qr-series:hover{color:var(--red)}
-.qr-page{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:700;font-size:13px;color:var(--red);background:rgba(200,34,42,0.08);border:1px solid rgba(200,34,42,0.2);padding:3px 8px;border-radius:2px;display:inline-block}
+.qr-series{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:#fff;transition:color .2s}.qr-series:hover{color:var(--red)}
+.qr-page{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--red);background:rgba(200,34,42,0.08);border:1px solid rgba(200,34,42,0.2);padding:3px 8px;border-radius:2px;display:inline-block}
 .empty-row{padding:40px;text-align:center;color:var(--muted);font-size:14px}
 /* MEASURING */
 .measure-guide{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-top:32px}
 .measure-item{background:var(--dark2);padding:20px}
-.measure-abbr{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:28px;font-weight:900;color:var(--red);line-height:1;margin-bottom:6px}
+.measure-abbr{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--red);line-height:1;margin-bottom:6px}
 .measure-full{font-weight:600;font-size:14px;margin-bottom:6px}
 .measure-desc{font-size:12px;color:var(--muted);line-height:1.5}
 /* TIPS */
 .tips-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:32px}
 .tip-box{background:var(--dark3);border:1px solid var(--border);border-radius:4px;padding:20px;border-left:3px solid var(--red)}
-.tip-box h4{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:700;font-size:17px;margin-bottom:8px}
+.tip-box h4{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;margin-bottom:8px}
 .tip-box p{font-size:13px;color:var(--muted);line-height:1.6}
 /* MATERIALS */
 .mat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:32px}
 .mat-card{background:var(--dark2);border:1px solid var(--border);border-radius:4px;padding:22px}
-.mat-name{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:800;font-size:20px;margin-bottom:4px}
+.mat-name{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;margin-bottom:4px}
 .mat-code{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
 .mat-props{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .mat-prop{font-size:11px;font-weight:600;padding:3px 8px;border-radius:2px;background:rgba(255,255,255,0.05);color:var(--muted)}
@@ -267,13 +268,13 @@ table.qr-table{width:100%;border-collapse:collapse;font-size:13px}
 .training-link-card{max-width:1200px;margin:0 auto;background:var(--dark3);border:1px solid var(--border);border-radius:4px;padding:40px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;transition:border-color .2s}
 .training-link-card:hover{border-color:rgba(200,34,42,0.4)}
 .tlc-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(200,34,42,0.1);border:1px solid rgba(200,34,42,0.25);color:#ff6b6b;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 10px;border-radius:2px;margin-bottom:12px}
-.tlc-title{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:32px;font-weight:800;margin-bottom:8px}
+.tlc-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;margin-bottom:8px}
 .tlc-desc{font-size:14px;color:var(--muted);max-width:480px}
 .tlc-right{display:flex;flex-direction:column;gap:12px;align-items:flex-end}
 /* FOOTER */
 footer{background:var(--dark);border-top:1px solid var(--border);padding:40px 32px}
 .footer-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
-.footer-brand{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:700;font-size:20px}
+.footer-brand{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px}
 .footer-brand span{color:var(--red)}
 .footer-links{display:flex;gap:24px}
 .footer-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s}
@@ -343,8 +344,8 @@ footer{background:var(--dark);border-top:1px solid var(--border);padding:40px 32
   color:var(--red);margin-bottom:4px;
 }
 .caliper-cta-title{
-  font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:700;font-size:18px;
-  color:var(--black);line-height:1.1;margin-bottom:3px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;
+  color:#fff;line-height:1.1;margin-bottom:3px;
 }
 .caliper-cta-sub{font-size:12px;color:var(--muted);line-height:1.4}
 .caliper-cta-arrow{
@@ -384,7 +385,7 @@ footer{background:var(--dark);border-top:1px solid var(--border);padding:40px 32
   position:relative;
 }
 .catalog-card:hover{background:var(--dark3)}
-.catalog-card:hover .catalog-card-dl{color:var(--black);border-color:rgba(200,34,42,0.6);background:rgba(200,34,42,0.12)}
+.catalog-card:hover .catalog-card-dl{color:#fff;border-color:rgba(200,34,42,0.6);background:rgba(200,34,42,0.12)}
 .catalog-card-icon{
   width:52px;height:52px;
   background:rgba(200,34,42,0.1);border:1px solid rgba(200,34,42,0.25);
@@ -397,8 +398,8 @@ footer{background:var(--dark);border-top:1px solid var(--border);padding:40px 32
   color:var(--red);margin-bottom:6px;
 }
 .catalog-card-title{
-  font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:24px;font-weight:800;
-  color:var(--black);margin-bottom:10px;line-height:1.1;
+  font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;
+  color:#fff;margin-bottom:10px;line-height:1.1;
 }
 .catalog-card-desc{
   font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;
@@ -464,7 +465,7 @@ footer{background:var(--dark);border-top:1px solid var(--border);padding:40px 32
   opacity:.75;line-height:1;
 }
 .pt-cell-symbol{
-  font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:900;
+  font-family:'Barlow Condensed',sans-serif;font-weight:900;
   font-size:26px;line-height:1;letter-spacing:-1px;
   margin:2px 0;
 }
@@ -497,7 +498,7 @@ footer{background:var(--dark);border-top:1px solid var(--border);padding:40px 32
 .pt-detail.open{max-height:400px;padding:0}
 .pt-detail-inner{padding:24px 28px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
 .pt-detail-title{
-  font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:800;font-size:22px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;
   margin-bottom:4px;
 }
 .pt-detail-code{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin-bottom:14px;text-transform:uppercase}
@@ -666,7 +667,7 @@ nav.scrolled{
 .back-to-top{
   position:fixed;bottom:28px;right:28px;z-index:200;
   width:44px;height:44px;border-radius:50%;
-  background:var(--red);color:var(--black);border:none;cursor:pointer;
+  background:var(--red);color:#fff;border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   opacity:0;transform:translateY(12px);pointer-events:none;
   transition:opacity .3s,transform .3s,background .2s;
@@ -769,7 +770,7 @@ h1.hero-title{animation:heroFadeUp .7s ease .25s both}
 .qr-img-cell{width:68px;padding:6px 8px 6px 12px !important}
 .qr-img-link{
   display:block;width:56px;height:44px;border-radius:3px;
-  background:var(--dark3);border:1px solid var(--border);
+  background:#0e1520;border:1px solid rgba(255,255,255,0.07);
   overflow:hidden;position:relative;transition:border-color .2s,transform .2s;
   text-decoration:none;flex-shrink:0;
 }
@@ -789,7 +790,7 @@ h1.hero-title{animation:heroFadeUp .7s ease .25s both}
 .qr-img-wrap:hover .qr-img-preview{display:block}
 .qr-img-preview{
   display:none;position:absolute;left:64px;top:50%;transform:translateY(-50%);
-  width:140px;height:110px;background:#fff;border:1px solid var(--yellow);
+  width:140px;height:110px;background:#0e1520;border:1px solid rgba(200,34,42,0.35);
   border-radius:4px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,0.6);
   pointer-events:none;padding:6px;
 }
@@ -798,12 +799,12 @@ h1.hero-title{animation:heroFadeUp .7s ease .25s both}
 
 .hub-eyebrow{
   display:inline-flex;align-items:center;gap:8px;
-  background:var(--yellow);border:1px solid var(--yellow);
-  color:var(--black);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  background:rgba(200,34,42,0.12);border:1px solid rgba(200,34,42,0.3);
+  color:#ff6b6b;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
   padding:7px 16px;border-radius:30px;margin-bottom:24px;
 }
 .hero-subtitle-main{
-  font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;
+  font-family:'Barlow Condensed',sans-serif;
   font-size:16px;font-weight:600;letter-spacing:3px;text-transform:uppercase;
   color:rgba(255,255,255,0.35);margin-top:-12px;margin-bottom:20px;
 }
@@ -839,33 +840,28 @@ h1.hero-title{animation:heroFadeUp .7s ease .25s both}
   <div class="nav-inner">
     <!-- Logo -->
     <a href="https://www.sealsonline.com/en/flabed" target="_blank" class="site-logo">
-      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" viewBox="53.0 234.5 686.0 143.0">
-<defs>
-<clipPath id="clip_1">
-<path transform="matrix(1,0,0,-1,0,612)" d="M0 612H792V0H0Z"/>
-</clipPath>
-</defs>
-<g inkscape:groupmode="layer" inkscape:label="Layer 1">
-<g clip-path="url(#clip_1)">
-<path transform="matrix(1,0,0,-1,294.5054,284.4077)" d="M0 0H2.688V11.626H-13.064C-24.495 11.626-28.141 7.879-28.141-2.358V-5.01H-34.007V-16.766H-28.256V-68.325C-28.256-70.875-29.794-71.625-33.734-71.625H-36.421V-83.254H-20.67C-9.235-83.254-5.584-79.508-5.584-69.272V-66.334H-5.474V-16.766H2.688V-5.01H-5.474V-3.306C-5.474-.757-3.94 0 0 0" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,0,612)" d="M302.088 339.207H324.755V261.258H302.088Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,0,612)" d="M385.461 339.222H408.125V326.827H385.461ZM385.461 322.583H408.125V261.258H385.461Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,505.6631,350.7461)" d="M0 0H-22.291C-33.714 0-37.301 3.738-37.301 14.004V21.617H-14.32V16.512C-14.32 13.33-13.36 11.787-11.153 11.787-8.847 11.787-7.986 13.33-7.986 16.512V18.148C-7.986 21.047-9.714 22.977-13.266 24.221L-26.417 28.756C-34.189 31.455-36.876 34.25-36.876 41.967V47.746C-36.876 57.952-33.234 61.658-21.803 61.658H0C11.356 61.658 15.109 57.952 15.109 47.746V43.604H-7.697V45.149C-7.697 48.328-8.66 49.87-10.868 49.87-12.687 49.87-14.034 48.423-14.034 46.398-14.034 43.021-12.116 42.156-7.792 40.615L2.117 37.143C11.546 33.865 15.109 30.588 15.109 21.432V14.004C15.109 3.738 11.356 0 0 0" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,577.5742,336.7578)" d="M0 0V10.336H-22.961V2.492C-22.961-.67-23.837-2.205-26.187-2.205-28.442-2.205-29.426-.67-29.426 2.492V15.029H0V33.59C0 43.896-3.726 47.657-15.014 47.657H-37.364C-48.744 47.657-52.287 43.896-52.287 33.59V0C-52.287-10.25-48.744-13.988-37.364-13.988H-15.014C-3.726-13.988 0-10.25 0 0M-29.615 30.987C-29.615 34.458-28.735 36.199-26.187 36.199-23.746 36.199-22.664 34.557-22.664 30.987V26.061H-29.615Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,610.4951,307.8516)" d="M0 0-19.453-8.459C-26.853-11.625-29.061-15.182-29.061-22.49V-24.986C-29.061-36.771-23.483-42.895-13.4-42.895-8.304-42.895-3.908-41.459 .575-38.586V-42.426H22.462V5.081C22.462 15.334 18.716 19.064 7.393 19.064H-13.741C-25.176 19.064-28.826 15.334-28.826 5.081V.658H-6.817V2.678C-6.817 6.04-5.862 7.582-3.46 7.582-.765 7.582 0 6.04 0 2.678ZM.096-24.697C.096-28.059-.955-29.596-3.433-29.596-5.723-29.596-6.864-28.059-6.864-24.697V-23.35C-6.864-20.18-6.194-18.256-2.956-16.623L.096-15.182Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,0,612)" d="M637.57 339.207H660.234V261.258H637.57Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,358.1562,288.9419)" d="M0 0V-45.324C0-48.482-.88-50.017-3.23-50.017-5.482-50.017-6.461-48.482-6.461-45.324V.031H-29.327V-47.816C-29.327-58.066-25.787-61.804-14.404-61.804H7.947C19.231-61.804 22.957-58.066 22.957-47.816V0Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,438.5449,338.959)" d="M0 0C-1.863 0-2.85 1.07-3.132 3.23V31.756C-3.132 34.916-2.256 36.446 .099 36.446 1.97 36.446 2.948 35.375 3.234 33.219V4.693C3.234 1.531 2.351 0 0 0M26.191 34.246V34.274 65.131H3.234V48.233H-11.078C-20.032 48.233-24.222 45.863-25.569 39.771H-26.096V2.205 2.172-3.293H-25.593C-24.297-9.412-20.223-11.787-11.178-11.787H11.177C20.131-11.787 24.32-9.416 25.676-3.32H26.191Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,600.9746,377.1387)" d="M0 0H4.844L.896 16.793H-5.002L-8.973 0H-4.134L-3.662 2.576H-.515ZM-1.026 6.238H-3.175L-2.093 13.127H-2.045Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,611.2881,363.7305)" d="M0 0H.634C1.598 0 2.065-.543 2.065-1.625 2.065-2.846 1.312-3.23 .706-3.23H0ZM-4.701-13.412H2.307C5.188-13.412 7.139-11.93 7.139-8.568 7.139-5.184 5.002-4.717 4.059-4.617V-4.574C5.148-4.336 6.77-3.416 6.77-.781 6.77 1.994 5.002 3.381 2.065 3.381H-4.701ZM0-6.199H.84C1.906-6.199 2.307-7.094 2.307-8.221 2.307-9.322 1.839-10.031 .816-10.031H0Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,0,612)" d="M625.949 251.654H630.64999V234.865H625.949Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,638.3311,368.7207)" d="M0 0C0 .967-.305 1.252-.896 1.252-1.506 1.252-1.815 .73-1.815 0V-8.422H-6.361V4.305H-1.954V2.838H-1.902C-1.229 4.086-.071 4.629 1.459 4.629 3.076 4.629 4.555 3.73 4.555 1.402V-8.422H0Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,650.4238,368.875)" d="M0 0C0 1.268-.233 1.803-1.002 1.803-1.839 1.803-2.025 1.268-2.025-1.891-2.025-5.006-1.958-5.617-1.026-5.617-.139-5.617 .067-5.006 .067-2.795H4.214C4.214-4.844 3.904-6.279 3.084-7.193 2.26-8.137 .939-8.586-1.026-8.586-6.044-8.586-6.579-5.475-6.579-1.891-6.579 1.68-6.044 4.783-1.026 4.783 3.132 4.783 4.214 3.227 4.214-.578H0Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,0,612)" d="M655.383 239.848H659.521V234.862H655.383Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,738.958,234.53961)" d="M0 0H-685.916V-22.74H-623.987V-97.744C-623.987-113.554-611.211-126.369-595.436-126.369H-532.713C-516.942-126.369-504.164-113.554-504.164-97.744V-22.74H0Z" fill="#231f20"/>
-<path transform="matrix(1,0,0,-1,227.0498,298.645)" d="M0 0C0-29.101-23.619-52.722-52.723-52.722-81.824-52.722-105.446-29.101-105.446 0-105.446 29.105-81.824 52.723-52.723 52.723-23.619 52.723 0 29.105 0 0" fill="#ffdd00"/>
-</g>
-</g>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 56" height="44" aria-label="FluidSeal AB Inc.">
+  <!-- Black square emblem with bold yellow ring -->
+  <rect x="0" y="2" width="52" height="52" fill="#231F20"/>
+  <!-- Outer yellow ring -->
+  <circle cx="26" cy="28" r="17" fill="#FFDD00"/>
+  <!-- Inner black circle (creating the ring) -->
+  <circle cx="26" cy="28" r="9" fill="#231F20"/>
+  <!-- fluidseal wordmark - Compacta Black style: very wide, very bold -->
+  <text x="62" y="37"
+        font-family="'Arial Black', 'Arial Narrow', Impact, 'Compacta Black', sans-serif"
+        font-weight="900"
+        font-size="30"
+        fill="#231F20"
+        letter-spacing="-0.5"
+        font-style="italic">fluidseal</text>
+  <!-- AB Inc. subtitle -->
+  <text x="64" y="52"
+        font-family="Arial, Helvetica, sans-serif"
+        font-weight="700"
+        font-size="11"
+        fill="#231F20"
+        letter-spacing="1.5">AB Inc.</text>
 </svg>
     </a>
 
@@ -948,7 +944,7 @@ h1.hero-title{animation:heroFadeUp .7s ease .25s both}
 <section id="training-modules" style="background:var(--dark2);border-bottom:1px solid var(--border);padding:56px 32px">
   <div style="max-width:1100px;margin:0 auto">
     <div class="section-tag" style="margin-bottom:8px">FluidSeal AB Internal Training</div>
-    <h2 style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:clamp(28px,4vw,40px);font-weight:900;color:var(--black);margin-bottom:8px">Staff Training Modules</h2>
+    <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:900;color:#fff;margin-bottom:8px">Staff Training Modules</h2>
     <p style="font-size:14px;color:var(--muted);margin-bottom:32px;max-width:560px">All training content is for FluidSeal AB internal staff use. Complete modules in sequence to build full product expertise and earn certification.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
 
@@ -956,51 +952,51 @@ h1.hero-title{animation:heroFadeUp .7s ease .25s both}
       <div style="background:linear-gradient(135deg,#0e1d30,#142a40);border:1px solid rgba(200,34,42,0.35);border-radius:6px;padding:28px;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)"></div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-          <div style="background:var(--red);color:var(--black);font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:800;font-size:12px;letter-spacing:1px;padding:4px 10px;border-radius:2px">MODULE 1</div>
+          <div style="background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;letter-spacing:1px;padding:4px 10px;border-radius:2px">MODULE 1</div>
           <div style="font-size:11px;color:#ff6b6b;font-weight:600;letter-spacing:1px">← YOU ARE HERE</div>
         </div>
-        <div style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:24px;font-weight:800;color:var(--black);margin-bottom:6px">Product Profiles Guide</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:6px">Product Profiles Guide</div>
         <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">130+ seal series — geometry, materials, measurement, catalog navigation, and shop links. The complete FluidSeal AB seal reference.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
           <span style="font-size:11px;font-weight:600;background:rgba(200,34,42,0.12);color:#e87a7a;border:1px solid rgba(200,34,42,0.2);padding:3px 10px;border-radius:2px">8 Categories</span>
           <span style="font-size:11px;font-weight:600;background:rgba(200,34,42,0.12);color:#e87a7a;border:1px solid rgba(200,34,42,0.2);padding:3px 10px;border-radius:2px">130+ Series</span>
           <span style="font-size:11px;font-weight:600;background:rgba(200,34,42,0.12);color:#e87a7a;border:1px solid rgba(200,34,42,0.2);padding:3px 10px;border-radius:2px">Inch &amp; Metric</span>
         </div>
-        <a href="#categories" style="display:inline-flex;align-items:center;gap:6px;background:var(--red);color:var(--black);font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:700;font-size:15px;padding:10px 20px;border-radius:3px;text-decoration:none;letter-spacing:.5px">Open Module ↓</a>
+        <a href="#categories" style="display:inline-flex;align-items:center;gap:6px;background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;padding:10px 20px;border-radius:3px;text-decoration:none;letter-spacing:.5px">Open Module ↓</a>
       </div>
 
       <!-- MODULE 2: Caliper Training -->
       <div style="background:var(--dark3);border:1px solid var(--border);border-radius:6px;padding:28px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s" onmouseover="this.style.borderColor='rgba(30,140,220,0.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='none'">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#3a7bd5"></div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-          <div style="background:#3a7bd5;color:var(--black);font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:800;font-size:12px;letter-spacing:1px;padding:4px 10px;border-radius:2px">MODULE 2</div>
+          <div style="background:#3a7bd5;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;letter-spacing:1px;padding:4px 10px;border-radius:2px">MODULE 2</div>
           <div style="font-size:11px;color:#7aade8;font-weight:600;letter-spacing:1px">PRECISION MEASUREMENT</div>
         </div>
-        <div style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:24px;font-weight:800;color:var(--black);margin-bottom:6px">Caliper &amp; Measurement Training</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:6px">Caliper &amp; Measurement Training</div>
         <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">Master the Mitutoyo 505-Series dial caliper. Covers anatomy, reading technique, inside/outside/depth measurements, and proper maintenance.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
           <span style="font-size:11px;font-weight:600;background:rgba(58,123,213,0.12);color:#7aade8;border:1px solid rgba(58,123,213,0.2);padding:3px 10px;border-radius:2px">~12 min video</span>
           <span style="font-size:11px;font-weight:600;background:rgba(58,123,213,0.12);color:#7aade8;border:1px solid rgba(58,123,213,0.2);padding:3px 10px;border-radius:2px">Beginner friendly</span>
           <span style="font-size:11px;font-weight:600;background:rgba(58,123,213,0.12);color:#7aade8;border:1px solid rgba(58,123,213,0.2);padding:3px 10px;border-radius:2px">Quiz included</span>
         </div>
-        <a href="training-calipers.html" style="display:inline-flex;align-items:center;gap:6px;background:#3a7bd5;color:var(--black);font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:700;font-size:15px;padding:10px 20px;border-radius:3px;text-decoration:none;letter-spacing:.5px">Open Module →</a>
+        <a href="training-calipers.html" style="display:inline-flex;align-items:center;gap:6px;background:#3a7bd5;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;padding:10px 20px;border-radius:3px;text-decoration:none;letter-spacing:.5px">Open Module →</a>
       </div>
 
       <!-- MODULE 3: Certification Program -->
       <div style="background:var(--dark3);border:1px solid var(--border);border-radius:6px;padding:28px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s" onmouseover="this.style.borderColor='rgba(200,160,0,0.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='none'">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#c8a000"></div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-          <div style="background:#c8a000;color:#231F20;font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:800;font-size:12px;letter-spacing:1px;padding:4px 10px;border-radius:2px">MODULE 3</div>
+          <div style="background:#c8a000;color:#231F20;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;letter-spacing:1px;padding:4px 10px;border-radius:2px">MODULE 3</div>
           <div style="font-size:11px;color:#e8c840;font-weight:600;letter-spacing:1px">6-LEVEL ASSESSMENT</div>
         </div>
-        <div style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:24px;font-weight:800;color:var(--black);margin-bottom:6px">Staff Certification Program</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:6px">Staff Certification Program</div>
         <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">6 progressive levels from catalog navigation to material science. Pass each level to earn your official FluidSeal AB certificate. Includes PDF download and email sharing.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
           <span style="font-size:11px;font-weight:600;background:rgba(200,160,0,0.12);color:#e8c840;border:1px solid rgba(200,160,0,0.2);padding:3px 10px;border-radius:2px">Levels 1–6</span>
           <span style="font-size:11px;font-weight:600;background:rgba(200,160,0,0.12);color:#e8c840;border:1px solid rgba(200,160,0,0.2);padding:3px 10px;border-radius:2px">75 total questions</span>
           <span style="font-size:11px;font-weight:600;background:rgba(200,160,0,0.12);color:#e8c840;border:1px solid rgba(200,160,0,0.2);padding:3px 10px;border-radius:2px">PDF Certificate</span>
         </div>
-        <a href="training-certificate.html" style="display:inline-flex;align-items:center;gap:6px;background:#c8a000;color:#231F20;font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:800;font-size:15px;padding:10px 20px;border-radius:3px;text-decoration:none;letter-spacing:.5px">Start Certification →</a>
+        <a href="training-certificate.html" style="display:inline-flex;align-items:center;gap:6px;background:#c8a000;color:#231F20;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;padding:10px 20px;border-radius:3px;text-decoration:none;letter-spacing:.5px">Start Certification →</a>
       </div>
 
     </div>
@@ -1268,7 +1264,7 @@ h1.hero-title{animation:heroFadeUp .7s ease .25s both}
   <div class="pt-section-header">
     <div>
       <div class="section-tag" style="margin-bottom:8px">Parker Material Selection Guide</div>
-      <h3 style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:28px;font-weight:800;margin-bottom:6px">Periodic Table of Elastomers</h3>
+      <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;margin-bottom:6px">Periodic Table of Elastomers</h3>
       <p style="font-size:13px;color:var(--muted)">Click any element for temperature range, fluid resistance, and Parker compound codes. Source: Parker ORD 5712.</p>
     </div>
     <a href="https://www.parker.com/content/dam/Parker-com/Literature/O-Ring-Division-Literature/ORD-5712-Parker-O-Ring-Material-Offering-Guide.pdf" target="_blank" class="catalog-card-dl" style="margin-top:0;flex-shrink:0">
@@ -1582,10 +1578,10 @@ h1.hero-title{animation:heroFadeUp .7s ease .25s both}
 
 
 <!-- ═══ CERTIFICATION CTA ═══ -->
-<section style="background:var(--black);border-top:4px solid var(--yellow);border-bottom:none;padding:56px 32px;text-align:center">
+<section style="background:linear-gradient(135deg,#0b1520,#111a26);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:56px 32px;text-align:center">
   <div style="max-width:640px;margin:0 auto">
     <div style="font-size:48px;margin-bottom:16px">🏆</div>
-    <div style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:clamp(28px,4vw,42px);font-weight:900;color:var(--black);margin-bottom:12px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(28px,4vw,42px);font-weight:900;color:#fff;margin-bottom:12px">
       Ready to Get Certified?
     </div>
     <p style="font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:28px;max-width:480px;margin-left:auto;margin-right:auto">
@@ -1594,21 +1590,21 @@ h1.hero-title{animation:heroFadeUp .7s ease .25s both}
     </p>
     <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:24px">
       <div style="text-align:center">
-        <div style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:32px;font-weight:900;color:#3a7bd5">L1</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:#3a7bd5">L1</div>
         <div style="font-size:11px;color:var(--muted);letter-spacing:1px">Foundational · 10 Q</div>
       </div>
       <div style="color:var(--border);font-size:24px;line-height:2">→</div>
       <div style="text-align:center">
-        <div style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:32px;font-weight:900;color:#e8a840">L2</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:#e8a840">L2</div>
         <div style="font-size:11px;color:var(--muted);letter-spacing:1px">Applied · 15 Q</div>
       </div>
       <div style="color:var(--border);font-size:24px;line-height:2">→</div>
       <div style="text-align:center">
-        <div style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:32px;font-weight:900;color:#c8222a">L3</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:#c8222a">L3</div>
         <div style="font-size:11px;color:var(--muted);letter-spacing:1px">Expert · 20 Q</div>
       </div>
     </div>
-    <a href="training-certificate.html" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--red);color:var(--black);font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-weight:700;font-size:18px;letter-spacing:.5px;padding:14px 36px;border-radius:3px;text-decoration:none;transition:background .2s">
+    <a href="training-certificate.html" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;letter-spacing:.5px;padding:14px 36px;border-radius:3px;text-decoration:none;transition:background .2s">
       Start Certificate Program ↗
     </a>
   </div>
@@ -2277,7 +2273,7 @@ function ptSelect(el, key) {
     </div>
     <div>
       <div class="pt-detail-label">Temperature Range</div>
-      <div class="pt-detail-value" style="font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:18px;font-weight:700;color:${data.color}">${data.temp}</div>
+      <div class="pt-detail-value" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:${data.color}">${data.temp}</div>
       <div class="pt-detail-label" style="margin-top:14px">Parker Compounds</div>
       <div class="pt-detail-value" style="font-size:12px">${data.parker_code}</div>
       <a href="https://www.parker.com/content/dam/Parker-com/Literature/O-Ring-Division-Literature/ORD-5712-Parker-O-Ring-Material-Offering-Guide.pdf" target="_blank" class="pt-parker-link">Parker ORD 5712 ↗</a>

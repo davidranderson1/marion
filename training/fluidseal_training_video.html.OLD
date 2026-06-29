@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dial Caliper Training | FluidSeal AB</title>
 <style>
-
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;overflow:hidden;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
+body{background:#000;font-family:'Inter',sans-serif;overflow:hidden;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
 
 /* ── STAGE ── */
 #stage{
   width:960px;height:540px;position:relative;overflow:hidden;
-  background:#231F20;
+  background:#0f1923;
 }
 
 /* ── SCENES ── */
@@ -32,7 +32,7 @@ body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;ove
 }
 
 /* ── SCENE 0: INTRO ── */
-#s0{background:linear-gradient(135deg,#231F20 0%,#3a3537 60%,#1a1718 100%);}
+#s0{background:linear-gradient(135deg,#0f1923 0%,#1a2e3f 60%,#0d1e2e 100%);}
 #s0 .bg-circle{
   position:absolute;width:600px;height:600px;border-radius:50%;
   background:radial-gradient(circle,rgba(200,34,42,.15) 0%,transparent 70%);
@@ -40,14 +40,14 @@ body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;ove
 }
 #s0 .logo-wrap{display:flex;align-items:center;gap:14px;margin-bottom:28px;}
 #s0 .logo-dot{
-  width:52px;height:52px;border-radius:8px;background:#231F20;
+  width:52px;height:52px;border-radius:50%;background:#c8222a;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 #s0 .brand{font-size:28px;font-weight:800;color:#fff;letter-spacing:.5px;}
-#s0 .brand-sub{font-size:12px;color:#FFDD00;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+#s0 .brand-sub{font-size:12px;color:#4a7090;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
 #s0 h1{font-size:48px;font-weight:800;color:#fff;text-align:center;line-height:1.1;margin-bottom:16px;}
 #s0 h1 span{color:#e8464a;}
-#s0 p{font-size:17px;color:#b9bdc2;text-align:center;max-width:520px;line-height:1.6;}
+#s0 p{font-size:17px;color:#5a8090;text-align:center;max-width:520px;line-height:1.6;}
 #s0 .badge{
   display:inline-flex;align-items:center;gap:8px;
   background:rgba(200,34,42,.15);border:1px solid rgba(200,34,42,.35);
@@ -56,7 +56,7 @@ body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;ove
 }
 
 /* ── SCENE 1: PARTS OVERVIEW ── */
-#s1{background:#231F20;flex-direction:column;}
+#s1{background:#0f1923;flex-direction:column;}
 #s1 .section-tag{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#c8222a;margin-bottom:12px;}
 #s1 h2{font-size:34px;font-weight:800;color:#fff;margin-bottom:32px;text-align:center;}
 #s1 .caliper-wrap{position:relative;width:860px;max-width:90%;}
@@ -64,18 +64,18 @@ body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;ove
 /* label chips */
 .chip{
   position:absolute;
-  background:#231F20;border:1px solid #FFDD00;
+  background:#0f1923;border:1px solid #c8222a;
   color:#fff;font-size:11px;font-weight:600;
   padding:4px 10px;border-radius:4px;white-space:nowrap;
   opacity:0;transform:scale(.8);
   transition:opacity .4s ease, transform .4s ease;
 }
 .chip.show{opacity:1;transform:scale(1);}
-.chip::after{content:'';position:absolute;background:#FFDD00;}
+.chip::after{content:'';position:absolute;background:#c8222a;}
 /* dot on image */
 .pdot{
   position:absolute;width:9px;height:9px;border-radius:50%;
-  background:#fff;border:2px solid #FFDD00;
+  background:#fff;border:2px solid #c8222a;
   transform:translate(-50%,-50%);
   opacity:0;transition:opacity .3s ease;
   box-shadow:0 0 0 3px rgba(200,34,42,.3);
@@ -83,7 +83,7 @@ body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;ove
 .pdot.show{opacity:1;}
 
 /* ── SCENE 2: HOW TO READ ── */
-#s2{background:#1a1718;}
+#s2{background:#0d1e2e;}
 #s2 .read-layout{display:flex;gap:50px;align-items:center;width:860px;}
 #s2 .read-left{flex:1;}
 #s2 .read-right{width:300px;flex-shrink:0;}
@@ -100,14 +100,14 @@ body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;ove
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 #s2 .stxt h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;}
-#s2 .stxt p{font-size:12.5px;color:#b9bdc2;line-height:1.5;}
+#s2 .stxt p{font-size:12.5px;color:#5a8090;line-height:1.5;}
 #s2 .formula{
-  background:#231F20;border-left:3px solid #c8222a;
+  background:#0f1923;border-left:3px solid #c8222a;
   color:#7ec8f0;font-family:monospace;font-size:12px;
   padding:6px 12px;border-radius:0 4px 4px 0;margin-top:8px;
 }
 /* reading display */
-.read-display{background:#231F20;border-radius:10px;padding:22px;border:1px solid #3a3537;}
+.read-display{background:#0f1923;border-radius:10px;padding:22px;border:1px solid #1a3048;}
 .read-display .rd-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#3a6080;margin-bottom:6px;}
 .read-display .rd-val{font-family:monospace;font-size:28px;font-weight:700;color:#7ec8f0;margin-bottom:16px;}
 .read-display .rd-total{background:#c8222a;border-radius:8px;padding:14px;text-align:center;margin-top:10px;}
@@ -115,11 +115,11 @@ body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;ove
 .read-display .rd-total .val{font-family:monospace;font-size:30px;font-weight:800;color:#fff;letter-spacing:2px;}
 
 /* ── SCENE 3: TIPS ── */
-#s3{background:#231F20;}
+#s3{background:#0f1923;}
 #s3 h2{font-size:32px;font-weight:800;color:#fff;margin-bottom:28px;text-align:center;}
 #s3 .tips-row{display:flex;gap:18px;width:860px;}
 .tip-box{
-  flex:1;background:#1a1718;border-radius:10px;padding:22px 18px;
+  flex:1;background:#0d1e2e;border-radius:10px;padding:22px 18px;
   border-top:3px solid #c8222a;
   opacity:0;transform:translateY(20px);
   transition:opacity .4s ease,transform .4s ease;
@@ -127,10 +127,10 @@ body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;ove
 .tip-box.show{opacity:1;transform:translateY(0);}
 .tip-box .ticon{font-size:28px;margin-bottom:10px;}
 .tip-box h3{font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;}
-.tip-box p{font-size:12px;color:#FFDD00;line-height:1.55;}
+.tip-box p{font-size:12px;color:#4a7090;line-height:1.55;}
 
 /* ── SCENE 4: CTA ── */
-#s4{background:linear-gradient(135deg,#231F20 0%,#1a1718 100%);}
+#s4{background:linear-gradient(135deg,#0f1923 0%,#1a1215 100%);}
 #s4 .bg-glow{
   position:absolute;width:500px;height:500px;border-radius:50%;
   background:radial-gradient(circle,rgba(200,34,42,.2) 0%,transparent 70%);
@@ -138,7 +138,7 @@ body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;ove
 }
 #s4 h2{font-size:42px;font-weight:800;color:#fff;text-align:center;line-height:1.15;margin-bottom:16px;position:relative;}
 #s4 h2 span{color:#e8464a;}
-#s4 .sub{font-size:16px;color:#FFDD00;text-align:center;margin-bottom:32px;position:relative;}
+#s4 .sub{font-size:16px;color:#4a7090;text-align:center;margin-bottom:32px;position:relative;}
 #s4 .cta-btn{
   background:#c8222a;color:#fff;font-size:15px;font-weight:700;
   padding:14px 36px;border-radius:6px;border:none;cursor:pointer;
@@ -198,10 +198,9 @@ body{background:#000;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;ove
     <div class="bg-circle"></div>
     <div class="logo-wrap fade-up d1">
       <div class="logo-dot">
-        <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
-          <rect width="34" height="34" rx="6" fill="#231F20"/>
-          <circle cx="17" cy="17" r="10" fill="#FFDD00"/>
-          <circle cx="17" cy="17" r="5" fill="#231F20"/>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2C12 2 5 9.5 5 14.5C5 18.09 8.13 21 12 21C15.87 21 19 18.09 19 14.5C19 9.5 12 2 12 2Z" fill="white"/>
+          <path d="M9 15.5C9 13.5 11 11 12 10C13 11 15 13.5 15 15.5C15 17.16 13.66 18.5 12 18.5C10.34 18.5 9 17.16 9 15.5Z" fill="#c8222a"/>
         </svg>
       </div>
       <div>
