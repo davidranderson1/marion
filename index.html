@@ -283,6 +283,7 @@
     </a>
     <div class="topbar-spacer"></div>
     <nav class="nav-links">
+      <a href="https://world.fluidsealab.com/" target="_blank" rel="noopener">World</a>
       <a href="knowledge.html">Knowledge</a>
       <a href="https://posters.fluidsealab.com/" target="_blank" rel="noopener">Posters</a>
       <a href="https://www.sealsonline.com/en/flabed" target="_blank" rel="noopener">Store</a>
@@ -1320,6 +1321,8 @@ async function shouldJD(text){
     const last=messagesEl.querySelector('.msg.marion:first-child .bubble');
     if(last) last.innerHTML=`<p>Hi, I'm <strong>Marion</strong> — Fluidseal's sealing specialist, named after the fellow who started this company back in the '50s. I've got <strong>${MARION.knowledge.products.length} seal profiles</strong> from ${[...new Set(MARION.knowledge.products.map(p=>p.manufacturer))].join(' and ')} loaded and ready. Tell me what you're sealing — equipment, size, pressure, temperature — and I'll find you the right one.</p>`;
   }
+  const wq=new URLSearchParams(location.search).get('q');
+  if(wq){inputEl.value=wq;sendBtn.disabled=false;inputEl.dispatchEvent(new Event('input'));}
   inputEl.focus();
 })();
 </script>
