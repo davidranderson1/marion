@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --black:#121212;
@@ -400,8 +401,8 @@
       <div class="panel-h">Marion's Brain</div>
       <div class="panel-b">
         <div class="conn-state conn-off" id="connState"><span class="d"></span><span id="connLbl">Offline recommender</span></div>
-        <p class="mini-note" id="connNote">Marion is running as a structured recommender over the catalog — no AI key needed. For full conversational answers, connect Claude.</p>
-        <button class="btn" id="connectBtn">Connect Claude (best quality)</button>
+        <p class="mini-note" id="connNote">Marion is running as a structured recommender over the catalog. Sign in for full conversational answers — free, no key needed.</p>
+        <button class="btn" id="connectBtn">Sign in for full answers</button>
       </div>
     </div>
   </aside>
@@ -414,15 +415,15 @@
 <!-- Connect modal -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
-    <div class="modal-h">Connect Claude <button class="close-x" id="modalClose" aria-label="Close">&times;</button></div>
+    <div class="modal-h">Connect Marion's Brain <button class="close-x" id="modalClose" aria-label="Close">&times;</button></div>
     <div class="modal-b">
-      <p>Paste an Anthropic API key to let Marion answer as a full conversational specialist. The key stays in this browser tab only — it is <strong>never saved, stored, or sent anywhere except Anthropic</strong>, and it disappears when you close the tab.</p>
-      <label class="field-lbl" for="keyInput">Anthropic API key</label>
-      <input class="key-input" id="keyInput" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
-      <button class="btn" id="keySave">Use this key for this session</button>
+      <p>Sign in with your email and Marion answers as a full conversational specialist — the AI runs on <strong>Fluidseal's secure server</strong>. No API key, no password, nothing to install.</p>
+      <label class="field-lbl" for="keyInput">Your email</label>
+      <input class="key-input" id="keyInput" type="email" placeholder="you@company.com" autocomplete="email" spellcheck="false">
+      <button class="btn" id="keySave">Email me a sign-in link</button>
       <div class="warn-line">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-        <span>Local testing only. A public site must route the key through a server-side proxy (Phase 3) — never ship a key in this page.</span>
+        <span>We'll email you a one-time sign-in link — click it and you're connected. Your quotes also appear under My Account.</span>
       </div>
     </div>
   </div>
@@ -436,9 +437,17 @@
    (B) structured spec-recommender fallback — always available.
    ============================================================ */
 
+/* ---- Supabase session (Phase 3): Marion's Brain runs through the server-side proxy ---- */
+const SB_URL="https://hnmbjqhxvxakhdzgetxw.supabase.co";
+const SB_KEY="sb_publishable_HbRa8tV_Vmj5WPdvDc37uw_Vp7WajUe";
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+let SESSION=null;
+sb.auth.onAuthStateChange((_e,s)=>{const was=!!SESSION;SESSION=s;setConnected(!!s);
+  if(s&&!was)pushMarion(`<p>Claude's connected — I'm running at full capability now. Ask me anything about your sealing application and I'll work it through with you properly.</p>`);});
+
 const MARION = {
   knowledge: { company:null, groups:[], profiles:[], products:[], manifest:null, parents:[], xrefIndex:null, anyseals:[], training:null },
-  apiKey: null,
+  apiKey: null, // legacy — no longer used; the key lives server-side
   history: [],          // {role, content} for API continuity
   ready: false
 };
@@ -929,9 +938,9 @@ async function answerViaAPI(userText){
   const sys = SYSTEM_PROMPT + "\n\n=== KNOWLEDGE BASE (your only source of truth) ===\n" + JSON.stringify(kb);
   MARION.history.push({role:'user',content:userText});
   const body={model:'claude-sonnet-4-6',max_tokens:1024,system:sys,messages:MARION.history.slice(-12)};
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
+  const res=await fetch(SB_URL+'/functions/v1/marion-chat',{
     method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':MARION.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SESSION.access_token},
     body:JSON.stringify(body)
   });
   if(!res.ok){const e=await res.text();throw new Error('API '+res.status+': '+e.slice(0,140));}
@@ -999,7 +1008,7 @@ async function handleSend(text){
       setSending(false);
       return;
     }
-    if(MARION.apiKey){
+    if(SESSION){
       // exact cross-reference hits are answered from the master directly — fast and exact
       if(shouldXref(text)){
         clearTyping();
@@ -1098,28 +1107,29 @@ const modal=document.getElementById('modalBg');
 document.getElementById('connectBtn').onclick=()=>{modal.classList.add('show');document.getElementById('keyInput').focus();};
 document.getElementById('modalClose').onclick=()=>modal.classList.remove('show');
 modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show');});
-document.getElementById('keySave').onclick=()=>{
-  const k=document.getElementById('keyInput').value.trim();
-  if(!k){return;}
-  MARION.apiKey=k;
+document.getElementById('keySave').onclick=async()=>{
+  const email=document.getElementById('keyInput').value.trim();
+  if(!email){return;}
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
   modal.classList.remove('show');
   document.getElementById('keyInput').value='';
-  setConnected(true);
-  pushMarion(`<p>Claude's connected — I'm running at full capability now. Ask me anything about your sealing application and I'll work it through with you properly.</p>`);
+  pushMarion(error
+    ? `<p>Couldn't send the sign-in link (${error.message}). Try again in a minute.</p>`
+    : `<p>Magic link sent to <strong>${email}</strong> — click it in your inbox and I'll be running at full capability.</p>`);
 };
 function setConnected(on){
   const st=document.getElementById('connState'),lbl=document.getElementById('connLbl'),
     note=document.getElementById('connNote'),dot=document.getElementById('statusDot'),btn=document.getElementById('connectBtn');
   if(on){
     st.className='conn-state conn-on';lbl.textContent='Claude connected';
-    note.textContent='Marion is answering as a full conversational specialist via the Anthropic API (this session only).';
+    note.textContent="Marion is answering as a full conversational specialist — signed in, running through Fluidseal's secure server.";
     dot.className='status-dot';dot.title='Claude connected';
-    btn.textContent='Disconnect';btn.onclick=()=>{MARION.apiKey=null;MARION.history=[];setConnected(false);};
+    btn.textContent='Sign out';btn.onclick=()=>{sb.auth.signOut();MARION.history=[];};
   }else{
     st.className='conn-state conn-off';lbl.textContent='Offline recommender';
-    note.textContent='Marion is running as a structured recommender over the catalog — no AI key needed. For full conversational answers, connect Claude.';
+    note.textContent='Marion is running as a structured recommender over the catalog. Sign in for full conversational answers — free, no key needed.';
     dot.className='status-dot off';dot.title='Offline recommender mode';
-    btn.textContent='Connect Claude (best quality)';
+    btn.textContent='Sign in for full answers';
     btn.onclick=()=>{modal.classList.add('show');document.getElementById('keyInput').focus();};
   }
 }
