@@ -186,7 +186,7 @@ async function openQuote(id){
   CURRENT=data;
   document.getElementById('detailPanel').classList.remove('hidden');
   document.getElementById('dMeta').textContent=new Date(data.created_at).toLocaleString('en-CA')+' · '+data.status+(data.po?' · PO# '+data.po:'');
-  document.getElementById('dCust').textContent=(data.acct||'—')+' · '+(data.contact||'')+' · '+(data.phone||'')+' · '+((PROFILES[data.user_id]||{}).email||'');
+  document.getElementById('dCust').textContent=[(data.acct||'—'),(data.contact||''),(data.phone||''),(data.email||''),(data.address||''),((PROFILES[data.user_id]||{}).email||'')].filter(Boolean).join(' · ');
   const tb=document.getElementById('detailBody');
   tb.innerHTML=(data.quote_lines||[]).map((l,i)=>'<tr>'+
     '<td><span class="conf '+(l.conf==='high'?'priced':l.conf==='med'?'submitted':'lost')+'">'+esc(l.conf||'')+'</span></td>'+
