@@ -35,6 +35,14 @@ Mono, amber/ink/paper palette, the panel + sticky-rail idiom) so it reads as the
 
 ---
 
+## To-do (added 2026-07-13)
+
+- **Leaked password protection (Supabase Auth)** — can't be enabled on the Free plan; the toggle
+  (Auth → Sign In/Providers → Email → "Prevent use of leaked passwords") is Pro-plan-and-above.
+  The security advisor warning stays until/unless the project is upgraded. Left untouched.
+  (Done same day: server-side min password length raised 6→8 + "Letters and digits" requirement,
+  matching the account.html Security form.)
+
 ## Open / next
 
 1. **Commit + push** (summary `summary`): `knowledge.html` (new) + `index.html` (modified). Then
