@@ -2,6 +2,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Marion — Quote Intake</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --yellow:#FFD400;--dark:#1a1a1a;--grey:#a7a9ac;--greylt:#e6e7e8;
@@ -12,13 +13,22 @@ body{font-family:'Roboto Condensed',Arial,sans-serif;color:var(--ink);background
 .mono{font-family:'JetBrains Mono',monospace;}
 
 /* HEADER */
-.top{background:var(--yellow);border-bottom:5px solid #000;padding:14px 22px;display:flex;align-items:center;gap:16px;}
+.top{background:var(--yellow);border-bottom:5px solid #000;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
 .top .logo{width:34px;height:34px;border-radius:50%;background:#000;flex:0 0 auto;position:relative;}
 .top .logo:after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--yellow);}
 .top h1{font-size:24px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
 .top h1 small{font-size:13px;font-weight:400;color:#555;letter-spacing:1px;display:block;margin-top:-3px;}
 .top .phase{margin-left:auto;font-size:12px;font-weight:700;background:#000;color:var(--yellow);
   padding:5px 12px;border-radius:3px;letter-spacing:1px;}
+
+/* AUTH */
+.auth{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;}
+.auth input{border:1px solid #00000055;border-radius:3px;padding:5px 8px;font-family:inherit;font-size:12px;width:190px;background:#fffdf0;}
+.auth .abtn{border:none;border-radius:3px;background:#000;color:var(--yellow);font-family:inherit;font-weight:700;
+  font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:6px 10px;cursor:pointer;}
+.auth .abtn:hover{background:#333;}
+.auth .who{color:#333;}
+.auth a.staff{color:#000;text-decoration:underline;font-weight:700;}
 
 .wrap{max-width:1280px;margin:0 auto;padding:22px;}
 
@@ -100,7 +110,7 @@ table.cart input.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
 .empty-cart{padding:40px;text-align:center;color:#999;font-size:14px;}
 
 /* QUOTE */
-.quote-tools{display:flex;gap:8px;padding:10px 16px;background:#fafafa;border-bottom:1px solid #e4e4e2;}
+.quote-tools{display:flex;gap:8px;padding:10px 16px;background:#fafafa;border-bottom:1px solid #e4e4e2;flex-wrap:wrap;align-items:center;}
 #quoteOut{padding:0;}
 .estimate{background:#fff;color:#000;font-size:12px;padding:24px;max-width:1000px;margin:0 auto;}
 .est-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:12px;}
@@ -137,7 +147,13 @@ table.est td.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
 <div class="top">
   <div class="logo"></div>
   <h1>Marion<small>Quote Intake · Cross-Reference</small></h1>
-  <div class="phase">PHASE 1</div>
+  <div class="phase">PHASE 3</div>
+  <div class="auth" id="authBox">
+    <span id="authForm" class="hidden"><input id="authEmail" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')sendLink()"><button class="abtn" onclick="sendLink()">Send link</button></span>
+    <span id="authWho" class="who hidden"></span>
+    <a class="staff hidden" id="staffLink" href="quotes.html">Staff</a>
+    <button class="abtn" id="authBtn" onclick="authAction()">Sign in</button>
+  </div>
 </div>
 
 <div class="wrap"><div class="stage">
@@ -208,13 +224,125 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="buildQuote()">Generate Quote</button>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="window.print()">Print / PDF</button>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="copyJSON()">Copy cart JSON</button>
+      <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="saveQuote('draft')">Save draft</button>
+      <button class="btn btn-go" style="padding:7px 14px;font-size:12px" onclick="saveQuote('submitted')">Submit to Fluidseal</button>
+      <span id="saveStatus" class="status" style="font-size:12px"></span>
     </div>
     <div id="quoteOut"><div class="hint">Generate a quote once the cart is reviewed.</div></div>
+  </div>
+
+  <!-- STEP 4: MY QUOTES -->
+  <div class="panel hidden" id="myQuotesPanel">
+    <div class="panel-h"><span class="step">4</span>My Quotes<span class="sub">saved &amp; submitted quotes on your account</span></div>
+    <div id="myQuotesList"><div class="hint">Sign in to see saved quotes.</div></div>
   </div>
 
 </div></div>
 
 <script>
+/* ---------- Supabase: auth + quote persistence (Phase 3) ---------- */
+const SB_URL="https://hnmbjqhxvxakhdzgetxw.supabase.co";
+const SB_KEY="sb_publishable_HbRa8tV_Vmj5WPdvDc37uw_Vp7WajUe";
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+let SESSION=null, IS_STAFF=false, CURRENT_QUOTE_ID=null;
+
+sb.auth.onAuthStateChange(async (_ev,session)=>{
+  SESSION=session; IS_STAFF=false;
+  if(session){
+    const {data}=await sb.from('profiles').select('is_staff').eq('id',session.user.id).single();
+    IS_STAFF=!!(data&&data.is_staff);
+    loadMyQuotes();
+  }
+  renderAuth();
+});
+
+function renderAuth(){
+  const form=document.getElementById('authForm'),who=document.getElementById('authWho'),
+        btn=document.getElementById('authBtn'),staff=document.getElementById('staffLink'),
+        panel=document.getElementById('myQuotesPanel');
+  if(SESSION){
+    form.classList.add('hidden');who.classList.remove('hidden');
+    who.textContent=SESSION.user.email;btn.textContent='Sign out';
+    staff.classList.toggle('hidden',!IS_STAFF);
+    panel.classList.remove('hidden');
+  }else{
+    who.classList.add('hidden');staff.classList.add('hidden');btn.textContent='Sign in';
+    panel.classList.add('hidden');
+  }
+}
+function authAction(){
+  if(SESSION){sb.auth.signOut();return;}
+  document.getElementById('authForm').classList.toggle('hidden');
+  const em=document.getElementById('authEmail');if(!document.getElementById('authForm').classList.contains('hidden'))em.focus();
+}
+async function sendLink(){
+  const email=document.getElementById('authEmail').value.trim();
+  if(!email)return;
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+  if(error){setStatus('Could not send sign-in link: '+error.message,'err');}
+  else{document.getElementById('authForm').classList.add('hidden');
+       setStatus('Magic link sent to '+email+' — check your email to finish signing in.','');}
+}
+
+async function saveQuote(status){
+  const el=document.getElementById('saveStatus');
+  if(!SESSION){el.textContent='Sign in (top right) to save quotes.';el.className='status err';return;}
+  if(!CART.length){el.textContent='Cart is empty.';el.className='status err';return;}
+  el.innerHTML='<span class="spin"></span>Saving…';el.className='status work';
+  const q={status,acct:CUST.acct,contact:CUST.contact,phone:CUST.phone,po:CUST.po,wh:CUST.wh,user_id:SESSION.user.id};
+  let id=CURRENT_QUOTE_ID,error=null;
+  if(id){
+    ({error}=await sb.from('quotes').update(q).eq('id',id));
+    if(!error)({error}=await sb.from('quote_lines').delete().eq('quote_id',id));
+  }else{
+    const r=await sb.from('quotes').insert(q).select('id').single();
+    error=r.error;if(r.data)id=r.data.id;
+  }
+  if(!error&&id){
+    const lines=CART.map(l=>({quote_id:id,conf:l.conf,oem:l.oem,brand:l.brand||null,pn:l.pn,descr:l.desc,
+      qty:l.qty,wh:l.wh,disp:l.disp,notes:l.notes,
+      unit_price:(l.price!=null&&l.price!=='')?+l.price:null,
+      line_total:(l.price!=null&&l.price!=='')?+(l.price*l.qty).toFixed(2):null}));
+    ({error}=await sb.from('quote_lines').insert(lines));
+  }
+  if(error){el.textContent='Save failed: '+error.message;el.className='status err';return;}
+  CURRENT_QUOTE_ID=id;
+  el.textContent=(status==='submitted')
+    ? '✓ Submitted to Fluidseal — we\'ll price it and get back to you.'
+    : '✓ Draft saved.';
+  el.className='status';
+  loadMyQuotes();
+}
+
+async function loadMyQuotes(){
+  if(!SESSION)return;
+  const box=document.getElementById('myQuotesList');
+  const {data,error}=await sb.from('quotes')
+    .select('id,status,acct,po,created_at,quote_lines(id)')
+    .eq('user_id',SESSION.user.id).order('created_at',{ascending:false});
+  if(error){box.innerHTML='<div class="hint">Could not load quotes: '+esc(error.message)+'</div>';return;}
+  if(!data.length){box.innerHTML='<div class="hint">No saved quotes yet — build a cart above, then Save draft or Submit.</div>';return;}
+  box.innerHTML='<div style="overflow-x:auto"><table class="cart"><thead><tr><th>Date</th><th>Account</th><th>PO</th><th>Lines</th><th>Status</th><th style="width:60px"></th></tr></thead><tbody>'+
+    data.map(q=>'<tr><td>'+new Date(q.created_at).toLocaleDateString('en-CA')+'</td><td>'+esc(q.acct||'—')+
+      '</td><td>'+esc(q.po||'')+'</td><td>'+q.quote_lines.length+
+      '</td><td><span class="conf '+(q.status==='draft'?'low':q.status==='submitted'?'med':'high')+'">'+q.status+'</span></td>'+
+      '<td><a href="#" onclick="openQuote(\''+q.id+'\');return false" style="color:var(--red);font-weight:700">open</a></td></tr>').join('')+
+    '</tbody></table></div>';
+}
+
+async function openQuote(id){
+  const {data,error}=await sb.from('quotes').select('*,quote_lines(*)').eq('id',id).single();
+  if(error||!data){setStatus('Could not open quote.','err');return;}
+  CURRENT_QUOTE_ID=data.id;
+  CUST={acct:data.acct||'',contact:data.contact||'',phone:data.phone||'',po:data.po||'',wh:data.wh||'6 - Edmonton'};
+  CART=(data.quote_lines||[]).map(l=>({conf:l.conf||'low',oem:l.oem||'',brand:l.brand||'',pn:l.pn||'',desc:l.descr||'',
+    qty:l.qty||1,wh:l.wh||'',disp:l.disp||'B',notes:l.notes||'',price:l.unit_price}));
+  renderCust();renderCart();
+  document.getElementById('saveStatus').textContent='Opened saved quote ('+data.status+').';
+  document.getElementById('saveStatus').className='status';
+  document.querySelector('.stage').scrollIntoView({behavior:'smooth'});
+}
+
 /* ---------- Cross-reference knowledge (Phase 1 rules the agent applies) ---------- */
 /* These encode what's known so far. The API call carries the same logic so the
    model can reason over unfamiliar requests; this JS handles the deterministic bits. */
@@ -227,7 +355,7 @@ const OEM_PREFIX_MAP = {
 const DISPOSITIONS = ["B","S","T"]; // Buy / Stock / Transfer  (B = default per cart)
 
 /* ---------- State ---------- */
-let CART = [];      // [{conf, oem, pn, desc, qty, wh, disp, notes, flags:[]}]
+let CART = [];      // [{conf, oem, brand, pn, desc, qty, wh, disp, notes, price}]
 let CUST = {acct:"",contact:"",phone:"",po:"",wh:"6 - Edmonton"};
 let IMAGES = [];    // [{name, media_type, data(base64), url(objectURL)}]
 
@@ -297,7 +425,7 @@ function loadSample(){
   document.getElementById('mPhone').value="403-333-6741";
 }
 
-/* ---------- Analyze: call Claude, fall back to local parser ---------- */
+/* ---------- Analyze: call Marion via server proxy, fall back to local parser ---------- */
 async function analyze(){
   const text=document.getElementById('req').value.trim();
   if(!text && !IMAGES.length){setStatus('Paste a request, or drop a file/screenshot first.','err');return;}
@@ -305,10 +433,18 @@ async function analyze(){
   setStatus('<span class="spin"></span>Reading request & cross-referencing…','work');
   let parsed=null;
   try{ parsed=await callMarion(text); }
-  catch(e){ console.warn('API failed, using local parser',e); }
+  catch(e){ console.warn('AI engine unavailable, using local parser',e); }
   if(!parsed){
-    if(!text){ setStatus('Couldn\u2019t read the screenshot (API unavailable). Type or paste the request to use the offline parser.','err'); btn.disabled=false; return; }
-    parsed=localParse(text); setStatus('Parsed locally (API unavailable). Review carefully.','err');
+    if(!text){
+      setStatus(SESSION
+        ? 'Couldn’t read the screenshot (AI engine error). Type or paste the request to use the offline parser.'
+        : 'Sign in (top right) to read screenshots with Marion’s AI engine.','err');
+      btn.disabled=false; return;
+    }
+    parsed=localParse(text);
+    setStatus(SESSION
+      ? 'Parsed locally (AI engine unavailable). Review carefully.'
+      : 'Parsed locally — sign in (top right) for Marion’s full AI read.','err');
   }
   else { setStatus('Done — '+parsed.lines.length+' line(s) staged. Review below.',''); }
   applyParsed(parsed);
@@ -317,8 +453,9 @@ async function analyze(){
 
 function setStatus(html,cls){const s=document.getElementById('status');s.innerHTML=html;s.className='status '+(cls||'');}
 
-/* ---- Claude API call ---- */
+/* ---- Marion AI call (server-side proxy holds the API key; sign-in required) ---- */
 async function callMarion(text){
+  if(!SESSION) throw new Error("signin-required");
   const sys=`You are Marion, a sealing-products cross-reference agent for Fluidseal AB Inc. (Sealing Solutions Group). You receive a raw customer request (often a forwarded email or phone note) and must extract a structured quote cart.
 
 YOUR JOB:
@@ -346,8 +483,9 @@ Return ONLY valid JSON, no markdown, no prose:
   userContent.push({type:"text",
     text:(text||"")+(IMAGES.length?"\n\n[One or more screenshots of the request are attached above — read all part numbers, quantities, dimensions, and customer details from them.]":"")});
 
-  const res=await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",headers:{"Content-Type":"application/json"},
+  const res=await fetch(SB_URL+"/functions/v1/marion-chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+SESSION.access_token},
     body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,
       system:sys,
       messages:[{role:"user",content:userContent}]})
@@ -400,9 +538,10 @@ function applyParsed(p){
   CUST.phone = document.getElementById('mPhone').value.trim() || p.customer.phone || "";
   CUST.po = document.getElementById('mPO').value.trim() || p.customer.po || "";
   CART = p.lines.map(l=>({
-    conf:l.conf||"low",oem:l.oem||"",pn:l.pn||"",desc:l.desc||"",
-    qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes:l.notes||""
+    conf:l.conf||"low",oem:l.oem||"",brand:l.brand||"",pn:l.pn||"",desc:l.desc||"",
+    qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes:l.notes||"",price:null
   }));
+  CURRENT_QUOTE_ID=null; // fresh analysis = new quote
   renderCust(); renderCart();
 }
 
@@ -437,7 +576,7 @@ function esc(s){return (s+'').replace(/"/g,'&quot;');}
 function upd(i,k,v){CART[i][k]=(k==='qty')?(parseInt(v)||1):v;
   if(k==='pn'&&v) CART[i].conf='high'; renderCart();}
 function delRow(i){CART.splice(i,1);renderCart();}
-function addRow(){CART.push({conf:'low',oem:'',pn:'',desc:'',qty:1,wh:CUST.wh,disp:'B',notes:'manual'});renderCart();}
+function addRow(){CART.push({conf:'low',oem:'',brand:'',pn:'',desc:'',qty:1,wh:CUST.wh,disp:'B',notes:'manual',price:null});renderCart();}
 
 /* sync editable customer strip */
 ['cAcct','cContact','cPhone','cWh'].forEach(id=>{
@@ -448,10 +587,16 @@ function addRow(){CART.push({conf:'low',oem:'',pn:'',desc:'',qty:1,wh:CUST.wh,di
 });
 
 /* ---------- Quote output ---------- */
+function money(n){return '$'+(+n).toFixed(2);}
 function buildQuote(){
   if(!CART.length){document.getElementById('quoteOut').innerHTML='<div class="hint">Cart is empty.</div>';return;}
   const today=new Date().toLocaleDateString('en-CA');
-  const rows=CART.map(r=>`<tr>
+  let subtotal=0, anyPriced=false;
+  const rows=CART.map(r=>{
+    const priced=(r.price!=null&&r.price!=='');
+    const unit=priced?+r.price:0, lineTotal=unit*r.qty;
+    if(priced){subtotal+=lineTotal;anyPriced=true;}
+    return `<tr>
     <td class="pn">${esc(r.pn)||'<span style="color:#c00">— not resolved —</span>'}</td>
     <td>${esc(r.desc)}</td>
     <td>${esc(r.oem)}</td>
@@ -460,9 +605,9 @@ function buildQuote(){
     <td style="text-align:center">0</td>
     <td style="text-align:center">${r.qty}</td>
     <td style="text-align:center">${r.disp}</td>
-    <td class="est-price">$0.00</td>
-    <td>$0.00</td>
-  </tr>`).join('');
+    <td class="est-price">${money(unit)}</td>
+    <td>${money(lineTotal)}</td>
+  </tr>`;}).join('');
   document.getElementById('quoteOut').innerHTML=`<div class="estimate">
     <div class="est-top">
       <div><div class="est-title"><span class="dot"></span>ESTIMATE</div>
@@ -481,13 +626,13 @@ function buildQuote(){
     <div class="est-totals"><table>
       <tr><td class="lbl">FREIGHT IN</td><td>$0.00</td></tr>
       <tr><td class="lbl">TOTAL TAX</td><td>$0.00</td></tr>
-      <tr><td class="lbl">TOTAL</td><td><b>$0.00</b></td></tr>
+      <tr><td class="lbl">TOTAL</td><td><b>${money(subtotal)}</b></td></tr>
     </table></div>
     <div class="est-foot">
       <div><b>FLUIDSEAL AB INC.</b><br>17309 - 107 Ave, Edmonton AB T5S 1E5 · (780) 414-1871</div>
       <div style="text-align:right"><b>FLUIDSEAL CG INC.</b><br>Bay #6, 3815 - 61st Ave SE, Calgary AB T2C 1V5</div>
     </div>
-    <div style="margin-top:10px;font-size:10px;color:#999;text-align:center">Pricing is not yet connected — net prices show $0.00 until Shopify inventory is linked (Phase 3).</div>
+    ${anyPriced?'':'<div style="margin-top:10px;font-size:10px;color:#999;text-align:center">Net prices are added by Fluidseal staff after you submit — submit this quote and we’ll price it and get back to you.</div>'}
   </div>`;
   document.getElementById('quotePanel').scrollIntoView({behavior:'smooth'});
 }
@@ -501,8 +646,10 @@ function clearAll(){
   document.getElementById('req').value='';
   ['mCust','mContact','mPhone','mPO'].forEach(id=>document.getElementById(id).value='');
   CART=[];CUST={acct:'',contact:'',phone:'',po:'',wh:'6 - Edmonton'};IMAGES=[];
+  CURRENT_QUOTE_ID=null;
   renderAttachments();renderCust();renderCart();
   document.getElementById('quoteOut').innerHTML='<div class="hint">Generate a quote once the cart is reviewed.</div>';
+  document.getElementById('saveStatus').textContent='';
   setStatus('','');
 }
 initDnD();
