@@ -114,6 +114,19 @@ table.grid input.price{font-family:'JetBrains Mono',monospace;font-weight:700;te
     </tr></thead><tbody id="detailBody"></tbody></table></div>
     <div class="totals">TOTAL <b id="dTotal">$0.00</b></div>
   </div>
+
+  <div class="panel hidden" id="rulesPanel">
+    <div class="panel-h">Marion Extraction Rules<span class="sub">what the AI is told on every Analyze — edits apply immediately, no deploy</span></div>
+    <div class="tools">
+      <button class="btn btn-go" onclick="addRule()">+ Add rule</button>
+      <span id="rStatus" class="status"></span>
+      <span style="margin-left:auto;font-size:11px;color:#888">categories: field_discipline · cross_reference · consistency · defaults · safety · other</span>
+    </div>
+    <div style="overflow-x:auto"><table class="grid"><thead><tr>
+      <th style="width:150px">Category</th><th>Rule (written as an instruction to Marion)</th>
+      <th style="width:60px">Active</th><th style="width:70px"></th><th style="width:70px"></th>
+    </tr></thead><tbody id="rulesBody"></tbody></table></div>
+  </div>
 </div>
 
 <script>
@@ -129,8 +142,55 @@ sb.auth.onAuthStateChange(async (_ev,session)=>{
     IS_STAFF=!!(data&&data.is_staff);
   }
   renderAuth(); renderGate();
-  if(SESSION&&IS_STAFF) loadQuotes();
+  if(SESSION&&IS_STAFF){ loadQuotes(); loadRules(); }
 });
+
+/* ---- Marion extraction rules editor (ai_rules table) ---- */
+async function loadRules(){
+  const {data,error}=await sb.from('ai_rules').select('*').order('sort');
+  const tb=document.getElementById('rulesBody');
+  if(error){tb.innerHTML='<tr><td colspan="5" class="hint">'+esc(error.message)+'</td></tr>';return;}
+  tb.innerHTML=(data||[]).map(r=>'<tr data-id="'+r.id+'">'+
+    '<td><input class="rcat" value="'+esc(r.category)+'"></td>'+
+    '<td><input class="rtext" value="'+esc(r.rule)+'"></td>'+
+    '<td style="text-align:center"><input type="checkbox" class="ract"'+(r.active?' checked':'')+'></td>'+
+    '<td><button class="btn btn-ghost" style="padding:5px 10px;font-size:11px" onclick="saveRule(this)">Save</button></td>'+
+    '<td><button class="btn btn-ghost" style="padding:5px 10px;font-size:11px;color:var(--red)" onclick="delRule(this)">Delete</button></td>'+
+    '</tr>').join('');
+  document.getElementById('rulesPanel').classList.remove('hidden');
+}
+async function saveRule(btn){
+  const tr=btn.closest('tr'),id=tr.dataset.id;
+  const row={category:tr.querySelector('.rcat').value.trim()||'other',
+    rule:tr.querySelector('.rtext').value.trim(),
+    active:tr.querySelector('.ract').checked,updated_at:new Date().toISOString()};
+  const el=document.getElementById('rStatus');
+  if(!row.rule){el.textContent='Rule text is empty.';el.className='status err';return;}
+  const {error}= id?await sb.from('ai_rules').update(row).eq('id',id)
+                   :await sb.from('ai_rules').insert(row);
+  el.textContent=error?('Save failed: '+error.message):'✓ Saved — applies on the next Analyze.';
+  el.className='status'+(error?' err':'');
+  if(!id&&!error)loadRules();
+}
+async function delRule(btn){
+  const tr=btn.closest('tr'),id=tr.dataset.id;
+  if(!id){tr.remove();return;}
+  if(!confirm('Delete this rule permanently?'))return;
+  const {error}=await sb.from('ai_rules').delete().eq('id',id);
+  const el=document.getElementById('rStatus');
+  if(error){el.textContent='Delete failed: '+error.message;el.className='status err';return;}
+  tr.remove();el.textContent='✓ Rule deleted.';el.className='status';
+}
+function addRule(){
+  const tb=document.getElementById('rulesBody');
+  const tr=document.createElement('tr');tr.dataset.id='';
+  tr.innerHTML='<td><input class="rcat" value="other"></td>'+
+    '<td><input class="rtext" value="" placeholder="e.g. Caterpillar parts: Fluidseal pn = CAT- + the full OEM number"></td>'+
+    '<td style="text-align:center"><input type="checkbox" class="ract" checked></td>'+
+    '<td><button class="btn btn-ghost" style="padding:5px 10px;font-size:11px" onclick="saveRule(this)">Save</button></td>'+
+    '<td><button class="btn btn-ghost" style="padding:5px 10px;font-size:11px;color:var(--red)" onclick="delRule(this)">Delete</button></td>';
+  tb.prepend(tr);
+}
 
 function renderAuth(){
   const form=document.getElementById('authForm'),who=document.getElementById('authWho'),btn=document.getElementById('authBtn');
