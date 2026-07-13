@@ -114,7 +114,7 @@ sb.auth.onAuthStateChange(async (_ev,session)=>{
     const {data}=await sb.from('profiles').select('is_staff').eq('id',session.user.id).single();
     IS_STAFF=!!(data&&data.is_staff);
   }
-  renderAuth();
+  renderAuth(); 
   if(SESSION){ if(IS_STAFF) await initImpersonation(); loadList(); }
   else { document.getElementById('gate').style.display='block';
          document.getElementById('list').style.display='none';
@@ -144,15 +144,23 @@ async function sendLink(){
   document.getElementById('authForm').classList.add('hidden');
 }
 
-/* ---- staff impersonation: pick any customer, see their quotes ---- */
+/* ---- staff impersonation: pick an account or customer login, see their quotes ---- */
 async function initImpersonation(){
-  const {data}=await sb.from('profiles').select('id,email,company').order('email');
+  const [{data:profs},{data:accts}]=await Promise.all([
+    sb.from('profiles').select('id,email,company').order('email'),
+    sb.from('quotes').select('acct').not('acct','is',null).neq('acct','')
+  ]);
   const sel=document.getElementById('viewAs');
   sel.innerHTML='<option value="">All customers</option>';
-  (data||[]).forEach(p=>{PROFILES[p.id]=p;
+  const gA=document.createElement('optgroup');gA.label='Accounts';
+  [...new Set((accts||[]).map(r=>r.acct))].sort().forEach(a=>{
+    const o=document.createElement('option');o.value='acct:'+a;o.textContent=a;gA.appendChild(o);});
+  if(gA.children.length)sel.appendChild(gA);
+  const gU=document.createElement('optgroup');gU.label='Customer logins';
+  (profs||[]).forEach(p=>{PROFILES[p.id]=p;
     const o=document.createElement('option');o.value=p.id;
-    o.textContent=(p.email||p.id)+(p.company?' — '+p.company:'');
-    sel.appendChild(o);});
+    o.textContent=(p.email||p.id)+(p.company?' — '+p.company:'');gU.appendChild(o);});
+  if(gU.children.length)sel.appendChild(gU);
   document.getElementById('imperson').classList.remove('hidden');
 }
 
@@ -167,7 +175,8 @@ async function loadList(){
   let q=sb.from('quotes').select('*,quote_lines(*)').order('created_at',{ascending:false});
   if(IS_STAFF){
     const who=document.getElementById('viewAs').value;
-    if(who)q=q.eq('user_id',who);
+    if(who.startsWith('acct:'))q=q.eq('acct',who.slice(5));
+    else if(who)q=q.eq('user_id',who);
   }else{
     q=q.eq('user_id',SESSION.user.id);
   }
