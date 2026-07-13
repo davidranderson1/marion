@@ -135,9 +135,48 @@ const SB_KEY="sb_publishable_HbRa8tV_Vmj5WPdvDc37uw_Vp7WajUe";
 const sb=window.supabase.createClient(SB_URL,SB_KEY);
 let SESSION=null, IS_STAFF=false, CURRENT=null, PROFILES={};
 
+/* ---- site-wide 2FA step-up: if the account has an authenticator enrolled,
+        require the 6-digit code before this page can be used ---- */
+async function enforceMfa(){
+  try{
+    const {data:aal}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+    if(!(aal&&aal.nextLevel==='aal2'&&aal.currentLevel!=='aal2'))return true;
+  }catch(e){return true;}
+  if(document.getElementById('mfaOv'))return false;
+  const d=document.createElement('div');d.id='mfaOv';
+  d.style.cssText='position:fixed;inset:0;background:rgba(26,26,26,.93);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Arial,Helvetica,sans-serif';
+  d.innerHTML='<div style="background:#fff;border-radius:10px;padding:34px 38px;text-align:center;max-width:380px">'+
+    '<div style="font-size:17px;font-weight:800;margin-bottom:8px">&#128274; Two-factor authentication</div>'+
+    '<div style="font-size:13px;color:#555;margin-bottom:16px">Enter the 6-digit code from your authenticator app to continue.</div>'+
+    '<input id="mfaOvCode" inputmode="numeric" maxlength="6" placeholder="123456" style="border:1px solid #cfcfcd;border-radius:6px;padding:10px 12px;font-size:16px;width:140px;text-align:center">'+
+    '<button id="mfaOvBtn" style="margin-left:8px;background:#FFD400;border:1px solid #000;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer">Verify</button>'+
+    '<div id="mfaOvMsg" style="color:#d0021b;font-size:12px;margin-top:10px"></div>'+
+    '<div style="margin-top:14px"><a href="#" onclick="sb.auth.signOut();document.getElementById(\'mfaOv\').remove();return false" style="font-size:12px;color:#888">Sign out instead</a></div></div>';
+  document.body.appendChild(d);
+  const go=async()=>{
+    const code=document.getElementById('mfaOvCode').value.trim();
+    const msg=document.getElementById('mfaOvMsg');msg.textContent='';
+    if(code.length!==6){msg.textContent='Enter the 6-digit code.';return;}
+    const {data:lf,error:e1}=await sb.auth.mfa.listFactors();
+    if(e1){msg.textContent=e1.message;return;}
+    const f=(((lf&&lf.totp)||[]).find(x=>x.status==='verified'))||((lf&&lf.totp)||[])[0];
+    if(!f){msg.textContent='No authenticator found on this account.';return;}
+    const {data:ch,error:e2}=await sb.auth.mfa.challenge({factorId:f.id});
+    if(e2){msg.textContent=e2.message;return;}
+    const {error:e3}=await sb.auth.mfa.verify({factorId:f.id,challengeId:ch.id,code});
+    if(e3){msg.textContent=e3.message;return;}
+    d.remove();location.reload();
+  };
+  document.getElementById('mfaOvBtn').onclick=go;
+  document.getElementById('mfaOvCode').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+  document.getElementById('mfaOvCode').focus();
+  return false;
+}
+
 sb.auth.onAuthStateChange(async (_ev,session)=>{
   SESSION=session; IS_STAFF=false;
   if(session){
+    enforceMfa();
     const {data}=await sb.from('profiles').select('is_staff').eq('id',session.user.id).single();
     IS_STAFF=!!(data&&data.is_staff);
   }
