@@ -54,6 +54,28 @@ table.qs tr:hover td{background:#fafbfc;cursor:pointer;}
 .gate{padding:70px 20px;text-align:center;font-size:15px;color:#555;}
 #detail{display:none;}
 .hidden{display:none;}
+.setcard{background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:18px;}
+.setcard .hd{padding:20px 24px 6px;}
+.setcard .hd h3{font-size:17px;font-weight:800;}
+.setcard .hd p{font-size:13px;color:#666;margin-top:2px;}
+.setrow{display:flex;align-items:center;gap:14px;justify-content:space-between;border:1px solid var(--line);border-radius:8px;margin:14px 24px;padding:16px 18px;flex-wrap:wrap;}
+.setrow .t{font-size:14px;font-weight:600;}
+.setrow .d{font-size:13px;color:#666;margin-top:2px;max-width:520px;}
+.btn{border:1px solid #cfcfcd;background:#fff;border-radius:6px;padding:9px 16px;font-family:'Inter',Arial,sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.btn:hover{background:#f7f8fa;}
+.btn.pri{background:var(--yellow);border-color:#000;}
+.btn.danger{color:var(--red);border-color:#f0c0c0;}
+.frm{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:6px 24px 20px;}
+.frm label{font-size:11px;font-weight:700;color:var(--grey);letter-spacing:.5px;display:block;margin-bottom:4px;text-transform:uppercase;}
+.frm input,.frm select{width:100%;border:1px solid #cfcfcd;border-radius:6px;padding:9px 10px;font-family:'Inter',Arial,sans-serif;font-size:14px;}
+.frm .full{grid-column:1/-1;}
+.msg{font-size:13px;padding:0 24px 16px;}
+.msg.ok{color:var(--green);}
+.msg.err{color:var(--red);}
+.addrcard{border:1px solid var(--line);border-radius:8px;margin:14px 24px;padding:16px 18px;font-size:14px;line-height:1.6;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.addrcard .ops{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;}
+.defchip{font-size:10px;font-weight:700;background:#d6f5e0;color:var(--green);border-radius:10px;padding:3px 10px;vertical-align:middle;}
+.qr{width:170px;height:170px;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;}
 @media print{.top,.side,.imperson,.back{display:none!important;}.main{padding:0;max-width:none;}body{background:#fff;}}
 </style></head>
 <body>
@@ -76,13 +98,25 @@ table.qs tr:hover td{background:#fafbfc;cursor:pointer;}
   <div class="side">
     <h2>&#128100; My account</h2>
     <div class="grp">TRANSACTIONS</div>
-    <a class="on" id="navQuotes" onclick="showList()">&#128203; Quotes</a>
+    <a class="on" id="navQuotes" onclick="showPanel('quotes')">&#128203; Quotes</a>
+    <div class="grp">SETTINGS</div>
+    <a id="navAddr" onclick="showPanel('addr')">&#127968; Addresses</a>
+    <a id="navBill" onclick="showPanel('bill')">&#128179; Billing</a>
     <div class="grp">SECURITY</div>
+    <a id="navSec" onclick="showPanel('sec')">&#128737; Security</a>
     <a onclick="sb.auth.signOut()">&#128274; Sign out</a>
   </div>
 
   <div class="main">
     <div id="gate" class="card"><div class="gate">Sign in (top right) to see your account.</div></div>
+
+    <div id="mfaGate" class="card hidden"><div class="gate">
+      <b>&#128274; Two-factor authentication</b><br><br>
+      Enter the 6-digit code from your authenticator app.<br><br>
+      <input id="mfaGateCode" inputmode="numeric" maxlength="6" placeholder="123456" style="border:1px solid #cfcfcd;border-radius:6px;padding:9px 12px;font-size:15px;width:130px;text-align:center" onkeydown="if(event.key==='Enter')stepUp()">
+      <button class="btn pri" onclick="stepUp()">Verify</button>
+      <div id="mfaGateMsg" style="color:var(--red);font-size:13px;margin-top:10px"></div>
+    </div></div>
 
     <div id="imperson" class="imperson hidden">
       <b>&#128737; Staff view</b> Viewing quotes for:
@@ -99,6 +133,90 @@ table.qs tr:hover td{background:#fafbfc;cursor:pointer;}
       <span class="back" onclick="showList()">&#8249; Back</span>
       <div id="detailCard"></div>
     </div>
+
+    <div id="panelSec" class="hidden">
+      <div class="setcard">
+        <div class="hd"><h3>Security</h3><p>Update your password and strengthen your account access.</p></div>
+        <div class="setrow">
+          <div><div class="t">&#128273; Password</div><div class="d">Choose a strong password and update it regularly. Magic-link sign-in keeps working either way.</div></div>
+          <button class="btn" onclick="tog('pwForm')">Change password</button>
+        </div>
+        <div id="pwForm" class="frm hidden">
+          <div><label>New password</label><input id="pw1" type="password" autocomplete="new-password"></div>
+          <div><label>Confirm new password</label><input id="pw2" type="password" autocomplete="new-password"></div>
+          <div class="full"><button class="btn pri" onclick="changePw()">Save password</button></div>
+        </div>
+        <div id="pwMsg" class="msg"></div>
+        <div class="setrow">
+          <div><div class="t">&#128274; Two-factor authentication</div><div class="d" id="mfaStatus">Add an authenticator app to better protect your account.</div></div>
+          <span><button class="btn" id="mfaBtn" onclick="start2FA()">Configure 2FA</button>
+          <button class="btn danger hidden" id="mfaOff" onclick="remove2FA()">Remove 2FA</button></span>
+        </div>
+        <div id="mfaEnroll" class="frm hidden">
+          <div class="full" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+            <img id="mfaQr" class="qr" alt="Scan with your authenticator app">
+            <div style="font-size:13px;color:#555;max-width:340px">Scan the QR code with Google Authenticator, Microsoft Authenticator, 1Password, etc. Or enter the key manually:<br><code id="mfaSecret" style="font-size:12px;word-break:break-all"></code></div>
+          </div>
+          <div><label>6-digit code</label><input id="mfaCode" inputmode="numeric" maxlength="6" placeholder="123456"></div>
+          <div style="align-self:end"><button class="btn pri" onclick="verify2FA()">Verify &amp; enable</button></div>
+        </div>
+        <div id="mfaMsg" class="msg"></div>
+      </div>
+    </div>
+
+    <div id="panelAddr" class="hidden">
+      <div class="setcard">
+        <div class="hd"><h3>Shipping addresses</h3><p>Edit, remove, or set a default delivery address.</p></div>
+        <div id="addrList"></div>
+        <div style="padding:6px 24px 16px"><button class="btn pri" onclick="addrNew()">+ Add address</button></div>
+        <div id="addrForm" class="frm hidden">
+          <div><label>Label (e.g. Shop, Yard 2)</label><input id="aLabel"></div>
+          <div><label>Company</label><input id="aCompany"></div>
+          <div><label>Contact name</label><input id="aContact"></div>
+          <div><label>Phone</label><input id="aPhone"></div>
+          <div class="full"><label>Street address</label><input id="aStreet1"></div>
+          <div class="full"><label>Street address 2</label><input id="aStreet2"></div>
+          <div><label>City</label><input id="aCity"></div>
+          <div><label>Province</label><input id="aProv"></div>
+          <div><label>Postal code</label><input id="aPostal"></div>
+          <div><label>Country</label><input id="aCountry"></div>
+          <div class="full" style="display:flex;align-items:center;gap:8px;font-size:13px"><input id="aDefault" type="checkbox" style="width:auto"> Set as default shipping address</div>
+          <div class="full"><button class="btn pri" onclick="addrSave()">Save address</button>
+          <button class="btn" onclick="document.getElementById('addrForm').classList.add('hidden')">Cancel</button></div>
+        </div>
+        <div id="addrMsg" class="msg"></div>
+      </div>
+    </div>
+
+    <div id="panelBill" class="hidden">
+      <div class="setcard">
+        <div class="hd"><h3>Billing information</h3><p>Billing address and invoicing preferences for your account.</p></div>
+        <div class="frm" style="margin-top:10px">
+          <div><label>Company</label><input id="bCompany"></div>
+          <div><label>Billing contact</label><input id="bContact"></div>
+          <div class="full"><label>Street address</label><input id="bStreet1"></div>
+          <div class="full"><label>Street address 2</label><input id="bStreet2"></div>
+          <div><label>City</label><input id="bCity"></div>
+          <div><label>Province</label><input id="bProv"></div>
+          <div><label>Postal code</label><input id="bPostal"></div>
+          <div><label>Country</label><input id="bCountry"></div>
+          <div><label>Phone</label><input id="bPhone"></div>
+          <div><label>Invoice email</label><input id="bInvEmail" type="email" placeholder="ap@yourcompany.com"></div>
+          <div class="full"><label>Payment preference</label>
+            <select id="bPayPref">
+              <option value="">— Select —</option>
+              <option value="account">On account (invoiced on terms)</option>
+              <option value="card">Credit card (card on file with our office)</option>
+              <option value="etransfer">E-transfer</option>
+            </select>
+          </div>
+          <div class="full" style="font-size:12px;color:#8b90a0">Card numbers are never stored online — to put a card on file, call the Edmonton office.</div>
+          <div class="full"><button class="btn pri" onclick="saveBilling()">Save billing info</button></div>
+        </div>
+        <div id="billMsg" class="msg"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -115,10 +233,22 @@ sb.auth.onAuthStateChange(async (_ev,session)=>{
     IS_STAFF=!!(data&&data.is_staff);
   }
   renderAuth(); 
-  if(SESSION){ if(IS_STAFF) await initImpersonation(); loadList(); }
+  if(SESSION){
+    const {data:aal}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+    if(aal&&aal.nextLevel==='aal2'&&aal.currentLevel!=='aal2'){
+      document.getElementById('gate').style.display='none';
+      document.getElementById('mfaGate').classList.remove('hidden');
+      document.getElementById('mfaGateCode').focus();
+    }else{
+      document.getElementById('mfaGate').classList.add('hidden');
+      if(IS_STAFF) await initImpersonation();
+      loadList();
+    }
+  }
   else { document.getElementById('gate').style.display='block';
          document.getElementById('list').style.display='none';
          document.getElementById('detail').style.display='none';
+         ['panelAddr','panelBill','panelSec','mfaGate'].forEach(id=>document.getElementById(id).classList.add('hidden'));
          document.getElementById('imperson').classList.add('hidden'); }
 });
 
@@ -256,6 +386,184 @@ function cardHTML(q,lines,custEmail){
   '</table>'+
   '<div style="margin-top:16px"><button onclick="window.print()" style="background:#FFD400;border:none;border-radius:6px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer">&#128424; PRINT</button></div>'+
   '</div>';
+}
+
+/* ================= account settings: panels ================= */
+function showPanel(name){
+  ['panelAddr','panelBill','panelSec'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  ['navQuotes','navAddr','navBill','navSec'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById({quotes:'navQuotes',addr:'navAddr',bill:'navBill',sec:'navSec'}[name]).classList.add('on');
+  document.getElementById('detail').style.display='none';
+  document.getElementById('imperson').classList.toggle('hidden',name!=='quotes'||!IS_STAFF);
+  if(name==='quotes'){ if(SESSION)loadList(); return; }
+  document.getElementById('list').style.display='none';
+  if(!SESSION)return;
+  document.getElementById({addr:'panelAddr',bill:'panelBill',sec:'panelSec'}[name]).classList.remove('hidden');
+  if(name==='addr')loadAddresses();
+  if(name==='bill')loadBilling();
+  if(name==='sec')loadSecurity();
+}
+function tog(id){document.getElementById(id).classList.toggle('hidden');}
+function v(id){return document.getElementById(id).value.trim();}
+
+/* ================= security: password ================= */
+async function changePw(){
+  const m=document.getElementById('pwMsg');m.className='msg';m.textContent='';
+  const p1=document.getElementById('pw1').value,p2=document.getElementById('pw2').value;
+  if(p1.length<8){m.className='msg err';m.textContent='Password must be at least 8 characters.';return;}
+  if(p1!==p2){m.className='msg err';m.textContent='Passwords do not match.';return;}
+  const {error}=await sb.auth.updateUser({password:p1});
+  if(error){m.className='msg err';m.textContent=error.message;return;}
+  m.className='msg ok';m.textContent='Password updated. You can now sign in with email + password, or keep using magic links.';
+  document.getElementById('pw1').value='';document.getElementById('pw2').value='';
+  document.getElementById('pwForm').classList.add('hidden');
+}
+
+/* ================= security: two-factor (TOTP) ================= */
+let MFA_FACTOR=null,ENROLLING=null;
+async function loadSecurity(){
+  const st=document.getElementById('mfaStatus'),btn=document.getElementById('mfaBtn'),off=document.getElementById('mfaOff');
+  const {data,error}=await sb.auth.mfa.listFactors();
+  if(error){st.textContent=error.message;return;}
+  const ver=((data&&data.totp)||[]).find(f=>f.status==='verified');
+  MFA_FACTOR=ver||null;
+  if(ver){st.innerHTML='<span class="defchip">ENABLED</span> Your account is protected with an authenticator app.';
+    btn.classList.add('hidden');off.classList.remove('hidden');}
+  else{st.textContent='Add an authenticator app to better protect your account.';
+    btn.classList.remove('hidden');off.classList.add('hidden');}
+}
+async function start2FA(){
+  const m=document.getElementById('mfaMsg');m.className='msg';m.textContent='';
+  const {data:lf}=await sb.auth.mfa.listFactors();
+  for(const f of (((lf&&lf.totp)||[]).filter(x=>x.status!=='verified')))await sb.auth.mfa.unenroll({factorId:f.id});
+  const {data,error}=await sb.auth.mfa.enroll({factorType:'totp',friendlyName:'Authenticator '+new Date().toISOString().slice(0,10)});
+  if(error){m.className='msg err';m.textContent=error.message;return;}
+  ENROLLING=data.id;
+  const qr=(data.totp&&data.totp.qr_code)||'';
+  document.getElementById('mfaQr').src=qr.startsWith('data:')?qr:'data:image/svg+xml;utf8,'+encodeURIComponent(qr);
+  document.getElementById('mfaSecret').textContent=(data.totp&&data.totp.secret)||'';
+  document.getElementById('mfaEnroll').classList.remove('hidden');
+  document.getElementById('mfaCode').focus();
+}
+async function verify2FA(){
+  const m=document.getElementById('mfaMsg');m.className='msg';m.textContent='';
+  const code=document.getElementById('mfaCode').value.trim();
+  if(!ENROLLING||code.length!==6){m.className='msg err';m.textContent='Enter the 6-digit code from your app.';return;}
+  const {data:ch,error:e1}=await sb.auth.mfa.challenge({factorId:ENROLLING});
+  if(e1){m.className='msg err';m.textContent=e1.message;return;}
+  const {error:e2}=await sb.auth.mfa.verify({factorId:ENROLLING,challengeId:ch.id,code});
+  if(e2){m.className='msg err';m.textContent=e2.message;return;}
+  ENROLLING=null;document.getElementById('mfaCode').value='';
+  document.getElementById('mfaEnroll').classList.add('hidden');
+  m.className='msg ok';m.textContent="Two-factor authentication is on. You'll be asked for a code at sign-in.";
+  loadSecurity();
+}
+async function remove2FA(){
+  const m=document.getElementById('mfaMsg');m.className='msg';m.textContent='';
+  if(!MFA_FACTOR||!confirm('Remove two-factor authentication?'))return;
+  const {error}=await sb.auth.mfa.unenroll({factorId:MFA_FACTOR.id});
+  if(error){m.className='msg err';m.textContent=error.message;return;}
+  m.className='msg ok';m.textContent='Two-factor authentication removed.';
+  loadSecurity();
+}
+/* step-up verification at sign-in when 2FA is enabled */
+async function stepUp(){
+  const m=document.getElementById('mfaGateMsg');m.textContent='';
+  const code=document.getElementById('mfaGateCode').value.trim();
+  if(code.length!==6){m.textContent='Enter the 6-digit code from your authenticator app.';return;}
+  const {data:lf,error:e1}=await sb.auth.mfa.listFactors();
+  if(e1){m.textContent=e1.message;return;}
+  const factor=(((lf&&lf.totp)||[]).find(x=>x.status==='verified'))||((lf&&lf.totp)||[])[0];
+  if(!factor){m.textContent='No authenticator found on this account.';return;}
+  const {data:ch,error:e2}=await sb.auth.mfa.challenge({factorId:factor.id});
+  if(e2){m.textContent=e2.message;return;}
+  const {error:e3}=await sb.auth.mfa.verify({factorId:factor.id,challengeId:ch.id,code});
+  if(e3){m.textContent=e3.message;return;}
+  document.getElementById('mfaGate').classList.add('hidden');
+  document.getElementById('mfaGateCode').value='';
+  if(IS_STAFF)await initImpersonation();
+  loadList();
+}
+
+/* ================= addresses ================= */
+let ADDRS=[],ADDR_EDIT=null;
+async function loadAddresses(){
+  const box=document.getElementById('addrList');
+  const {data,error}=await sb.from('addresses').select('*').eq('user_id',SESSION.user.id).eq('kind','shipping').order('created_at');
+  if(error){box.innerHTML='<div class="empty">'+hesc(error.message)+'</div>';return;}
+  ADDRS=data||[];
+  if(!ADDRS.length){box.innerHTML='<div class="empty">No shipping addresses yet — add your first one below.</div>';return;}
+  box.innerHTML=ADDRS.map(a=>'<div class="addrcard"><div>'+
+    '<b>'+hesc(a.label||a.company||'Address')+'</b> '+(a.is_default?'<span class="defchip">DEFAULT</span>':'')+'<br>'+
+    [a.company,a.contact_name,a.street1,a.street2,[a.city,a.province,a.postal].filter(Boolean).join(', '),a.country,a.phone].filter(Boolean).map(hesc).join('<br>')+
+    '</div><div class="ops">'+
+    (a.is_default?'':'<button class="btn" onclick="addrDefault(\''+a.id+'\')">Set default</button>')+
+    '<button class="btn" onclick="addrEdit(\''+a.id+'\')">Edit</button>'+
+    '<button class="btn danger" onclick="addrDel(\''+a.id+'\')">Remove</button></div></div>').join('');
+}
+function addrFill(a){
+  const map={aLabel:'label',aCompany:'company',aContact:'contact_name',aStreet1:'street1',aStreet2:'street2',aCity:'city',aProv:'province',aPostal:'postal',aCountry:'country',aPhone:'phone'};
+  for(const k in map)document.getElementById(k).value=a[map[k]]||'';
+  document.getElementById('aDefault').checked=!!a.is_default;
+}
+function addrNew(){ADDR_EDIT=null;addrFill({country:'Canada'});document.getElementById('addrForm').classList.remove('hidden');document.getElementById('aLabel').focus();}
+function addrEdit(id){ADDR_EDIT=id;addrFill(ADDRS.find(a=>a.id===id)||{});document.getElementById('addrForm').classList.remove('hidden');}
+async function addrSave(){
+  const m=document.getElementById('addrMsg');m.className='msg';m.textContent='';
+  const rec={user_id:SESSION.user.id,kind:'shipping',label:v('aLabel'),company:v('aCompany'),contact_name:v('aContact'),
+    street1:v('aStreet1'),street2:v('aStreet2'),city:v('aCity'),province:v('aProv'),postal:v('aPostal'),
+    country:v('aCountry'),phone:v('aPhone'),updated_at:new Date().toISOString()};
+  if(!rec.street1||!rec.city){m.className='msg err';m.textContent='Street address and city are required.';return;}
+  const makeDef=document.getElementById('aDefault').checked;
+  let err=null;
+  if(makeDef){const {error:e0}=await sb.from('addresses').update({is_default:false}).eq('user_id',SESSION.user.id).eq('kind','shipping');err=e0;}
+  rec.is_default=makeDef;
+  if(!err){
+    if(ADDR_EDIT){const {error:e}=await sb.from('addresses').update(rec).eq('id',ADDR_EDIT);err=e;}
+    else{if(!ADDRS.length)rec.is_default=true;const {error:e}=await sb.from('addresses').insert(rec);err=e;}
+  }
+  if(err){m.className='msg err';m.textContent=err.message;return;}
+  document.getElementById('addrForm').classList.add('hidden');
+  m.className='msg ok';m.textContent='Address saved.';
+  loadAddresses();
+}
+async function addrDefault(id){
+  await sb.from('addresses').update({is_default:false}).eq('user_id',SESSION.user.id).eq('kind','shipping');
+  await sb.from('addresses').update({is_default:true}).eq('id',id);
+  loadAddresses();
+}
+async function addrDel(id){
+  if(!confirm('Remove this address?'))return;
+  await sb.from('addresses').delete().eq('id',id);
+  loadAddresses();
+}
+
+/* ================= billing ================= */
+let BILL_ID=null;
+async function loadBilling(){
+  const m=document.getElementById('billMsg');m.className='msg';m.textContent='';
+  const [{data:addr},{data:prof}]=await Promise.all([
+    sb.from('addresses').select('*').eq('user_id',SESSION.user.id).eq('kind','billing').limit(1),
+    sb.from('profiles').select('invoice_email,payment_pref,company,contact_name,phone').eq('id',SESSION.user.id).single()
+  ]);
+  const a=(addr&&addr[0])||{};BILL_ID=a.id||null;
+  const setv=(id,val)=>document.getElementById(id).value=val||'';
+  setv('bCompany',a.company||(prof&&prof.company));setv('bContact',a.contact_name||(prof&&prof.contact_name));
+  setv('bStreet1',a.street1);setv('bStreet2',a.street2);setv('bCity',a.city);setv('bProv',a.province);
+  setv('bPostal',a.postal);setv('bCountry',a.country||'Canada');setv('bPhone',a.phone||(prof&&prof.phone));
+  setv('bInvEmail',prof&&prof.invoice_email);setv('bPayPref',prof&&prof.payment_pref);
+}
+async function saveBilling(){
+  const m=document.getElementById('billMsg');m.className='msg';m.textContent='';
+  const rec={user_id:SESSION.user.id,kind:'billing',company:v('bCompany'),contact_name:v('bContact'),
+    street1:v('bStreet1'),street2:v('bStreet2'),city:v('bCity'),province:v('bProv'),postal:v('bPostal'),
+    country:v('bCountry'),phone:v('bPhone'),is_default:true,updated_at:new Date().toISOString()};
+  let err=null;
+  if(BILL_ID){const {error:e}=await sb.from('addresses').update(rec).eq('id',BILL_ID);err=e;}
+  else{const {data,error:e}=await sb.from('addresses').insert(rec).select().single();err=e;if(data)BILL_ID=data.id;}
+  if(!err){const {error:e2}=await sb.from('profiles').update({invoice_email:v('bInvEmail'),payment_pref:document.getElementById('bPayPref').value}).eq('id',SESSION.user.id);err=e2;}
+  if(err){m.className='msg err';m.textContent=err.message;return;}
+  m.className='msg ok';m.textContent='Billing information saved.';
 }
 </script>
 </body></html>
