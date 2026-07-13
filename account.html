@@ -1,0 +1,252 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marion — My Account</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--yellow:#FFD400;--grey:#8b90a0;--red:#d0021b;--green:#0a8a3c;--amber:#b8860b;--ink:#1a1a1a;--line:#e5e7eb;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',Arial,sans-serif;color:#1a202c;background:#f4f5f7;line-height:1.4;}
+.top{background:var(--yellow);border-bottom:5px solid #000;padding:12px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  font-family:'Roboto Condensed',Arial,sans-serif;}
+.top .logo{width:30px;height:30px;border-radius:50%;background:#000;position:relative;}
+.top .logo:after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--yellow);}
+.top h1{font-size:20px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.top h1 small{font-size:11px;font-weight:400;color:#555;letter-spacing:1px;display:block;margin-top:-2px;}
+.top .nav{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:12px;font-weight:700;}
+.top .nav a{color:#000;text-decoration:underline;}
+.auth{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;}
+.auth input{border:1px solid #00000055;border-radius:3px;padding:5px 8px;font-family:inherit;font-size:12px;width:190px;background:#fffdf0;}
+.auth .abtn{border:none;border-radius:3px;background:#000;color:var(--yellow);font-family:inherit;font-weight:700;
+  font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:6px 10px;cursor:pointer;}
+
+.layout{display:flex;min-height:calc(100vh - 60px);}
+.side{width:250px;background:#fff;border-right:1px solid var(--line);padding:24px 0;flex:0 0 auto;}
+.side h2{font-size:16px;font-weight:800;padding:0 24px 18px;display:flex;align-items:center;gap:8px;}
+.side .grp{font-size:10px;letter-spacing:1.5px;color:var(--grey);font-weight:700;padding:14px 24px 6px;}
+.side a{display:flex;align-items:center;gap:10px;padding:10px 24px;font-size:14px;color:#1a202c;text-decoration:none;cursor:pointer;}
+.side a.on{background:#f7f8fa;font-weight:600;border-right:3px solid var(--yellow);}
+.side a:hover{background:#fafafa;}
+.main{flex:1;padding:28px;max-width:1000px;}
+.back{font-size:13px;color:#555;cursor:pointer;margin-bottom:14px;display:inline-block;}
+.back:hover{color:#000;}
+
+.imperson{background:#fffbe8;border:1px solid #f0e3a0;border-radius:8px;padding:12px 16px;margin-bottom:18px;
+  display:flex;align-items:center;gap:10px;font-size:13px;flex-wrap:wrap;}
+.imperson select{border:1px solid #cfcfcd;border-radius:5px;padding:7px 10px;font-family:inherit;font-size:13px;max-width:340px;}
+.imperson b{color:#8a6d00;}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;}
+.list-card{overflow:hidden;}
+table.qs{width:100%;border-collapse:collapse;font-size:14px;}
+table.qs th{text-align:left;font-size:11px;letter-spacing:1px;color:var(--grey);font-weight:700;text-transform:uppercase;
+  padding:14px 16px;border-bottom:1px solid var(--line);}
+table.qs td{padding:13px 16px;border-bottom:1px solid #f0f1f4;}
+table.qs tr:hover td{background:#fafbfc;cursor:pointer;}
+.chip{font-size:11px;font-weight:700;padding:4px 12px;border-radius:12px;}
+.chip.draft{background:#eee;color:#666;}
+.chip.submitted{background:#fdf0d0;color:var(--amber);}
+.chip.priced{background:#d6f5e0;color:var(--green);}
+.chip.sent{background:#d8e9fb;color:#1a5fa8;}
+.chip.won{background:#d6f5e0;color:var(--green);}
+.chip.lost{background:#fbdcdc;color:var(--red);}
+.empty{padding:50px;text-align:center;color:var(--grey);font-size:14px;}
+.gate{padding:70px 20px;text-align:center;font-size:15px;color:#555;}
+#detail{display:none;}
+.hidden{display:none;}
+@media print{.top,.side,.imperson,.back{display:none!important;}.main{padding:0;max-width:none;}body{background:#fff;}}
+</style></head>
+<body>
+<div class="top">
+  <div class="logo"></div>
+  <h1>Marion<small>My Account</small></h1>
+  <div class="nav">
+    <a href="index.html">Marion</a>
+    <a href="quote.html">Quote intake</a>
+    <a href="quotes.html" class="hidden" id="staffLink">Staff desk</a>
+    <div class="auth" id="authBox">
+      <span id="authForm" class="hidden"><input id="authEmail" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')sendLink()"><button class="abtn" onclick="sendLink()">Send link</button></span>
+      <span id="authWho" class="hidden"></span>
+      <button class="abtn" id="authBtn" onclick="authAction()">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="side">
+    <h2>&#128100; My account</h2>
+    <div class="grp">TRANSACTIONS</div>
+    <a class="on" id="navQuotes" onclick="showList()">&#128203; Quotes</a>
+    <div class="grp">SECURITY</div>
+    <a onclick="sb.auth.signOut()">&#128274; Sign out</a>
+  </div>
+
+  <div class="main">
+    <div id="gate" class="card"><div class="gate">Sign in (top right) to see your account.</div></div>
+
+    <div id="imperson" class="imperson hidden">
+      <b>&#128737; Staff view</b> Viewing quotes for:
+      <select id="viewAs" onchange="loadList()"><option value="">All customers</option></select>
+    </div>
+
+    <div id="list" class="card list-card" style="display:none">
+      <table class="qs"><thead><tr>
+        <th>Quote #</th><th>Date</th><th>Account</th><th>PO Number</th><th>Lines</th><th>Status</th><th style="text-align:right">Total</th>
+      </tr></thead><tbody id="listBody"></tbody></table>
+    </div>
+
+    <div id="detail">
+      <span class="back" onclick="showList()">&#8249; Back</span>
+      <div id="detailCard"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL="https://hnmbjqhxvxakhdzgetxw.supabase.co";
+const SB_KEY="sb_publishable_HbRa8tV_Vmj5WPdvDc37uw_Vp7WajUe";
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+let SESSION=null, IS_STAFF=false, PROFILES={};
+
+sb.auth.onAuthStateChange(async (_ev,session)=>{
+  SESSION=session; IS_STAFF=false;
+  if(session){
+    const {data}=await sb.from('profiles').select('is_staff').eq('id',session.user.id).single();
+    IS_STAFF=!!(data&&data.is_staff);
+  }
+  renderAuth();
+  if(SESSION){ if(IS_STAFF) await initImpersonation(); loadList(); }
+  else { document.getElementById('gate').style.display='block';
+         document.getElementById('list').style.display='none';
+         document.getElementById('detail').style.display='none';
+         document.getElementById('imperson').classList.add('hidden'); }
+});
+
+function renderAuth(){
+  const form=document.getElementById('authForm'),who=document.getElementById('authWho'),
+        btn=document.getElementById('authBtn'),staff=document.getElementById('staffLink');
+  if(SESSION){form.classList.add('hidden');who.classList.remove('hidden');
+    who.textContent=SESSION.user.email;btn.textContent='Sign out';
+    staff.classList.toggle('hidden',!IS_STAFF);}
+  else{who.classList.add('hidden');staff.classList.add('hidden');btn.textContent='Sign in';}
+}
+function authAction(){
+  if(SESSION){sb.auth.signOut();return;}
+  const f=document.getElementById('authForm');f.classList.toggle('hidden');
+  if(!f.classList.contains('hidden'))document.getElementById('authEmail').focus();
+}
+async function sendLink(){
+  const email=document.getElementById('authEmail').value.trim();
+  if(!email)return;
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+  document.getElementById('gate').querySelector('.gate').textContent=
+    error?('Could not send link: '+error.message):('Magic link sent to '+email+' — check your email.');
+  document.getElementById('authForm').classList.add('hidden');
+}
+
+/* ---- staff impersonation: pick any customer, see their quotes ---- */
+async function initImpersonation(){
+  const {data}=await sb.from('profiles').select('id,email,company').order('email');
+  const sel=document.getElementById('viewAs');
+  sel.innerHTML='<option value="">All customers</option>';
+  (data||[]).forEach(p=>{PROFILES[p.id]=p;
+    const o=document.createElement('option');o.value=p.id;
+    o.textContent=(p.email||p.id)+(p.company?' — '+p.company:'');
+    sel.appendChild(o);});
+  document.getElementById('imperson').classList.remove('hidden');
+}
+
+function hesc(s){return (s??'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function cmoney(n){return (n==null||n==='')?'—':'CAD '+(+n).toFixed(2);}
+function qtotal(lines){let t=0,any=false;(lines||[]).forEach(l=>{if(l.line_total!=null){t+=+l.line_total;any=true;}});return any?'CAD '+t.toFixed(2):'—';}
+
+async function loadList(){
+  if(!SESSION)return;
+  document.getElementById('gate').style.display='none';
+  showList();
+  let q=sb.from('quotes').select('*,quote_lines(*)').order('created_at',{ascending:false});
+  if(IS_STAFF){
+    const who=document.getElementById('viewAs').value;
+    if(who)q=q.eq('user_id',who);
+  }else{
+    q=q.eq('user_id',SESSION.user.id);
+  }
+  const {data,error}=await q;
+  const tb=document.getElementById('listBody');
+  if(error){tb.innerHTML='<tr><td colspan="7" class="empty">'+hesc(error.message)+'</td></tr>';return;}
+  if(!data.length){tb.innerHTML='<tr><td colspan="7" class="empty">No quotes yet — build one on the <a href="quote.html">quote intake</a> page.</td></tr>';return;}
+  tb.innerHTML=data.map(r=>'<tr onclick="openDetail(\''+r.id+'\')">'+
+    '<td style="font-weight:600">#'+hesc(r.quote_no)+'</td>'+
+    '<td>'+new Date(r.created_at).toLocaleDateString('en-CA')+'</td>'+
+    '<td>'+hesc(r.acct||((PROFILES[r.user_id]||{}).email)||'—')+'</td>'+
+    '<td>'+hesc(r.po||'—')+'</td>'+
+    '<td>'+(r.quote_lines||[]).length+'</td>'+
+    '<td><span class="chip '+hesc(r.status)+'">'+hesc(r.status)+'</span></td>'+
+    '<td style="text-align:right;font-weight:600">'+qtotal(r.quote_lines)+'</td></tr>').join('');
+  window.__QUOTES={};data.forEach(r=>window.__QUOTES[r.id]=r);
+}
+
+function showList(){
+  document.getElementById('detail').style.display='none';
+  if(SESSION)document.getElementById('list').style.display='block';
+}
+
+function openDetail(id){
+  const q=(window.__QUOTES||{})[id];if(!q)return;
+  const custEmail=(PROFILES[q.user_id]||{}).email||(SESSION&&q.user_id===SESSION.user.id?SESSION.user.email:'');
+  document.getElementById('detailCard').innerHTML=cardHTML(q,q.quote_lines||[],custEmail);
+  document.getElementById('list').style.display='none';
+  document.getElementById('detail').style.display='block';
+}
+
+/* ---- order-card renderer (matches the sealsonline order format) ---- */
+function cardHTML(q,lines,custEmail){
+  let subtotal=0;
+  const rows=lines.map(l=>{
+    if(l.line_total!=null)subtotal+=+l.line_total;
+    return '<tr>'+
+      '<td style="padding:12px 8px;border-bottom:1px solid #eef0f3;color:#4a5568;font-size:13px">'+(hesc(l.pn)||'<i>unresolved</i>')+(l.descr?' — '+hesc(l.descr):'')+(l.oem?' <span style="color:#8b90a0">(OEM '+hesc(l.oem)+')</span>':'')+'</td>'+
+      '<td align="center" style="padding:12px 8px;border-bottom:1px solid #eef0f3;color:#2b6cb0;font-size:13px">'+hesc(l.qty)+'</td>'+
+      '<td align="right" style="padding:12px 8px;border-bottom:1px solid #eef0f3;font-size:13px">'+cmoney(l.unit_price)+'</td>'+
+      '<td align="right" style="padding:12px 8px;border-bottom:1px solid #eef0f3;font-weight:700;font-size:13px">'+cmoney(l.line_total)+'</td></tr>';
+  }).join('');
+  const date=new Date(q.created_at||Date.now()).toLocaleDateString('en-CA');
+  return '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:28px 32px">'+
+  '<table width="100%" cellpadding="0" cellspacing="0"><tr><td>'+
+    '<div style="font-size:11px;color:#8b90a0;letter-spacing:1.5px;font-weight:700">QUOTE</div>'+
+    '<div style="font-size:28px;font-weight:800;color:#111827">#'+hesc(q.quote_no)+'</div>'+
+    '<div style="margin-top:10px;font-size:12px;color:#555"><span class="chip '+hesc(q.status)+'">'+hesc(q.status)+'</span>&nbsp;&nbsp;'+date+(q.po?' &nbsp;·&nbsp; PO Number: <b>'+hesc(q.po)+'</b>':'')+'</div>'+
+  '</td><td align="right" valign="top">'+
+    '<span style="display:inline-block;width:18px;height:18px;background:#FFD400;border-radius:50%;border:5px solid #000;vertical-align:middle"></span>'+
+    '<span style="font-size:24px;font-weight:800;font-style:italic;color:#111;vertical-align:middle">&nbsp;fluidseal</span>'+
+    '<span style="font-size:9px;color:#555;vertical-align:middle"> AB Inc.</span>'+
+  '</td></tr></table>'+
+  '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:26px"><tr>'+
+  '<td width="49%" valign="top" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 18px">'+
+    '<div style="font-size:10px;color:#8b90a0;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">BILLING ADDRESS</div>'+
+    '<div style="font-size:14px;line-height:1.6">'+(hesc(q.acct)||'(ENTER BUSINESS NAME)')+'<br>'+(hesc(q.contact)||'(ENTER CONTACT NAME)')+'<br>'+(hesc(q.address)||'—')+'<br>'+(hesc(q.phone)||'')+'</div></td>'+
+  '<td width="2%"></td>'+
+  '<td width="49%" valign="top" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 18px">'+
+    '<div style="font-size:10px;color:#8b90a0;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">SHIPPING ADDRESS</div>'+
+    '<div style="font-size:14px;line-height:1.6">'+(hesc(q.acct)||'—')+'<br>'+(hesc(q.contact)||'')+'<br>'+(hesc(q.address)||'—')+'</div></td>'+
+  '</tr></table>'+
+  '<div style="background:#f7f8fa;border-radius:8px;padding:14px 18px;margin-top:18px">'+
+    '<div style="font-size:10px;color:#8b90a0;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">DOCUMENT REFERENCES</div>'+
+    '<span style="font-size:13px"><b>Document Number:</b> '+hesc(q.quote_no)+'</span>&nbsp;&nbsp;&nbsp;'+
+    '<span style="font-size:13px"><b>PO Number:</b> '+(hesc(q.po)||'—')+'</span>&nbsp;&nbsp;&nbsp;'+
+    '<span style="font-size:13px"><b>Customer:</b> '+hesc(custEmail)+'</span></div>'+
+  '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px"><tr>'+
+    '<th align="left" style="padding:10px 8px;border-bottom:2px solid #e5e7eb;font-size:13px">Description</th>'+
+    '<th align="center" style="padding:10px 8px;border-bottom:2px solid #e5e7eb;font-size:13px">Quantity</th>'+
+    '<th align="right" style="padding:10px 8px;border-bottom:2px solid #e5e7eb;font-size:13px">Price</th>'+
+    '<th align="right" style="padding:10px 8px;border-bottom:2px solid #e5e7eb;font-size:13px">Total Price</th></tr>'+
+    rows+
+    '<tr><td colspan="2"></td><td align="right" style="padding:10px 8px;color:#4a5568;font-size:13px">Subtotal</td><td align="right" style="padding:10px 8px;font-size:13px">'+(subtotal?'CAD '+subtotal.toFixed(2):'—')+'</td></tr>'+
+    '<tr><td colspan="2"></td><td align="right" style="padding:10px 8px;color:#4a5568;font-size:13px">TAXES</td><td align="right" style="padding:10px 8px;font-size:13px">—</td></tr>'+
+    '<tr><td colspan="2"></td><td align="right" style="padding:12px 8px;background:#f7f8fa;font-weight:800;font-size:14px">Total</td><td align="right" style="padding:12px 8px;background:#f7f8fa;font-weight:800;font-size:14px">'+(subtotal?'CAD '+subtotal.toFixed(2):'pending pricing')+'</td></tr>'+
+  '</table>'+
+  '<div style="margin-top:16px"><button onclick="window.print()" style="background:#FFD400;border:none;border-radius:6px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer">&#128424; PRINT</button></div>'+
+  '</div>';
+}
+</script>
+</body></html>

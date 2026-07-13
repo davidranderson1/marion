@@ -151,6 +151,7 @@ table.est td.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
   <div class="auth" id="authBox">
     <span id="authForm" class="hidden"><input id="authEmail" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')sendLink()"><button class="abtn" onclick="sendLink()">Send link</button></span>
     <span id="authWho" class="who hidden"></span>
+    <a class="staff hidden" id="acctLink" href="account.html">My Account</a>
     <a class="staff hidden" id="staffLink" href="quotes.html">Staff</a>
     <button class="abtn" id="authBtn" onclick="authAction()">Sign in</button>
   </div>
@@ -262,13 +263,16 @@ function renderAuth(){
   const form=document.getElementById('authForm'),who=document.getElementById('authWho'),
         btn=document.getElementById('authBtn'),staff=document.getElementById('staffLink'),
         panel=document.getElementById('myQuotesPanel');
+  const acct=document.getElementById('acctLink');
   if(SESSION){
     form.classList.add('hidden');who.classList.remove('hidden');
     who.textContent=SESSION.user.email;btn.textContent='Sign out';
     staff.classList.toggle('hidden',!IS_STAFF);
+    if(acct)acct.classList.remove('hidden');
     panel.classList.remove('hidden');
   }else{
     who.classList.add('hidden');staff.classList.add('hidden');btn.textContent='Sign in';
+    if(acct)acct.classList.add('hidden');
     panel.classList.add('hidden');
   }
 }
@@ -315,6 +319,91 @@ async function saveQuote(status){
     : '✓ Draft saved.';
   el.className='status';
   loadMyQuotes();
+  if(status==='submitted')notifySubmit(id); // fire-and-forget email to Fluidseal
+}
+
+/* ---------- Submit notification: order-card PDF + email via marion-notify ---------- */
+let H2P_LOADING=null;
+function loadHtml2Pdf(){
+  if(window.html2pdf)return Promise.resolve();
+  if(H2P_LOADING)return H2P_LOADING;
+  H2P_LOADING=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+  return H2P_LOADING;
+}
+function hesc(s){return (s??'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function cmoney(n){return (n==null||n==='')?'—':'CAD '+(+n).toFixed(2);}
+function cardHTML(q,lines,custEmail){
+  let subtotal=0;
+  const rows=lines.map(l=>{
+    if(l.line_total!=null)subtotal+=+l.line_total;
+    return '<tr>'+
+      '<td style="padding:12px 8px;border-bottom:1px solid #eef0f3;color:#4a5568;font-size:13px">'+(hesc(l.pn)||'<i>unresolved</i>')+(l.descr?' — '+hesc(l.descr):'')+(l.oem?' <span style="color:#8b90a0">(OEM '+hesc(l.oem)+')</span>':'')+'</td>'+
+      '<td align="center" style="padding:12px 8px;border-bottom:1px solid #eef0f3;color:#2b6cb0;font-size:13px">'+hesc(l.qty)+'</td>'+
+      '<td align="right" style="padding:12px 8px;border-bottom:1px solid #eef0f3;font-size:13px">'+cmoney(l.unit_price)+'</td>'+
+      '<td align="right" style="padding:12px 8px;border-bottom:1px solid #eef0f3;font-weight:700;font-size:13px">'+cmoney(l.line_total)+'</td></tr>';
+  }).join('');
+  const date=new Date(q.created_at||Date.now()).toLocaleDateString('en-CA');
+  return '<div style="font-family:Arial,Helvetica,sans-serif;background:#f4f5f7;padding:24px">'+
+  '<div style="max-width:840px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:28px 32px">'+
+  '<table width="100%" cellpadding="0" cellspacing="0"><tr><td>'+
+    '<div style="font-size:11px;color:#8b90a0;letter-spacing:1.5px;font-weight:700">QUOTE</div>'+
+    '<div style="font-size:28px;font-weight:800;color:#111827">#'+hesc(q.quote_no)+'</div>'+
+    '<div style="margin-top:10px;font-size:12px;color:#555"><span style="background:#fdf0d0;color:#b8860b;padding:4px 12px;border-radius:12px;font-weight:700">'+hesc(q.status)+'</span>&nbsp;&nbsp;'+date+(q.po?' &nbsp;·&nbsp; PO Number: <b>'+hesc(q.po)+'</b>':'')+'</div>'+
+  '</td><td align="right" valign="top">'+
+    '<span style="display:inline-block;width:18px;height:18px;background:#FFD400;border-radius:50%;border:5px solid #000;vertical-align:middle"></span>'+
+    '<span style="font-size:24px;font-weight:800;font-style:italic;color:#111;vertical-align:middle">&nbsp;fluidseal</span>'+
+    '<span style="font-size:9px;color:#555;vertical-align:middle"> AB Inc.</span>'+
+  '</td></tr></table>'+
+  '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:26px"><tr>'+
+  '<td width="49%" valign="top" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 18px">'+
+    '<div style="font-size:10px;color:#8b90a0;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">BILLING ADDRESS</div>'+
+    '<div style="font-size:14px;color:#1a202c;line-height:1.6">'+(hesc(q.acct)||'(ENTER BUSINESS NAME)')+'<br>'+(hesc(q.contact)||'(ENTER CONTACT NAME)')+'<br>'+(hesc(q.address)||'—')+'<br>'+(hesc(q.phone)||'')+'</div></td>'+
+  '<td width="2%"></td>'+
+  '<td width="49%" valign="top" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 18px">'+
+    '<div style="font-size:10px;color:#8b90a0;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">SHIPPING ADDRESS</div>'+
+    '<div style="font-size:14px;color:#1a202c;line-height:1.6">'+(hesc(q.acct)||'—')+'<br>'+(hesc(q.contact)||'')+'<br>'+(hesc(q.address)||'—')+'</div></td>'+
+  '</tr></table>'+
+  '<div style="background:#f7f8fa;border-radius:8px;padding:14px 18px;margin-top:18px">'+
+    '<div style="font-size:10px;color:#8b90a0;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">DOCUMENT REFERENCES</div>'+
+    '<span style="font-size:13px;color:#1a202c"><b>Document Number:</b> '+hesc(q.quote_no)+'</span>&nbsp;&nbsp;&nbsp;'+
+    '<span style="font-size:13px;color:#1a202c"><b>PO Number:</b> '+(hesc(q.po)||'—')+'</span>&nbsp;&nbsp;&nbsp;'+
+    '<span style="font-size:13px;color:#1a202c"><b>Customer:</b> '+hesc(custEmail)+'</span></div>'+
+  '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px"><tr>'+
+    '<th align="left" style="padding:10px 8px;border-bottom:2px solid #e5e7eb;font-size:13px;color:#1a202c">Description</th>'+
+    '<th align="center" style="padding:10px 8px;border-bottom:2px solid #e5e7eb;font-size:13px;color:#1a202c">Quantity</th>'+
+    '<th align="right" style="padding:10px 8px;border-bottom:2px solid #e5e7eb;font-size:13px;color:#1a202c">Price</th>'+
+    '<th align="right" style="padding:10px 8px;border-bottom:2px solid #e5e7eb;font-size:13px;color:#1a202c">Total Price</th></tr>'+
+    rows+
+    '<tr><td colspan="2"></td><td align="right" style="padding:10px 8px;color:#4a5568;font-size:13px">Subtotal</td><td align="right" style="padding:10px 8px;font-size:13px">'+(subtotal?'CAD '+subtotal.toFixed(2):'—')+'</td></tr>'+
+    '<tr><td colspan="2"></td><td align="right" style="padding:10px 8px;color:#4a5568;font-size:13px">TAXES</td><td align="right" style="padding:10px 8px;font-size:13px">—</td></tr>'+
+    '<tr><td colspan="2"></td><td align="right" style="padding:12px 8px;background:#f7f8fa;font-weight:800;font-size:14px">Total</td><td align="right" style="padding:12px 8px;background:#f7f8fa;font-weight:800;font-size:14px">'+(subtotal?'CAD '+subtotal.toFixed(2):'pending pricing')+'</td></tr>'+
+  '</table></div></div>';
+}
+async function notifySubmit(id){
+  const el=document.getElementById('saveStatus');
+  try{
+    const {data:q}=await sb.from('quotes').select('*,quote_lines(*)').eq('id',id).single();
+    if(!q)return;
+    let pdf=null;
+    try{
+      await loadHtml2Pdf();
+      const host=document.createElement('div');
+      host.style.cssText='position:fixed;left:-10000px;top:0;width:840px;background:#fff';
+      host.innerHTML=cardHTML(q,q.quote_lines||[],SESSION.user.email);
+      document.body.appendChild(host);
+      const uri=await window.html2pdf().set({margin:6,image:{type:'jpeg',quality:.95},
+        html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4'}}).from(host).outputPdf('datauristring');
+      document.body.removeChild(host);
+      pdf=uri.split(',')[1];
+    }catch(e){console.warn('pdf generation failed — sending email without attachment',e);}
+    const res=await fetch(SB_URL+'/functions/v1/marion-notify',{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SESSION.access_token},
+      body:JSON.stringify({quote_id:id,pdf_base64:pdf})});
+    if(res.ok){el.textContent='✓ Submitted — quote #'+q.quote_no+' emailed to Fluidseal.';el.className='status';}
+  }catch(e){console.warn('notify failed',e);}
 }
 
 async function loadMyQuotes(){
