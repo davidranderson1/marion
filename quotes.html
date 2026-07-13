@@ -1,0 +1,247 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marion — Staff · Quotes</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--yellow:#FFD400;--grey:#a7a9ac;--red:#d0021b;--green:#0a8a3c;--amber:#b8860b;--ink:#1a1a1a;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Roboto Condensed',Arial,sans-serif;color:var(--ink);background:#f2f2f0;line-height:1.3;}
+.mono{font-family:'JetBrains Mono',monospace;}
+.top{background:var(--yellow);border-bottom:5px solid #000;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.top .logo{width:34px;height:34px;border-radius:50%;background:#000;flex:0 0 auto;position:relative;}
+.top .logo:after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--yellow);}
+.top h1{font-size:24px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.top h1 small{font-size:13px;font-weight:400;color:#555;letter-spacing:1px;display:block;margin-top:-3px;}
+.top .nav{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:12px;font-weight:700;}
+.top .nav a{color:#000;text-decoration:underline;}
+.auth{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;}
+.auth input{border:1px solid #00000055;border-radius:3px;padding:5px 8px;font-family:inherit;font-size:12px;width:190px;background:#fffdf0;}
+.auth .abtn{border:none;border-radius:3px;background:#000;color:var(--yellow);font-family:inherit;font-weight:700;
+  font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:6px 10px;cursor:pointer;}
+.auth .abtn:hover{background:#333;}
+.wrap{max-width:1280px;margin:0 auto;padding:22px;display:grid;gap:22px;}
+.panel{background:#fff;border:1px solid #d4d4d2;border-radius:5px;overflow:hidden;}
+.panel-h{background:var(--ink);color:#fff;padding:10px 16px;font-weight:700;font-size:14px;
+  letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.panel-h .sub{margin-left:auto;font-weight:400;font-size:11px;color:var(--grey);letter-spacing:.5px;text-transform:none;}
+.panel-b{padding:16px;}
+.tools{display:flex;gap:8px;align-items:center;padding:10px 16px;background:#fafafa;border-bottom:1px solid #e4e4e2;flex-wrap:wrap;font-size:13px;}
+.tools select{border:1px solid #cfcfcd;border-radius:4px;padding:6px 9px;font-family:inherit;font-size:13px;}
+.btn{border:none;border-radius:4px;padding:9px 16px;font-family:inherit;font-weight:700;font-size:12px;
+  letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:.12s;}
+.btn-go{background:var(--yellow);color:#000;}
+.btn-go:hover{background:#e6bf00;}
+.btn-ghost{background:#fff;border:1px solid #cfcfcd;color:#333;}
+.btn-ghost:hover{background:#f4f4f2;}
+table.grid{width:100%;border-collapse:collapse;font-size:13px;}
+table.grid th{background:#2a2a2a;color:#fff;font-size:10px;letter-spacing:.5px;text-transform:uppercase;
+  padding:8px 6px;text-align:left;font-weight:700;border-right:1px solid #444;white-space:nowrap;}
+table.grid td{padding:6px;border-bottom:1px solid #eee;border-right:1px solid #f0f0f0;vertical-align:middle;}
+table.grid tr:nth-child(even) td{background:#fafafa;}
+table.grid tr.sel td{background:#fffdf0;}
+table.grid input{width:100%;border:1px solid transparent;border-radius:3px;padding:6px 5px;font-family:inherit;font-size:13px;background:transparent;}
+table.grid input:hover{border-color:#ddd;background:#fff;}
+table.grid input:focus{outline:none;border-color:var(--yellow);background:#fffdf0;}
+table.grid input.price{font-family:'JetBrains Mono',monospace;font-weight:700;text-align:right;width:90px;}
+.conf{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.conf.draft{background:#eee;color:#666;}
+.conf.submitted{background:#fdf0d0;color:var(--amber);}
+.conf.priced{background:#d6f5e0;color:var(--green);}
+.conf.sent{background:#d8e9fb;color:#1a5fa8;}
+.conf.won{background:#d6f5e0;color:var(--green);}
+.conf.lost{background:#fbdcdc;color:var(--red);}
+.hint{font-size:12px;color:#888;padding:14px 16px;}
+.gate{padding:60px 20px;text-align:center;font-size:15px;color:#555;}
+.status{font-size:13px;font-weight:700;}
+.status.err{color:var(--red);}
+.status.work{color:var(--amber);}
+.totals{display:flex;justify-content:flex-end;padding:10px 16px;font-size:13px;gap:24px;}
+.totals b{font-family:'JetBrains Mono',monospace;}
+.openlink{color:var(--red);font-weight:700;cursor:pointer;text-decoration:underline;}
+.hidden{display:none;}
+</style></head>
+<body>
+<div class="top">
+  <div class="logo"></div>
+  <h1>Marion<small>Staff · Quote Desk</small></h1>
+  <div class="nav">
+    <a href="index.html">Marion</a>
+    <a href="quote.html">Quote intake</a>
+    <div class="auth" id="authBox">
+      <span id="authForm" class="hidden"><input id="authEmail" type="email" placeholder="you@fluidsealab.com" onkeydown="if(event.key==='Enter')sendLink()"><button class="abtn" onclick="sendLink()">Send link</button></span>
+      <span id="authWho" class="hidden"></span>
+      <button class="abtn" id="authBtn" onclick="authAction()">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="gate" class="panel"><div class="gate">Checking access…</div></div>
+
+  <div class="panel hidden" id="listPanel">
+    <div class="panel-h">All Quotes<span class="sub" id="listCount"></span></div>
+    <div class="tools">
+      Status:
+      <select id="fStatus" onchange="loadQuotes()">
+        <option value="">all</option><option>draft</option><option selected>submitted</option>
+        <option>priced</option><option>sent</option><option>won</option><option>lost</option>
+      </select>
+      <button class="btn btn-ghost" onclick="loadQuotes()">Refresh</button>
+      <span id="listStatus" class="status"></span>
+    </div>
+    <div style="overflow-x:auto"><table class="grid"><thead><tr>
+      <th>Date</th><th>Account</th><th>Contact</th><th>Customer email</th><th>PO</th><th>WH</th><th>Lines</th><th>Status</th><th style="width:60px"></th>
+    </tr></thead><tbody id="listBody"><tr><td colspan="9" class="hint">Loading…</td></tr></tbody></table></div>
+  </div>
+
+  <div class="panel hidden" id="detailPanel">
+    <div class="panel-h">Quote Detail<span class="sub" id="dMeta"></span></div>
+    <div class="tools">
+      <span id="dCust" style="font-weight:700"></span>
+      <span style="margin-left:auto"></span>
+      <button class="btn btn-go" onclick="savePrices()">Save prices → Priced</button>
+      <button class="btn btn-ghost" onclick="setQuoteStatus('sent')">Mark Sent</button>
+      <button class="btn btn-ghost" onclick="setQuoteStatus('won')">Won</button>
+      <button class="btn btn-ghost" onclick="setQuoteStatus('lost')">Lost</button>
+      <span id="dStatus" class="status"></span>
+    </div>
+    <div style="overflow-x:auto"><table class="grid"><thead><tr>
+      <th>Conf.</th><th>OEM / Requested</th><th>Part Number</th><th>Description</th>
+      <th style="width:60px">Qty</th><th>WH</th><th style="width:50px">Disp.</th><th>Notes</th>
+      <th style="width:100px">Net Price</th><th style="width:100px">Total</th>
+    </tr></thead><tbody id="detailBody"></tbody></table></div>
+    <div class="totals">TOTAL <b id="dTotal">$0.00</b></div>
+  </div>
+</div>
+
+<script>
+const SB_URL="https://hnmbjqhxvxakhdzgetxw.supabase.co";
+const SB_KEY="sb_publishable_HbRa8tV_Vmj5WPdvDc37uw_Vp7WajUe";
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+let SESSION=null, IS_STAFF=false, CURRENT=null, PROFILES={};
+
+sb.auth.onAuthStateChange(async (_ev,session)=>{
+  SESSION=session; IS_STAFF=false;
+  if(session){
+    const {data}=await sb.from('profiles').select('is_staff').eq('id',session.user.id).single();
+    IS_STAFF=!!(data&&data.is_staff);
+  }
+  renderAuth(); renderGate();
+  if(SESSION&&IS_STAFF) loadQuotes();
+});
+
+function renderAuth(){
+  const form=document.getElementById('authForm'),who=document.getElementById('authWho'),btn=document.getElementById('authBtn');
+  if(SESSION){form.classList.add('hidden');who.classList.remove('hidden');
+    who.textContent=SESSION.user.email;btn.textContent='Sign out';}
+  else{who.classList.add('hidden');btn.textContent='Sign in';}
+}
+function renderGate(){
+  const gate=document.getElementById('gate'),list=document.getElementById('listPanel');
+  if(SESSION&&IS_STAFF){gate.classList.add('hidden');list.classList.remove('hidden');return;}
+  gate.classList.remove('hidden');list.classList.add('hidden');
+  document.getElementById('detailPanel').classList.add('hidden');
+  gate.querySelector('.gate').innerHTML = !SESSION
+    ? 'Fluidseal staff only — sign in (top right) with your @fluidsealab.com email.'
+    : 'This page is for Fluidseal staff. Your account ('+esc(SESSION.user.email)+') doesn’t have staff access.';
+}
+function authAction(){
+  if(SESSION){sb.auth.signOut();return;}
+  const f=document.getElementById('authForm');f.classList.toggle('hidden');
+  if(!f.classList.contains('hidden'))document.getElementById('authEmail').focus();
+}
+async function sendLink(){
+  const email=document.getElementById('authEmail').value.trim();
+  if(!email)return;
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+  const g=document.getElementById('gate').querySelector('.gate');
+  g.textContent=error?('Could not send link: '+error.message):('Magic link sent to '+email+' — check your email.');
+  document.getElementById('authForm').classList.add('hidden');
+}
+
+async function loadQuotes(){
+  const st=document.getElementById('fStatus').value;
+  const el=document.getElementById('listStatus');el.textContent='Loading…';el.className='status work';
+  let q=sb.from('quotes').select('id,user_id,status,acct,contact,po,wh,created_at,quote_lines(id)').order('created_at',{ascending:false});
+  if(st)q=q.eq('status',st);
+  const [{data,error},{data:profs}]=await Promise.all([q,sb.from('profiles').select('id,email,company')]);
+  if(profs)profs.forEach(p=>PROFILES[p.id]=p);
+  const tb=document.getElementById('listBody');
+  if(error){tb.innerHTML='<tr><td colspan="9" class="hint">Error: '+esc(error.message)+'</td></tr>';el.textContent='';return;}
+  document.getElementById('listCount').textContent=data.length+' quote(s)';
+  el.textContent='';el.className='status';
+  if(!data.length){tb.innerHTML='<tr><td colspan="9" class="hint">No quotes'+(st?' with status “'+st+'”':'')+'.</td></tr>';return;}
+  tb.innerHTML=data.map(q=>'<tr><td>'+new Date(q.created_at).toLocaleDateString('en-CA')+'</td>'+
+    '<td>'+esc(q.acct||'—')+'</td><td>'+esc(q.contact||'')+'</td>'+
+    '<td class="mono" style="font-size:11px">'+esc((PROFILES[q.user_id]||{}).email||'')+'</td>'+
+    '<td>'+esc(q.po||'')+'</td><td>'+esc(q.wh||'')+'</td><td>'+q.quote_lines.length+'</td>'+
+    '<td><span class="conf '+q.status+'">'+q.status+'</span></td>'+
+    '<td><span class="openlink" onclick="openQuote(\''+q.id+'\')">open</span></td></tr>').join('');
+}
+
+async function openQuote(id){
+  const {data,error}=await sb.from('quotes').select('*,quote_lines(*)').eq('id',id).single();
+  if(error||!data){alert('Could not open quote');return;}
+  CURRENT=data;
+  document.getElementById('detailPanel').classList.remove('hidden');
+  document.getElementById('dMeta').textContent=new Date(data.created_at).toLocaleString('en-CA')+' · '+data.status+(data.po?' · PO# '+data.po:'');
+  document.getElementById('dCust').textContent=(data.acct||'—')+' · '+(data.contact||'')+' · '+(data.phone||'')+' · '+((PROFILES[data.user_id]||{}).email||'');
+  const tb=document.getElementById('detailBody');
+  tb.innerHTML=(data.quote_lines||[]).map((l,i)=>'<tr>'+
+    '<td><span class="conf '+(l.conf==='high'?'priced':l.conf==='med'?'submitted':'lost')+'">'+esc(l.conf||'')+'</span></td>'+
+    '<td class="mono">'+esc(l.oem||'')+'</td><td class="mono" style="font-weight:700">'+esc(l.pn||'')+'</td>'+
+    '<td>'+esc(l.descr||'')+'</td><td style="text-align:center">'+l.qty+'</td>'+
+    '<td>'+esc(l.wh||'')+'</td><td style="text-align:center">'+esc(l.disp||'')+'</td>'+
+    '<td>'+esc(l.notes||'')+'</td>'+
+    '<td><input class="price" data-line="'+l.id+'" data-qty="'+l.qty+'" value="'+(l.unit_price!=null?(+l.unit_price).toFixed(2):'')+'" placeholder="0.00" oninput="recalc()"></td>'+
+    '<td class="mono" id="lt-'+l.id+'" style="text-align:right">'+(l.line_total!=null?'$'+(+l.line_total).toFixed(2):'—')+'</td>'+
+    '</tr>').join('');
+  recalc();
+  document.getElementById('dStatus').textContent='';
+  document.getElementById('detailPanel').scrollIntoView({behavior:'smooth'});
+}
+
+function recalc(){
+  let total=0;
+  document.querySelectorAll('input.price').forEach(inp=>{
+    const v=parseFloat(inp.value);
+    const cell=document.getElementById('lt-'+inp.dataset.line);
+    if(!isNaN(v)){const lt=v*(+inp.dataset.qty);total+=lt;cell.textContent='$'+lt.toFixed(2);}
+    else cell.textContent='—';
+  });
+  document.getElementById('dTotal').textContent='$'+total.toFixed(2);
+}
+
+async function savePrices(){
+  if(!CURRENT)return;
+  const el=document.getElementById('dStatus');el.textContent='Saving…';el.className='status work';
+  const updates=[];
+  document.querySelectorAll('input.price').forEach(inp=>{
+    const v=parseFloat(inp.value);
+    updates.push(sb.from('quote_lines').update({
+      unit_price:isNaN(v)?null:v,
+      line_total:isNaN(v)?null:+(v*(+inp.dataset.qty)).toFixed(2)
+    }).eq('id',inp.dataset.line));
+  });
+  const results=await Promise.all(updates);
+  const err=results.find(r=>r.error);
+  if(err){el.textContent='Save failed: '+err.error.message;el.className='status err';return;}
+  await setQuoteStatus('priced',true);
+  el.textContent='✓ Prices saved — quote marked Priced.';el.className='status';
+}
+
+async function setQuoteStatus(status,silent){
+  if(!CURRENT)return;
+  const {error}=await sb.from('quotes').update({status}).eq('id',CURRENT.id);
+  const el=document.getElementById('dStatus');
+  if(error){el.textContent='Update failed: '+error.message;el.className='status err';return;}
+  CURRENT.status=status;
+  document.getElementById('dMeta').textContent=new Date(CURRENT.created_at).toLocaleString('en-CA')+' · '+status+(CURRENT.po?' · PO# '+CURRENT.po:'');
+  if(!silent){el.textContent='✓ Status → '+status;el.className='status';}
+  loadQuotes();
+}
+
+function esc(s){return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+</script>
+</body></html>
