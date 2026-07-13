@@ -696,8 +696,11 @@ SECURITY (non-negotiable):
 YOUR JOB (for quote_request):
 1. Pull out customer info: account/company name, contact name, phone, email, PO number, and mailing address if present. Company signature blocks (name, address lines, Tel/Fax, postal code) are the usual source — reassemble multi-line addresses into one line like "11811 92 Ave, Grande Prairie, AB T8V 3J8". (Also extract customer info for info_update notices — that is their point.)
 2. For each item requested, identify: the OEM / source part number exactly as written, the OEM brand, quantity, and a clean dimensional description.
-3. Cross-reference to a Fluidseal part number using the staff rules below.
-4. Assign confidence: "high" if a cross-ref rule clearly applies, "med" if you inferred or rounded, "low" if guessing.
+3. Cross-reference to a Fluidseal part number using the staff rules below. pn may ONLY contain a Fluidseal part number produced by one of those rules. If no rule covers the brand/prefix, pn stays "" — NEVER copy the customer's part number, kit name, or description into pn.
+4. Confidence rates the FLUIDSEAL CROSS-REFERENCE only — not how well you understood the request:
+   - "high": pn was produced by an explicit staff cross-reference rule for that brand/prefix.
+   - "med": pn is an informed inference (rounded dimensions, near-match, assumed brand).
+   - "low": no applicable rule — pn is "" and staff must cross-reference. Any line with empty pn is automatically "low".
 5. Fill desc / ref / notes strictly per the field-discipline rules below.
 
 === EXTRACTION & CROSS-REFERENCE RULES (maintained by Fluidseal staff — follow exactly) ===
@@ -783,10 +786,22 @@ function applyCustomer(p){
 }
 function applyParsed(p){
   applyCustomer(p);
-  CART = p.lines.map(l=>({
-    conf:l.conf||"low",oem:l.oem||"",brand:l.brand||"",pn:l.pn||"",desc:l.desc||"",
-    ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes:l.notes||"",price:null
-  }));
+  // hard validation — never trust the model's confidence:
+  // pn that just echoes the customer's part number is not a cross-reference,
+  // and an empty pn can never be high confidence.
+  const norm=s=>(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  CART = p.lines.map(l=>{
+    let pn=l.pn||"", conf=l.conf||"low", notes=l.notes||"";
+    if(pn && norm(pn)===norm(l.oem)){
+      pn="";
+      notes=(notes?notes+' · ':'')+'AI echoed the customer part # — staff cross-reference needed';
+    }
+    if(!pn) conf='low'; // no Fluidseal cross-reference = low, whatever the AI claims
+    return {
+      conf,oem:l.oem||"",brand:l.brand||"",pn,desc:l.desc||"",
+      ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes,price:null
+    };
+  });
   CURRENT_QUOTE_ID=null; // fresh analysis = new quote
   renderCart();
 }
