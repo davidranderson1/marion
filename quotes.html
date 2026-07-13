@@ -108,6 +108,7 @@ table.grid input.price{font-family:'JetBrains Mono',monospace;font-weight:700;te
     </div>
     <div style="overflow-x:auto"><table class="grid"><thead><tr>
       <th>Conf.</th><th>OEM / Requested</th><th>Part Number</th><th>Description</th>
+      <th style="width:110px">Reference</th>
       <th style="width:60px">Qty</th><th>WH</th><th style="width:50px">Disp.</th><th>Notes</th>
       <th style="width:100px">Net Price</th><th style="width:100px">Total</th>
     </tr></thead><tbody id="detailBody"></tbody></table></div>
@@ -191,7 +192,9 @@ async function openQuote(id){
   tb.innerHTML=(data.quote_lines||[]).map((l,i)=>'<tr>'+
     '<td><span class="conf '+(l.conf==='high'?'priced':l.conf==='med'?'submitted':'lost')+'">'+esc(l.conf||'')+'</span></td>'+
     '<td class="mono">'+esc(l.oem||'')+'</td><td class="mono" style="font-weight:700">'+esc(l.pn||'')+'</td>'+
-    '<td>'+esc(l.descr||'')+'</td><td style="text-align:center">'+l.qty+'</td>'+
+    '<td>'+esc(l.descr||'')+'</td>'+
+    '<td class="mono" style="color:var(--amber);font-weight:700">'+esc(l.reference||'')+'</td>'+
+    '<td style="text-align:center">'+l.qty+'</td>'+
     '<td>'+esc(l.wh||'')+'</td><td style="text-align:center">'+esc(l.disp||'')+'</td>'+
     '<td>'+esc(l.notes||'')+'</td>'+
     '<td><input class="price" data-line="'+l.id+'" data-qty="'+l.qty+'" value="'+(l.unit_price!=null?(+l.unit_price).toFixed(2):'')+'" placeholder="0.00" oninput="recalc()"></td>'+
