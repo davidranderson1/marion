@@ -44,7 +44,7 @@ body{font-family:'Roboto Condensed',Arial,sans-serif;color:var(--ink);background
 
 /* INPUT */
 .dropzone{position:relative;}
-textarea#req{width:100%;min-height:360px;border:1px solid #cfcfcd;border-radius:4px;padding:12px;
+textarea#req{width:100%;min-height:700px;border:1px solid #cfcfcd;border-radius:4px;padding:12px;
   font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.5;resize:vertical;background:#fafafa;}
 textarea#req:focus{outline:2px solid var(--yellow);background:#fff;}
 .dropzone.over textarea#req{border-color:var(--yellow);background:#fffdf0;}
@@ -173,8 +173,8 @@ T187116: Plain Bushing | Shop.Deere.com
 QTY: 4   HEIGHT = 1.220&quot;
 T187117: Plain Bushing | Shop.Deere.com"></textarea>
       </div>
-      <div class="drop-hint">Drop a <b>.txt / .eml / .csv</b> file to fill the box, or a <b>screenshot (.png / .jpg)</b> to read with vision — or <a onclick="document.getElementById('fileInput').click()">browse</a>.
-        <input type="file" id="fileInput" class="hidden" multiple accept=".txt,.eml,.csv,.md,.png,.jpg,.jpeg,.webp,.gif" onchange="handleFiles(this.files)">
+      <div class="drop-hint">Drop an <b>email (.eml)</b>, <b>Excel (.xlsx / .xls / .csv)</b>, <b>.txt</b>, or a <b>screenshot (.png / .jpg)</b> to read with vision — or <a onclick="document.getElementById('fileInput').click()">browse</a>.
+        <input type="file" id="fileInput" class="hidden" multiple accept=".txt,.eml,.msg,.csv,.md,.xlsx,.xls,.png,.jpg,.jpeg,.webp,.gif" onchange="handleFiles(this.files)">
       </div>
       <div id="attachRow"></div>
       <div class="req-meta">
@@ -378,10 +378,40 @@ function initDnD(){
     dz.classList.remove('over');}));
   dz.addEventListener('drop',e=>handleFiles(e.dataTransfer.files));
 }
+/* Lazy-load SheetJS only when an Excel file is dropped */
+let XLSX_LOADING=null;
+function loadXLSX(){
+  if(window.XLSX)return Promise.resolve();
+  if(XLSX_LOADING)return XLSX_LOADING;
+  XLSX_LOADING=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js';
+    s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+  return XLSX_LOADING;
+}
+async function stageExcel(f){
+  setStatus('<span class="spin"></span>Reading '+esc(f.name)+'…','work');
+  try{
+    await loadXLSX();
+    const buf=await f.arrayBuffer();
+    const wb=window.XLSX.read(buf,{type:'array'});
+    let txt='';
+    wb.SheetNames.forEach(n=>{
+      const csv=window.XLSX.utils.sheet_to_csv(wb.Sheets[n]).trim();
+      if(csv)txt+='--- Sheet: '+n+' ---\n'+csv+'\n\n';});
+    if(!txt){setStatus('No data found in '+esc(f.name)+'.','err');return;}
+    const ta=document.getElementById('req');
+    ta.value=(ta.value.trim()?ta.value.trim()+'\n\n':'')+txt.trim();
+    setStatus('Loaded '+esc(f.name)+' ('+wb.SheetNames.length+' sheet(s)) — hit Analyze.','');
+  }catch(e){console.warn('excel read failed',e);
+    setStatus('Couldn’t read '+esc(f.name)+' — try saving it as CSV and dropping that.','err');}
+}
 function handleFiles(fileList){
   const files=[...fileList];if(!files.length)return;
   files.forEach(f=>{
     if(IMG_TYPE.test(f.type)||/\.(png|jpe?g|webp|gif)$/i.test(f.name)){ stageImage(f); }
+    else if(/\.(xlsx|xls)$/i.test(f.name)){ stageExcel(f); }
+    else if(/\.msg$/i.test(f.name)){ setStatus('Outlook .msg files aren’t supported yet — drag the email text in, save it as .eml, or screenshot it.','err'); }
     else if(TEXT_EXT.test(f.name)||f.type.startsWith('text/')){
       const r=new FileReader();
       r.onload=()=>{
