@@ -10,6 +10,16 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-13 · Wizard merge + required-by + quote/order type
+- quote.html: re-merged the guided wizard layout (cf134bb, was accidentally
+  overwritten by 1c1ac77) with the intent banner + 2FA overlay
+- Cart step: Save draft / Submit to Fluidseal buttons restored
+- New fields end-to-end: Required Date/Time and Request Type (quote|order) —
+  AI-extracted, editable in both steps, saved to quotes.required_by /
+  quotes.req_type (migration applied), shown on the estimate
+- LESSON: check file freshness at PUSH time, not edit time — a wizard commit
+  landed mid-session and was clobbered
+
 ## 2026-07-13 · 2FA site-wide, intent banner, changelog (this commit)
 - quote.html / quotes.html / index.html: 2FA step-up overlay — accounts with an
   enrolled authenticator must enter the 6-digit code on every Marion page, not
