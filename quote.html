@@ -173,8 +173,8 @@ T187116: Plain Bushing | Shop.Deere.com
 QTY: 4   HEIGHT = 1.220&quot;
 T187117: Plain Bushing | Shop.Deere.com"></textarea>
       </div>
-      <div class="drop-hint">Drop an <b>email (.eml)</b>, <b>Excel (.xlsx / .xls / .csv)</b>, <b>.txt</b>, or a <b>screenshot (.png / .jpg)</b> to read with vision — or <a onclick="document.getElementById('fileInput').click()">browse</a>.
-        <input type="file" id="fileInput" class="hidden" multiple accept=".txt,.eml,.msg,.csv,.md,.xlsx,.xls,.png,.jpg,.jpeg,.webp,.gif" onchange="handleFiles(this.files)">
+      <div class="drop-hint">Drop an <b>email (.eml / Outlook .msg)</b>, <b>PDF</b>, <b>Excel (.xlsx / .xls / .csv)</b>, <b>.txt</b>, or a <b>screenshot (.png / .jpg)</b> — or <a onclick="document.getElementById('fileInput').click()">browse</a>. PDFs and screenshots are read by Marion's AI on Analyze.
+        <input type="file" id="fileInput" class="hidden" multiple accept=".txt,.eml,.msg,.csv,.md,.xlsx,.xls,.pdf,.png,.jpg,.jpeg,.webp,.gif" onchange="handleFiles(this.files)">
       </div>
       <div id="attachRow"></div>
       <div class="req-meta">
@@ -364,6 +364,7 @@ const DISPOSITIONS = ["B","S","T"]; // Buy / Stock / Transfer  (B = default per 
 let CART = [];      // [{conf, oem, brand, pn, desc, qty, wh, disp, notes, price}]
 let CUST = {acct:"",contact:"",phone:"",po:"",email:"",addr:"",wh:"6 - Edmonton"};
 let IMAGES = [];    // [{name, media_type, data(base64), url(objectURL)}]
+let PDFS = [];      // [{name, data(base64)}] — sent to the AI as document blocks
 
 /* ---------- Drag & drop ---------- */
 const TEXT_EXT=/\.(txt|eml|csv|md|log|json)$/i;
@@ -406,12 +407,79 @@ async function stageExcel(f){
   }catch(e){console.warn('excel read failed',e);
     setStatus('Couldn’t read '+esc(f.name)+' — try saving it as CSV and dropping that.','err');}
 }
+/* ---- PDF attachments: staged and sent to the AI as document blocks ---- */
+function stagePdf(f){
+  if(f.size>15*1024*1024){setStatus(esc(f.name)+' is over 15 MB — too large to analyze.','err');return;}
+  const r=new FileReader();
+  r.onload=()=>{
+    PDFS.push({name:f.name,data:r.result.split(',')[1]});
+    renderAttachments();
+    setStatus('Attached PDF '+esc(f.name)+' — will be read on Analyze.','');
+  };
+  r.readAsDataURL(f);
+}
+function u8ToB64(u8){
+  let s='';const CH=0x8000;
+  for(let i=0;i<u8.length;i+=CH)s+=String.fromCharCode.apply(null,u8.subarray(i,i+CH));
+  return btoa(s);
+}
+/* ---- Outlook .msg: parsed in-browser (msgreader), body -> textbox,
+        embedded PDF/image attachments staged for the AI ---- */
+let MSG_LOADING=null;
+function loadMsgReader(){
+  if(window.__MsgReader)return Promise.resolve(window.__MsgReader);
+  if(MSG_LOADING)return MSG_LOADING;
+  MSG_LOADING=import('https://cdn.jsdelivr.net/npm/@kenjiuno/msgreader@1.24.0/+esm')
+    .then(m=>{const MR=(m.default&&(m.default.default||m.default))||m.MsgReader||m;
+      window.__MsgReader=MR;return MR;});
+  return MSG_LOADING;
+}
+async function stageMsg(f){
+  setStatus('<span class="spin"></span>Reading '+esc(f.name)+'…','work');
+  try{
+    const MsgReader=await loadMsgReader();
+    const buf=await f.arrayBuffer();
+    const reader=new MsgReader(buf);
+    const msg=reader.getFileData();
+    if(msg.error)throw new Error(msg.error);
+    let txt='';
+    if(msg.subject)txt+='Subject: '+msg.subject+'\n';
+    if(msg.senderName||msg.senderEmail)txt+='From: '+(msg.senderName||'')+(msg.senderEmail?' <'+msg.senderEmail+'>':'')+'\n';
+    const body=(msg.body||'').trim();
+    txt+=body?'\n'+body:'';
+    if(txt.trim()){
+      const ta=document.getElementById('req');
+      ta.value=(ta.value.trim()?ta.value.trim()+'\n\n':'')+txt.trim();
+    }
+    // pull usable attachments out of the email (PDF POs, screenshots)
+    let staged=0;
+    (msg.attachments||[]).forEach(att=>{
+      try{
+        const name=(att.fileName||att.name||'attachment').toString();
+        if(!/\.(pdf|png|jpe?g|webp|gif)$/i.test(name))return;
+        const a=reader.getAttachment(att);
+        if(!a||!a.content)return;
+        const b64=u8ToB64(a.content instanceof Uint8Array?a.content:new Uint8Array(a.content));
+        if(/\.pdf$/i.test(name)){PDFS.push({name,data:b64});staged++;}
+        else{
+          const mt=/\.png$/i.test(name)?'image/png':/\.gif$/i.test(name)?'image/gif':/\.webp$/i.test(name)?'image/webp':'image/jpeg';
+          IMAGES.push({name,media_type:mt,data:b64,url:'data:'+mt+';base64,'+b64});staged++;
+        }
+      }catch(e){console.warn('msg attachment skipped',e);}
+    });
+    renderAttachments();
+    if(!txt.trim()&&!staged)throw new Error('empty');
+    setStatus('Loaded '+esc(f.name)+(staged?' + '+staged+' attachment(s)':'')+' — hit Analyze.','');
+  }catch(e){console.warn('msg read failed',e);
+    setStatus('Couldn’t read '+esc(f.name)+' — save it as .eml (or screenshot it) and drop that instead.','err');}
+}
 function handleFiles(fileList){
   const files=[...fileList];if(!files.length)return;
   files.forEach(f=>{
     if(IMG_TYPE.test(f.type)||/\.(png|jpe?g|webp|gif)$/i.test(f.name)){ stageImage(f); }
+    else if(/\.pdf$/i.test(f.name)||f.type==='application/pdf'){ stagePdf(f); }
     else if(/\.(xlsx|xls)$/i.test(f.name)){ stageExcel(f); }
-    else if(/\.msg$/i.test(f.name)){ setStatus('Outlook .msg files aren’t supported yet — drag the email text in, save it as .eml, or screenshot it.','err'); }
+    else if(/\.msg$/i.test(f.name)){ stageMsg(f); }
     else if(TEXT_EXT.test(f.name)||f.type.startsWith('text/')){
       const r=new FileReader();
       r.onload=()=>{
@@ -436,9 +504,12 @@ function stageImage(f){
 }
 function renderAttachments(){
   const row=document.getElementById('attachRow');
-  row.innerHTML=IMAGES.map((im,i)=>`<span class="chip img"><img src="${im.url}" style="width:18px;height:18px;object-fit:cover;border-radius:2px">${esc(im.name)}<span class="x" onclick="rmImage(${i})">×</span></span>`).join('');
+  row.innerHTML=
+    IMAGES.map((im,i)=>`<span class="chip img"><img src="${im.url}" style="width:18px;height:18px;object-fit:cover;border-radius:2px">${esc(im.name)}<span class="x" onclick="rmImage(${i})">×</span></span>`).join('')+
+    PDFS.map((p,i)=>`<span class="chip">📄 ${esc(p.name)}<span class="x" onclick="rmPdf(${i})">×</span></span>`).join('');
 }
 function rmImage(i){IMAGES.splice(i,1);renderAttachments();}
+function rmPdf(i){PDFS.splice(i,1);renderAttachments();}
 
 /* ---------- Sample ---------- */
 const SAMPLE = `ATTN – SERGE
@@ -464,7 +535,7 @@ function loadSample(){
 /* ---------- Analyze: call Marion via server proxy, fall back to local parser ---------- */
 async function analyze(){
   const text=document.getElementById('req').value.trim();
-  if(!text && !IMAGES.length){setStatus('Paste a request, or drop a file/screenshot first.','err');return;}
+  if(!text && !IMAGES.length && !PDFS.length){setStatus('Paste a request, or drop a file/screenshot/PDF first.','err');return;}
   const btn=document.getElementById('goBtn');btn.disabled=true;
   setStatus('<span class="spin"></span>Reading request & cross-referencing…','work');
   let parsed=null;
@@ -473,8 +544,8 @@ async function analyze(){
   if(!parsed){
     if(!text){
       setStatus(SESSION
-        ? 'Couldn’t read the screenshot (AI engine error). Type or paste the request to use the offline parser.'
-        : 'Sign in (top right) to read screenshots with Marion’s AI engine.','err');
+        ? 'Couldn’t read the attachment(s) (AI engine error). Type or paste the request to use the offline parser.'
+        : 'Sign in (top right) to read screenshots and PDFs with Marion’s AI engine.','err');
       btn.disabled=false; return;
     }
     parsed=localParse(text);
@@ -514,15 +585,18 @@ Return ONLY valid JSON, no markdown, no prose:
  "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","qty":1,"wh":"6 - Edmonton","disp":"B","notes":""}]}`;
 
   const userContent=[];
+  PDFS.forEach(p=>userContent.push({type:"document",
+    source:{type:"base64",media_type:"application/pdf",data:p.data}}));
   IMAGES.forEach(im=>userContent.push({type:"image",
     source:{type:"base64",media_type:im.media_type,data:im.data}}));
+  const nAtt=IMAGES.length+PDFS.length;
   userContent.push({type:"text",
-    text:(text||"")+(IMAGES.length?"\n\n[One or more screenshots of the request are attached above — read all part numbers, quantities, dimensions, and customer details from them.]":"")});
+    text:(text||"")+(nAtt?"\n\n["+nAtt+" attachment(s) — screenshots and/or PDF documents — are included above. Read all part numbers, quantities, dimensions, and customer details from them.]":"")});
 
   const res=await fetch(SB_URL+"/functions/v1/marion-chat",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+SESSION.access_token},
-    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:2000,
       system:sys,
       messages:[{role:"user",content:userContent}]})
   });
@@ -692,7 +766,7 @@ function copyJSON(){
 function clearAll(){
   document.getElementById('req').value='';
   ['mCust','mContact','mPhone','mPO','mEmail','mAddr'].forEach(id=>document.getElementById(id).value='');
-  CART=[];CUST={acct:'',contact:'',phone:'',po:'',email:'',addr:'',wh:'6 - Edmonton'};IMAGES=[];
+  CART=[];CUST={acct:'',contact:'',phone:'',po:'',email:'',addr:'',wh:'6 - Edmonton'};IMAGES=[];PDFS=[];
   CURRENT_QUOTE_ID=null;
   renderAttachments();renderCust();renderCart();
   document.getElementById('quoteOut').innerHTML='<div class="hint">Generate a quote once the cart is reviewed.</div>';
