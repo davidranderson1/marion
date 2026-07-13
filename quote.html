@@ -42,32 +42,9 @@ body{font-family:'Roboto Condensed',Arial,sans-serif;color:var(--ink);background
 .panel-h .sub{margin-left:auto;font-weight:400;font-size:11px;color:var(--grey);letter-spacing:.5px;text-transform:none;}
 .panel-b{padding:16px;}
 
-/* WIZARD — horizontal stepper */
-.stepper{display:flex;background:#fff;border:1px solid #d4d4d2;border-radius:5px;margin-bottom:22px;overflow:hidden;}
-.stepper .st{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 10px;cursor:pointer;
-  font-weight:700;font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:#777;
-  border-right:1px solid #e4e4e2;background:#fafafa;transition:.12s;white-space:nowrap;user-select:none;}
-.stepper .st:last-child{border-right:none;}
-.stepper .st .n{width:22px;height:22px;border-radius:3px;background:#d8d8d6;color:#555;
-  display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto;}
-.stepper .st:hover{background:#f1f1ef;}
-.stepper .st.active{background:var(--ink);color:#fff;}
-.stepper .st.active .n{background:var(--yellow);color:#000;}
-.stepper .st.done{color:#333;}
-.stepper .st.done .n{background:var(--green);color:#fff;}
-.stepper .st.disabled{opacity:.4;cursor:not-allowed;}
-@media(max-width:860px){.stepper .st{flex-direction:column;gap:4px;font-size:10px;white-space:normal;text-align:center;padding:8px 4px;}}
-
-/* one step visible at a time */
-.stage .panel{display:none;}
-.stage .panel.active{display:block;}
-
-/* step navigation */
-.step-nav{display:flex;justify-content:space-between;margin-top:18px;}
-
 /* INPUT */
 .dropzone{position:relative;}
-textarea#req{width:100%;min-height:420px;border:1px solid #cfcfcd;border-radius:4px;padding:12px;
+textarea#req{width:100%;min-height:700px;border:1px solid #cfcfcd;border-radius:4px;padding:12px;
   font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.5;resize:vertical;background:#fafafa;}
 textarea#req:focus{outline:2px solid var(--yellow);background:#fff;}
 .dropzone.over textarea#req{border-color:var(--yellow);background:#fffdf0;}
@@ -101,6 +78,11 @@ textarea#req:focus{outline:2px solid var(--yellow);background:#fff;}
 .status{font-size:13px;font-weight:700;}
 .status.work{color:var(--amber);}
 .status.err{color:var(--red);}
+.intent-banner{display:block;width:100%;margin-top:12px;padding:16px 20px;border-radius:6px;
+  font-size:15px;font-weight:700;line-height:1.55;}
+.intent-banner.info{background:#fdf0d0;border:2px solid var(--amber);color:#7a5a00;}
+.intent-banner.warn{background:#fbdcdc;border:3px solid var(--red);color:var(--red);font-size:17px;}
+.intent-banner.plain{background:#eef1f3;border:2px solid #b8bcc4;color:#444;}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid #ddd;border-top-color:var(--amber);
   border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px;}
 @keyframes sp{to{transform:rotate(360deg);}}
@@ -162,8 +144,8 @@ table.est td.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
 
 @media print{
   body{background:#fff;}
-  .top,.wrap>.stage>.panel:not(#quotePanel),.quote-tools,.panel-h,.stepper,.step-nav{display:none!important;}
-  #quotePanel{display:block!important;border:none;}.estimate{padding:0;}
+  .top,.wrap>.stage>.panel:not(#quotePanel),.quote-tools,.panel-h{display:none!important;}
+  #quotePanel{border:none;}.estimate{padding:0;}
 }
 </style></head>
 <body>
@@ -180,20 +162,10 @@ table.est td.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
   </div>
 </div>
 
-<div class="wrap">
-
-<!-- WIZARD STEPPER -->
-<div class="stepper" id="stepper">
-  <div class="st" data-step="1" onclick="goStep(1)"><span class="n">1</span>Customer Request</div>
-  <div class="st" data-step="2" onclick="goStep(2)"><span class="n">2</span>Cart — Review</div>
-  <div class="st" data-step="3" onclick="goStep(3)"><span class="n">3</span>Quote / Estimate</div>
-  <div class="st" data-step="4" onclick="goStep(4)"><span class="n">4</span>My Quotes</div>
-</div>
-
-<div class="stage">
+<div class="wrap"><div class="stage">
 
   <!-- STEP 1: INPUT -->
-  <div class="panel active" id="reqPanel">
+  <div class="panel">
     <div class="panel-h"><span class="step">1</span>Customer Request<span class="sub">paste, or drag &amp; drop an email / screenshot / text file</span></div>
     <div class="panel-b">
       <div class="dropzone" id="dropzone">
@@ -225,11 +197,12 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
         <span id="status" class="status"></span>
         <span class="samples">Load sample: <a onclick="loadSample()">Serge / Plain Bushing</a></span>
       </div>
+      <div id="intentBanner" class="intent-banner hidden"></div>
     </div>
   </div>
 
   <!-- STEP 2: CART -->
-  <div class="panel" id="cartPanel">
+  <div class="panel">
     <div class="panel-h"><span class="step">2</span>Cart — Review &amp; Normalize<span class="sub">edit any field · confirm the agent's guesses before quoting</span></div>
     <div class="cart-tools">
       <div class="cust-strip">
@@ -248,7 +221,7 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
       <th style="width:70px">Qty</th><th>Warehouse</th><th style="width:90px">Disposition</th>
       <th style="width:110px">Notes</th>
     </tr></thead><tbody id="cartBody">
-      <tr><td colspan="10" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>
+      <tr><td colspan="10" class="empty-cart">No lines yet — analyze a request above, or add a line manually.</td></tr>
     </tbody></table>
     </div>
     <div class="hint" id="cartFlags"></div>
@@ -274,51 +247,57 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
     <div id="myQuotesList"><div class="hint">Sign in to see saved quotes.</div></div>
   </div>
 
-</div>
-
-<!-- WIZARD NAV -->
-<div class="step-nav">
-  <button class="btn btn-ghost" id="navBack" onclick="goStep(STEP-1)">← Back</button>
-  <button class="btn btn-go" id="navNext" onclick="goStep(STEP+1)">Next →</button>
-</div>
-
-</div>
+</div></div>
 
 <script>
-/* ---------- Wizard: horizontal guided steps ---------- */
-let STEP=1;
-const STEP_IDS=['reqPanel','cartPanel','quotePanel','myQuotesPanel'];
-const STEP_NAMES=['Customer Request','Cart — Review','Quote / Estimate','My Quotes'];
-function maxStep(){return (typeof SESSION!=='undefined'&&SESSION)?4:3;}
-function goStep(n){
-  n=Math.max(1,Math.min(n,maxStep()));
-  STEP=n;
-  STEP_IDS.forEach((id,i)=>{
-    const p=document.getElementById(id);
-    if(p)p.classList.toggle('active',i+1===n);
-    const st=document.querySelector('.stepper .st[data-step="'+(i+1)+'"]');
-    if(st){
-      st.classList.toggle('active',i+1===n);
-      st.classList.toggle('done',i+1<n);
-      st.classList.toggle('disabled',i+1>maxStep());
-    }
-  });
-  const back=document.getElementById('navBack'),next=document.getElementById('navNext');
-  back.style.visibility=n===1?'hidden':'visible';
-  if(n>=maxStep()){next.style.visibility='hidden';}
-  else{next.style.visibility='visible';next.textContent='Next: '+STEP_NAMES[n]+' →';}
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
 /* ---------- Supabase: auth + quote persistence (Phase 3) ---------- */
 const SB_URL="https://hnmbjqhxvxakhdzgetxw.supabase.co";
 const SB_KEY="sb_publishable_HbRa8tV_Vmj5WPdvDc37uw_Vp7WajUe";
 const sb=window.supabase.createClient(SB_URL,SB_KEY);
 let SESSION=null, IS_STAFF=false, CURRENT_QUOTE_ID=null;
 
+/* ---- site-wide 2FA step-up: if the account has an authenticator enrolled,
+        require the 6-digit code before this page can be used ---- */
+async function enforceMfa(){
+  try{
+    const {data:aal}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+    if(!(aal&&aal.nextLevel==='aal2'&&aal.currentLevel!=='aal2'))return true;
+  }catch(e){return true;}
+  if(document.getElementById('mfaOv'))return false;
+  const d=document.createElement('div');d.id='mfaOv';
+  d.style.cssText='position:fixed;inset:0;background:rgba(26,26,26,.93);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Arial,Helvetica,sans-serif';
+  d.innerHTML='<div style="background:#fff;border-radius:10px;padding:34px 38px;text-align:center;max-width:380px">'+
+    '<div style="font-size:17px;font-weight:800;margin-bottom:8px">&#128274; Two-factor authentication</div>'+
+    '<div style="font-size:13px;color:#555;margin-bottom:16px">Enter the 6-digit code from your authenticator app to continue.</div>'+
+    '<input id="mfaOvCode" inputmode="numeric" maxlength="6" placeholder="123456" style="border:1px solid #cfcfcd;border-radius:6px;padding:10px 12px;font-size:16px;width:140px;text-align:center">'+
+    '<button id="mfaOvBtn" style="margin-left:8px;background:#FFD400;border:1px solid #000;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer">Verify</button>'+
+    '<div id="mfaOvMsg" style="color:#d0021b;font-size:12px;margin-top:10px"></div>'+
+    '<div style="margin-top:14px"><a href="#" onclick="sb.auth.signOut();document.getElementById(\'mfaOv\').remove();return false" style="font-size:12px;color:#888">Sign out instead</a></div></div>';
+  document.body.appendChild(d);
+  const go=async()=>{
+    const code=document.getElementById('mfaOvCode').value.trim();
+    const msg=document.getElementById('mfaOvMsg');msg.textContent='';
+    if(code.length!==6){msg.textContent='Enter the 6-digit code.';return;}
+    const {data:lf,error:e1}=await sb.auth.mfa.listFactors();
+    if(e1){msg.textContent=e1.message;return;}
+    const f=(((lf&&lf.totp)||[]).find(x=>x.status==='verified'))||((lf&&lf.totp)||[])[0];
+    if(!f){msg.textContent='No authenticator found on this account.';return;}
+    const {data:ch,error:e2}=await sb.auth.mfa.challenge({factorId:f.id});
+    if(e2){msg.textContent=e2.message;return;}
+    const {error:e3}=await sb.auth.mfa.verify({factorId:f.id,challengeId:ch.id,code});
+    if(e3){msg.textContent=e3.message;return;}
+    d.remove();location.reload();
+  };
+  document.getElementById('mfaOvBtn').onclick=go;
+  document.getElementById('mfaOvCode').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+  document.getElementById('mfaOvCode').focus();
+  return false;
+}
+
 sb.auth.onAuthStateChange(async (_ev,session)=>{
   SESSION=session; IS_STAFF=false;
   if(session){
+    enforceMfa();
     const {data}=await sb.from('profiles').select('is_staff').eq('id',session.user.id).single();
     IS_STAFF=!!(data&&data.is_staff);
     loadMyQuotes();
@@ -342,7 +321,6 @@ function renderAuth(){
     if(acct)acct.classList.add('hidden');
     panel.classList.add('hidden');
   }
-  goStep(STEP); // re-clamp wizard (step 4 requires sign-in)
 }
 function authAction(){
   if(SESSION){sb.auth.signOut();return;}
@@ -503,7 +481,7 @@ async function openQuote(id){
   renderCust();renderCart();
   document.getElementById('saveStatus').textContent='Opened saved quote ('+data.status+').';
   document.getElementById('saveStatus').className='status';
-  goStep(2); // guided: review the opened quote in the Cart
+  document.querySelector('.stage').scrollIntoView({behavior:'smooth'});
 }
 
 /* ---------- Cross-reference knowledge (Phase 1 rules the agent applies) ---------- */
@@ -694,6 +672,7 @@ async function analyze(){
   const text=document.getElementById('req').value.trim();
   if(!text && !IMAGES.length && !PDFS.length){setStatus('Paste a request, or drop a file/screenshot/PDF first.','err');return;}
   const btn=document.getElementById('goBtn');btn.disabled=true;
+  document.getElementById('intentBanner').className='intent-banner hidden';
   setStatus('<span class="spin"></span>Reading request & cross-referencing…','work');
   let parsed=null;
   try{ parsed=await callMarion(text); }
@@ -710,28 +689,33 @@ async function analyze(){
       ? 'Parsed locally (AI engine unavailable). Review carefully.'
       : 'Parsed locally — sign in (top right) for Marion’s full AI read.','err');
     applyParsed(parsed);
-    btn.disabled=false;
-    if(parsed.lines&&parsed.lines.length)goStep(2); // guided: advance to Cart
-    return;
+    btn.disabled=false; return;
   }
   // intent gate: only quote requests build a cart
   const intent=parsed.intent||'quote_request';
+  const banner=document.getElementById('intentBanner');
   if(intent!=='quote_request'){
     applyCustomer(parsed);            // still capture new address / contact details
-    const note=parsed.intent_note?' '+parsed.intent_note:'';
+    const note=parsed.intent_note?'<br><span style="font-weight:400">'+hesc(parsed.intent_note)+'</span>':'';
     if(intent==='suspicious'){
-      setStatus('⚠ SUSPICIOUS — possible spam or phishing. Do NOT click links, reply, or open attachments. Nothing staged.'+note,'err');
+      banner.className='intent-banner warn';
+      banner.innerHTML='⚠ SUSPICIOUS EMAIL — possible spam or phishing. Do NOT click links, reply, or open attachments. Nothing was staged.'+note;
+      setStatus('Suspicious email — see warning below.','err');
     }else if(intent==='info_update'){
-      setStatus('ℹ Company notice, not a parts request — no lines staged. Customer fields updated from the notice.'+note,'work');
+      banner.className='intent-banner info';
+      banner.innerHTML='ℹ COMPANY NOTICE — not a parts request, no quote lines staged. Customer fields were updated from the notice.'+note;
+      setStatus('Company notice — see details below.','work');
     }else{
-      setStatus('This doesn’t look like a parts request — nothing staged.'+note,'work');
+      banner.className='intent-banner plain';
+      banner.innerHTML='Not a parts request — nothing staged.'+note;
+      setStatus('Nothing staged.','work');
     }
     btn.disabled=false; return;
   }
-  setStatus('Done — '+parsed.lines.length+' line(s) staged. Review in the Cart.','');
+  banner.className='intent-banner hidden';
+  setStatus('Done — '+parsed.lines.length+' line(s) staged. Review below.','');
   applyParsed(parsed);
   btn.disabled=false;
-  if(parsed.lines.length)goStep(2); // guided: advance to Cart
 }
 
 function setStatus(html,cls){const s=document.getElementById('status');s.innerHTML=html;s.className='status '+(cls||'');}
@@ -885,7 +869,7 @@ function renderCust(){
 
 function renderCart(){
   const tb=document.getElementById('cartBody');
-  if(!CART.length){tb.innerHTML='<tr><td colspan="10" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>';
+  if(!CART.length){tb.innerHTML='<tr><td colspan="10" class="empty-cart">No lines yet — analyze a request above, or add a line manually.</td></tr>';
     document.getElementById('cartFlags').textContent='';return;}
   tb.innerHTML=CART.map((r,i)=>`<tr>
     <td class="row-del" onclick="delRow(${i})" title="remove">×</td>
@@ -971,6 +955,7 @@ function buildQuote(){
     </div>
     ${anyPriced?'':'<div style="margin-top:10px;font-size:10px;color:#999;text-align:center">Net prices are added by Fluidseal staff after you submit — submit this quote and we’ll price it and get back to you.</div>'}
   </div>`;
+  document.getElementById('quotePanel').scrollIntoView({behavior:'smooth'});
 }
 
 function copyJSON(){
@@ -986,9 +971,9 @@ function clearAll(){
   renderAttachments();renderCust();renderCart();
   document.getElementById('quoteOut').innerHTML='<div class="hint">Generate a quote once the cart is reviewed.</div>';
   document.getElementById('saveStatus').textContent='';
+  document.getElementById('intentBanner').className='intent-banner hidden';
   setStatus('','');
 }
 initDnD();
-goStep(1);
 </script>
 </body></html>
