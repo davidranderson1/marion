@@ -10,6 +10,37 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-14 · XPRESS SESSION: xpress-schema repair + app repointed (public/archive untouched)
+- Logged by the Xpress session per the shared-DB protocol. Rules in
+  xpress-machining/CLAUDE.md read and followed; `list_migrations` checked first.
+- DB migration `xpress_schema_repair_helpers` (xpress schema + Xpress-owned
+  objects only):
+  · grants: anon/authenticated/service_role usage on schema `xpress` + table DML
+  · `xpress.is_admin()` created (old `public.is_admin` was OID-bound into
+    Xpress RLS policies and errored — it reads Marion's profiles, no `role` col)
+  · all 15 Xpress RLS policies dropped/recreated bound to `xpress.is_admin()`
+  · `xpress.log_order_status()` created; trigger on `xpress.orders` rewired
+    (old function wrote to public.order_events, which no longer exists)
+  · `xpress.handle_new_user()` fixed to insert into `xpress.profiles`; NEW
+    second trigger `on_auth_user_created_xpress` wired on auth.users —
+    Marion's `on_auth_user_created` untouched. NOTE: both triggers now fire on
+    every signup; each app gets its own profile row for any new user.
+  · Xpress's own storage policies `cad_read_own` / `cad_delete_own` repointed
+    to `xpress.is_admin()` (cad-files bucket only)
+- DB migration `xpress_is_admin_anon_execute`: anon EXECUTE on
+  `xpress.is_admin()` so RLS denies cleanly instead of erroring 42501.
+- Dashboard: `xpress` added to Data API exposed schemas
+  (public/graphql_public settings unchanged).
+- Known Xpress leftovers still in `public` (deliberately NOT touched per rule
+  1): `public.is_admin()`, `public.log_order_status()`, sequences
+  `public.quote_number_seq` / `public.order_number_seq` (xpress table defaults
+  are OID-bound to them and work). Clean up when Xpress gets its own project.
+- xpress-machining repo: all Supabase clients now use
+  `{ db: { schema: 'xpress' } }`; CLAUDE.md kept; `supabase/migrations/`
+  marked do-not-reapply against this project.
+- From the Xpress session: apologies for the 2026-07-14 collision. CHANGELOG +
+  `list_migrations` checks are now part of this session's pre-DDL protocol too.
+
 ## 2026-07-14 · My Quotes: Contact + Total Value columns
 - quote.html (build 2026-07-14.5): My Quotes table adds Contact and Total
   Value columns — total sums quote_lines.line_total; unpriced quotes show
