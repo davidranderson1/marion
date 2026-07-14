@@ -10,6 +10,11 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-13 · .msg analyze fix
+- Signature images (image001.jpg pattern, <150KB) skipped from .msg staging
+- AI response parsing made tolerant; max_tokens 3900; failures now logged
+  with stop_reason to the browser console
+
 ## 2026-07-13 · Wizard merge + required-by + quote/order type
 - quote.html: re-merged the guided wizard layout (cf134bb, was accidentally
   overwritten by 1c1ac77) with the intent banner + 2FA overlay
