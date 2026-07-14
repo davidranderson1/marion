@@ -127,6 +127,20 @@ table.cart input,table.cart select{width:100%;border:1px solid transparent;borde
 table.cart input:hover,table.cart select:hover{border-color:#ddd;background:#fff;}
 table.cart input:focus,table.cart select:focus{outline:none;border-color:var(--yellow);background:#fffdf0;}
 table.cart input.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
+/* Multi Add + Kits */
+.drag-h{display:inline-flex;align-items:center;justify-content:center;width:18px;height:22px;border-radius:4px;
+  background:#dbeeff;color:#4a90c2;font-size:11px;letter-spacing:1px;cursor:grab;user-select:none;font-weight:700;vertical-align:middle;}
+.drag-h:active{cursor:grabbing;}
+tr.dragging{opacity:.45;}
+tr.drop-hint td{background:#fff7cc !important;box-shadow:inset 0 -2px 0 var(--yellow);}
+tr.kit-child td{background:#f4f9ff !important;}
+tr.kit-child td:first-child{border-left:3px solid #9ec9e8;}
+.kit-indent{display:inline-block;width:16px;color:#7fb2d8;font-weight:700;}
+.typetag{font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px;letter-spacing:.5px;text-transform:uppercase;margin-left:4px;vertical-align:middle;}
+.typetag.kit{background:#1a6bb5;color:#fff;}
+.typetag.item{background:#eee;color:#777;}
+.unnest{border:none;background:none;color:#4a90c2;cursor:pointer;font-size:13px;padding:0 3px;vertical-align:middle;}
+.unnest:hover{color:#000;}
 .conf{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
 .conf.high{background:#d6f5e0;color:var(--green);}
 .conf.med{background:#fdf0d0;color:var(--amber);}
@@ -248,19 +262,20 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
         <span>Type: <b class="ed" contenteditable id="cType">quote</b></span>
         <span>Required: <b class="ed" contenteditable id="cReqBy">—</b></span>
       </div>
-      <button class="btn btn-ghost" style="margin-left:auto;padding:7px 14px;font-size:12px" onclick="addRow()">+ Add line</button>
+      <button class="btn btn-ghost" id="addLineBtn" style="margin-left:auto;padding:7px 14px;font-size:12px" title="Click: add one line · Hold: paste a parts list (Multi Add)">+ Add line</button>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="saveQuote('draft')">Save draft</button>
+      <button class="btn btn-go" style="padding:7px 14px;font-size:12px" onclick="saveQuote('submitted')">Submit to Fluidseal</button>
       <span id="saveStatus2" class="status" style="font-size:12px"></span>
     </div>
     <div style="overflow-x:auto">
     <table class="cart"><thead><tr>
-      <th style="width:30px"></th><th style="width:55px">Conf.</th>
+      <th style="width:30px"></th><th style="width:64px">Type</th><th style="width:55px">Conf.</th>
       <th>OEM / Requested</th><th>Part Number (Fluidseal)</th><th>Description</th>
       <th style="width:110px">Reference</th>
       <th style="width:70px">Qty</th><th>Warehouse</th><th style="width:90px">Disposition</th>
       <th style="width:110px">Notes</th>
     </tr></thead><tbody id="cartBody">
-      <tr><td colspan="10" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>
+      <tr><td colspan="11" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>
     </tbody></table>
     </div>
     <div class="hint" id="cartFlags"></div>
@@ -270,13 +285,14 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
   <div class="panel" id="quotePanel">
     <div class="panel-h"><span class="step">3</span>Quote / Estimate<span class="sub">output form</span></div>
     <div class="quote-tools">
+      <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="buildQuote()">Generate Quote</button>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="window.print()">Print / PDF</button>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="copyJSON()">Copy cart JSON</button>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="saveQuote('draft')">Save draft</button>
+      <button class="btn btn-go" style="padding:7px 14px;font-size:12px" onclick="saveQuote('submitted')">Submit to Fluidseal</button>
       <span id="saveStatus" class="status" style="font-size:12px"></span>
-      <span style="margin-left:auto;font-size:11px;color:#888">this preview is exactly what Fluidseal receives on submit</span>
     </div>
-    <div id="quoteOut"><div class="hint">The quote preview appears here once the cart has lines.</div></div>
+    <div id="quoteOut"><div class="hint">Generate a quote once the cart is reviewed.</div></div>
   </div>
 
   <!-- STEP 4: MY QUOTES -->
@@ -290,11 +306,7 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
 <!-- WIZARD NAV -->
 <div class="step-nav">
   <button class="btn btn-ghost" id="navBack" onclick="goStep(STEP-1)">← Back</button>
-  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-    <span id="navHint" style="display:none;font-size:12px;color:#888;font-weight:700">Review the quote, then submit — My Quotes unlocks after submitting.</span>
-    <button class="btn btn-go" id="navSubmit" style="display:none" onclick="saveQuote('submitted')">Submit to Fluidseal</button>
-    <button class="btn btn-go" id="navNext" onclick="goStep(STEP+1)">Next →</button>
-  </div>
+  <button class="btn btn-go" id="navNext" onclick="goStep(STEP+1)">Next →</button>
 </div>
 
 </div>
@@ -302,7 +314,6 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
 <script>
 /* ---------- Wizard: horizontal guided steps ---------- */
 let STEP=1;
-let SUBMITTED=false, SUBMITTED_NO=null; // gate "Next: My Quotes" until Submit to Fluidseal succeeds
 const STEP_IDS=['reqPanel','cartPanel','quotePanel','myQuotesPanel'];
 const STEP_NAMES=['Customer Request','Cart — Review','Quote / Estimate','My Quotes'];
 function maxStep(){return (typeof SESSION!=='undefined'&&SESSION)?4:3;}
@@ -319,32 +330,11 @@ function goStep(n){
       st.classList.toggle('disabled',i+1>maxStep());
     }
   });
-  if(n===3)buildQuote(); // live preview — exactly what Fluidseal receives on submit
-  refreshNav();
+  const back=document.getElementById('navBack'),next=document.getElementById('navNext');
+  back.style.visibility=n===1?'hidden':'visible';
+  if(n>=maxStep()){next.style.visibility='hidden';}
+  else{next.style.visibility='visible';next.textContent='Next: '+STEP_NAMES[n]+' →';}
   window.scrollTo({top:0,behavior:'smooth'});
-}
-function refreshNav(){
-  const back=document.getElementById('navBack'),next=document.getElementById('navNext'),
-        sub=document.getElementById('navSubmit'),hint=document.getElementById('navHint');
-  back.style.visibility=STEP===1?'hidden':'visible';
-  const onQuote=(STEP===3);
-  if(sub){
-    sub.style.display=onQuote?'':'none';
-    sub.textContent=SUBMITTED?'✓ Submitted':'Submit to Fluidseal';
-    sub.disabled=SUBMITTED;
-  }
-  if(hint)hint.style.display=(onQuote&&!SUBMITTED&&CART.length)?'':'none';
-  if(STEP>=maxStep()){next.style.visibility='hidden';}
-  else{
-    next.style.visibility='visible';
-    next.textContent='Next: '+STEP_NAMES[STEP]+' →';
-    const lock=onQuote&&!SUBMITTED;
-    next.disabled=lock;
-    next.title=lock?'Submit to Fluidseal first':'';
-  }
-}
-function unlockSubmit(){ // any cart change after submitting = a new/changed quote
-  if(SUBMITTED){SUBMITTED=false;SUBMITTED_NO=null;refreshNav();}
 }
 
 /* ---------- Supabase: auth + quote persistence (Phase 3) ---------- */
@@ -460,16 +450,13 @@ async function saveQuote(status){
   if(!error&&id){
     const lines=CART.map(l=>({quote_id:id,conf:l.conf,oem:l.oem,brand:l.brand||null,pn:l.pn,descr:l.desc,
       reference:l.ref||null,qty:l.qty,wh:l.wh,disp:l.disp,notes:l.notes,
+      line_type:(l.type==='kit')?'kit':'item',kit_group:l.kitGroup||null,
       unit_price:(l.price!=null&&l.price!=='')?+l.price:null,
       line_total:(l.price!=null&&l.price!=='')?+(l.price*l.qty).toFixed(2):null}));
     ({error}=await sb.from('quote_lines').insert(lines));
   }
   if(error){setSaveStatus('Save failed: '+error.message,'err');return;}
   CURRENT_QUOTE_ID=id;
-  SUBMITTED=(status==='submitted');
-  if(!SUBMITTED)SUBMITTED_NO=null;
-  refreshNav();
-  if(STEP===3)buildQuote(); // refresh preview (status pill / quote #)
   setSaveStatus((status==='submitted')
     ? '✓ Submitted to Fluidseal — we\'ll price it and get back to you.'
     : '✓ Draft saved.','');
@@ -525,9 +512,7 @@ function cardHTML(q,lines,custEmail){
     '<div style="font-size:10px;color:#8b90a0;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">DOCUMENT REFERENCES</div>'+
     '<span style="font-size:13px;color:#1a202c"><b>Document Number:</b> '+hesc(q.quote_no)+'</span>&nbsp;&nbsp;&nbsp;'+
     '<span style="font-size:13px;color:#1a202c"><b>PO Number:</b> '+(hesc(q.po)||'—')+'</span>&nbsp;&nbsp;&nbsp;'+
-    '<span style="font-size:13px;color:#1a202c"><b>Customer:</b> '+hesc(custEmail)+'</span>&nbsp;&nbsp;&nbsp;'+
-    '<span style="font-size:13px;color:#1a202c"><b>Type:</b> '+hesc((q.req_type||'quote').toUpperCase())+'</span>'+
-    (q.required_by?'&nbsp;&nbsp;&nbsp;<span style="font-size:13px;color:#1a202c"><b>Required:</b> '+hesc(q.required_by)+'</span>':'')+'</div>'+
+    '<span style="font-size:13px;color:#1a202c"><b>Customer:</b> '+hesc(custEmail)+'</span></div>'+
   '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px"><tr>'+
     '<th align="left" style="padding:10px 8px;border-bottom:2px solid #e5e7eb;font-size:13px;color:#1a202c">Description</th>'+
     '<th align="center" style="padding:10px 8px;border-bottom:2px solid #e5e7eb;font-size:13px;color:#1a202c">Quantity</th>'+
@@ -543,8 +528,6 @@ async function notifySubmit(id){
   try{
     const {data:q}=await sb.from('quotes').select('*,quote_lines(*)').eq('id',id).single();
     if(!q)return;
-    SUBMITTED_NO=q.quote_no||null;
-    if(STEP===3)buildQuote(); // show the real quote # on the preview
     let pdf=null;
     try{
       await loadHtml2Pdf();
@@ -591,10 +574,9 @@ async function openQuote(id){
     .forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.value=CUST[k];});
   const rtSel=document.getElementById('mReqType');if(rtSel)rtSel.value=CUST.reqtype;
   CART=(data.quote_lines||[]).map(l=>({conf:l.conf||'low',oem:l.oem||'',brand:l.brand||'',pn:l.pn||'',desc:l.descr||'',
-    ref:l.reference||'',qty:l.qty||1,wh:l.wh||'',disp:l.disp||'B',notes:l.notes||'',price:l.unit_price}));
-  SUBMITTED=(data.status==='submitted');
-  SUBMITTED_NO=SUBMITTED?(data.quote_no||null):null;
-  renderCust();renderCart();
+    ref:l.reference||'',qty:l.qty||1,wh:l.wh||'',disp:l.disp||'B',notes:l.notes||'',
+    type:(l.line_type==='kit')?'kit':'item',kitGroup:l.kit_group||null,price:l.unit_price}));
+  orderKits();renderCust();renderCart();
   setSaveStatus('Opened saved quote ('+data.status+').','');
   goStep(2); // guided: review the opened quote in the Cart
 }
@@ -994,11 +976,10 @@ function applyParsed(p){
     if(!pn) conf='low'; // no Fluidseal cross-reference = low, whatever the AI claims
     return {
       conf,oem:l.oem||"",brand:l.brand||"",pn,desc:l.desc||"",
-      ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes,price:null
+      ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes,type:"item",kitGroup:null,price:null
     };
   });
   CURRENT_QUOTE_ID=null; // fresh analysis = new quote
-  SUBMITTED=false;SUBMITTED_NO=null;refreshNav();
   renderCart();
 }
 
@@ -1013,12 +994,20 @@ function renderCust(){
 
 function renderCart(){
   const tb=document.getElementById('cartBody');
-  if(!CART.length){tb.innerHTML='<tr><td colspan="10" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>';
+  if(!CART.length){tb.innerHTML='<tr><td colspan="11" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>';
     document.getElementById('cartFlags').textContent='';return;}
-  tb.innerHTML=CART.map((r,i)=>`<tr>
+  tb.innerHTML=CART.map((r,i)=>{
+    const child=!!(r.kitGroup&&r.type!=='kit'), isKit=r.type==='kit';
+    const typeCell=isKit
+      ? '<span class="drag-h" style="opacity:.35;cursor:default" title="Kits can\'t be nested inside another kit">⋮⋮</span><span class="typetag kit">Kit</span>'
+      : '<span class="drag-h" draggable="true" ondragstart="dragLine(event,'+i+')" title="Drag onto another line to nest into a kit">⋮⋮</span>'
+        +(child?'<button class="unnest" onclick="unnest('+i+')" title="Remove from kit">⤴</button>'
+               :'<span class="typetag item">Item</span>');
+    return `<tr class="${child?'kit-child':''}" ondragover="dragOver(event,${i})" ondragleave="dragLeave(event)" ondrop="dropLine(event,${i})">
     <td class="row-del" onclick="delRow(${i})" title="remove">×</td>
+    <td style="white-space:nowrap">${typeCell}</td>
     <td><span class="conf ${r.conf}">${r.conf}</span></td>
-    <td><input value="${esc(r.oem)}" onchange="upd(${i},'oem',this.value)" placeholder="OEM part #"></td>
+    <td>${child?'<span class="kit-indent">↳</span>':''}<input value="${esc(r.oem)}" onchange="upd(${i},'oem',this.value)" placeholder="OEM part #" style="${child?'width:calc(100% - 18px)':''}"></td>
     <td><input class="pn" value="${esc(r.pn)}" onchange="upd(${i},'pn',this.value)" placeholder="—"></td>
     <td><input value="${esc(r.desc)}" onchange="upd(${i},'desc',this.value)" placeholder="size"></td>
     <td><input value="${esc(r.ref||'')}" onchange="upd(${i},'ref',this.value)" placeholder="invoice / PO / comp. #"></td>
@@ -1026,7 +1015,7 @@ function renderCart(){
     <td><input value="${esc(r.wh)}" onchange="upd(${i},'wh',this.value)"></td>
     <td><select onchange="upd(${i},'disp',this.value)">${DISPOSITIONS.map(d=>`<option ${d===r.disp?'selected':''}>${d}</option>`).join('')}</select></td>
     <td><input value="${esc(r.notes)}" onchange="upd(${i},'notes',this.value)" placeholder=""></td>
-  </tr>`).join('');
+  </tr>`;}).join('');
   const flags=CART.filter(r=>r.notes||r.conf==='low');
   document.getElementById('cartFlags').innerHTML = flags.length
     ? '<b>Needs review:</b> '+flags.map(r=>`${r.oem||r.pn||'line'} — ${r.notes||'low confidence'}`).join(' · ')
@@ -1034,9 +1023,96 @@ function renderCart(){
 }
 function esc(s){return (s+'').replace(/"/g,'&quot;');}
 function upd(i,k,v){CART[i][k]=(k==='qty')?(parseInt(v)||1):v;
-  if(k==='pn'&&v) CART[i].conf='high'; unlockSubmit(); renderCart();}
-function delRow(i){CART.splice(i,1);unlockSubmit();renderCart();}
-function addRow(){CART.push({conf:'low',oem:'',brand:'',pn:'',desc:'',ref:'',qty:1,wh:CUST.wh,disp:'B',notes:'manual',price:null});unlockSubmit();renderCart();}
+  if(k==='pn'&&v) CART[i].conf='high'; renderCart();}
+function delRow(i){CART.splice(i,1);orderKits();renderCart();}
+function addRow(){CART.push({conf:'low',oem:'',brand:'',pn:'',desc:'',ref:'',qty:1,wh:CUST.wh,disp:'B',notes:'manual',type:'item',kitGroup:null,price:null});renderCart();}
+
+/* ---------- Multi Add: hold "+ Add line" to paste a parts list ---------- */
+let MA_HOLD=null,MA_HELD=false;
+function initAddLineHold(){
+  const b=document.getElementById('addLineBtn');if(!b)return;
+  const arm=()=>{MA_HELD=false;clearTimeout(MA_HOLD);MA_HOLD=setTimeout(()=>{MA_HELD=true;openMultiAdd();},500);};
+  const disarm=()=>{clearTimeout(MA_HOLD);MA_HOLD=null;};
+  b.addEventListener('pointerdown',arm);
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,disarm));
+  b.addEventListener('click',()=>{if(MA_HELD){MA_HELD=false;return;}addRow();});
+  b.addEventListener('contextmenu',e=>e.preventDefault()); /* touch long-press */
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initAddLineHold);else initAddLineHold();
+
+function openMultiAdd(){
+  if(document.getElementById('maOv'))return;
+  const d=document.createElement('div');d.id='maOv';
+  d.style.cssText='position:fixed;inset:0;background:rgba(26,26,26,.7);z-index:9999;display:flex;align-items:center;justify-content:center';
+  d.innerHTML='<div style="background:#fff;border-radius:10px;padding:26px 28px;width:460px;max-width:92vw;box-shadow:0 12px 40px rgba(0,0,0,.35)">'
+    +'<div style="display:flex;align-items:center;margin-bottom:6px"><b style="font-size:15px">Multi Add — paste a parts list</b>'
+    +'<span onclick="closeMultiAdd()" style="margin-left:auto;cursor:pointer;font-size:18px;color:#888;line-height:1">×</span></div>'
+    +'<div style="font-size:12px;color:#666;margin-bottom:10px">One part per line. Optional quantity after a comma or tab — e.g. <code>2A95D29A74V90 16ORB-V, 4</code></div>'
+    +'<select id="maKind" style="width:100%;border:1px solid #cfcfcd;border-radius:6px;padding:8px;font-size:13px;margin-bottom:8px;box-sizing:border-box">'
+    +'<option value="oem">Customer / OEM part numbers</option><option value="pn">Fluidseal part numbers</option></select>'
+    +'<textarea id="maList" rows="9" placeholder="Enter each part on a new line" style="width:100%;border:1px solid #cfcfcd;border-radius:6px;padding:10px;font-family:\'JetBrains Mono\',monospace;font-size:12.5px;box-sizing:border-box"></textarea>'
+    +'<div style="margin-top:12px;display:flex;gap:8px;align-items:center">'
+    +'<button class="btn btn-go" style="padding:8px 18px;font-size:12px" onclick="resolveMultiAdd()">Add to cart</button>'
+    +'<span id="maMsg" style="font-size:12px;color:#666"></span></div></div>';
+  document.body.appendChild(d);
+  d.addEventListener('click',e=>{if(e.target===d)closeMultiAdd();});
+  setTimeout(()=>{const t=document.getElementById('maList');if(t)t.focus();},50);
+}
+function closeMultiAdd(){const d=document.getElementById('maOv');if(d)d.remove();}
+function resolveMultiAdd(){
+  const kind=document.getElementById('maKind').value;
+  const rows=document.getElementById('maList').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  if(!rows.length){document.getElementById('maMsg').textContent='Nothing to add — paste or type part numbers first.';return;}
+  rows.forEach(raw=>{
+    let pn=raw,qty=1;
+    const m=raw.match(/^(.*?)[,\t]\s*(\d+)\s*$/);
+    if(m){pn=m[1].trim();qty=parseInt(m[2])||1;}
+    CART.push({conf:kind==='pn'?'high':'low',oem:kind==='oem'?pn:'',brand:'',pn:kind==='pn'?pn:'',
+      desc:'',ref:'',qty,wh:CUST.wh||'6 - Edmonton',disp:'B',notes:'multi-add',type:'item',kitGroup:null,price:null});
+  });
+  closeMultiAdd();renderCart();
+}
+
+/* ---------- Kits: drag a line's ⋮⋮ handle onto another line to nest ---------- */
+let DRAG_I=null;
+function dragLine(e,i){DRAG_I=i;e.dataTransfer.effectAllowed='move';
+  try{e.dataTransfer.setData('text/plain',String(i));}catch(_){}
+  const tr=e.target.closest('tr');if(tr)requestAnimationFrame(()=>tr.classList.add('dragging'));}
+function dragOver(e,i){if(DRAG_I===null||DRAG_I===i)return;e.preventDefault();
+  e.dataTransfer.dropEffect='move';e.currentTarget.classList.add('drop-hint');}
+function dragLeave(e){e.currentTarget.classList.remove('drop-hint');}
+function dropLine(e,i){e.preventDefault();e.currentTarget.classList.remove('drop-hint');
+  const s=DRAG_I;DRAG_I=null;if(s===null||s===i)return;dropOnRow(s,i);}
+document.addEventListener('dragend',()=>{DRAG_I=null;
+  document.querySelectorAll('tr.dragging,tr.drop-hint').forEach(t=>t.classList.remove('dragging','drop-hint'));});
+
+function nextKitGroup(){const used=CART.map(l=>l.kitGroup).filter(Boolean);return used.length?Math.max(...used)+1:1;}
+function dropOnRow(s,t){
+  const a=CART[s],b=CART[t];
+  if(!a||!b||a.type==='kit')return; /* kits can't be nested */
+  if(b.kitGroup){a.kitGroup=b.kitGroup;}
+  else{b.type='kit';b.kitGroup=nextKitGroup();a.kitGroup=b.kitGroup;}
+  a.type='item';
+  orderKits();renderCart();
+}
+function unnest(i){const l=CART[i];if(!l)return;l.kitGroup=null;l.type='item';orderKits();renderCart();}
+/* keep components physically after their kit parent; dissolve broken groups */
+function orderKits(){
+  const groups={};
+  CART.forEach(l=>{if(l.kitGroup){const g=groups[l.kitGroup]=groups[l.kitGroup]||{parent:null,kids:[]};
+    if(l.type==='kit')g.parent=l;else g.kids.push(l);}});
+  Object.values(groups).forEach(g=>{
+    if(!g.parent)g.kids.forEach(k=>{k.kitGroup=null;});
+    else if(!g.kids.length){g.parent.type='item';g.parent.kitGroup=null;}
+  });
+  const out=[];
+  CART.forEach(l=>{
+    if(l.kitGroup&&l.type!=='kit')return; /* appended with parent below */
+    out.push(l);
+    if(l.type==='kit'&&l.kitGroup)CART.forEach(c=>{if(c!==l&&c.kitGroup===l.kitGroup)out.push(c);});
+  });
+  CART=out;
+}
 
 /* sync meta inputs -> CUST so manual edits after analysis are kept */
 [['mCust','acct'],['mContact','contact'],['mPhone','phone'],['mPO','po'],['mEmail','email'],['mAddr','addr'],['mReqBy','reqby']]
@@ -1053,23 +1129,54 @@ function addRow(){CART.push({conf:'low',oem:'',brand:'',pn:'',desc:'',ref:'',qty
   }});
 });
 
-/* ---------- Quote output — SAME card the customer/Fluidseal get by email (cardHTML) ---------- */
+/* ---------- Quote output ---------- */
+function money(n){return '$'+(+n).toFixed(2);}
 function buildQuote(){
-  const out=document.getElementById('quoteOut');
-  if(!CART.length){out.innerHTML='<div class="hint">Cart is empty — add lines in step 2 (Cart — Review) first.</div>';return;}
-  const q={quote_no:SUBMITTED_NO||(SUBMITTED?'…':'PREVIEW'),
-    status:SUBMITTED?'submitted':(CURRENT_QUOTE_ID?'draft':'not saved'),
-    created_at:Date.now(),acct:CUST.acct,contact:CUST.contact,phone:CUST.phone,
-    po:CUST.po,address:CUST.addr,required_by:CUST.reqby,req_type:CUST.reqtype};
-  const lines=CART.map(l=>{
-    const priced=(l.price!=null&&l.price!=='');
-    return {pn:l.pn,descr:l.desc,oem:l.oem,reference:l.ref,qty:l.qty,
-      unit_price:priced?+l.price:null,
-      line_total:priced?+(l.price*l.qty).toFixed(2):null};
-  });
-  const anyPriced=lines.some(l=>l.unit_price!=null);
-  out.innerHTML=cardHTML(q,lines,(SESSION&&SESSION.user.email)||CUST.email||'—')+
-    (anyPriced?'':'<div style="margin:0 0 14px;font-size:11px;color:#888;text-align:center">Net prices are added by Fluidseal staff after you submit — submit this quote and we’ll price it and get back to you.</div>');
+  if(!CART.length){document.getElementById('quoteOut').innerHTML='<div class="hint">Cart is empty.</div>';return;}
+  const today=new Date().toLocaleDateString('en-CA');
+  let subtotal=0, anyPriced=false;
+  const rows=CART.map(r=>{
+    const priced=(r.price!=null&&r.price!=='');
+    const unit=priced?+r.price:0, lineTotal=unit*r.qty;
+    if(priced){subtotal+=lineTotal;anyPriced=true;}
+    return `<tr>
+    <td class="pn">${(r.kitGroup&&r.type!=='kit')?'<span style="color:#9ec9e8">↳ </span>':''}${r.type==='kit'?'<span style="font-size:9px;font-weight:800;background:#1a6bb5;color:#fff;border-radius:8px;padding:1px 6px;margin-right:5px">KIT</span>':''}${esc(r.pn)||'<span style="color:#c00">— not resolved —</span>'}</td>
+    <td>${esc(r.desc)}</td>
+    <td>${esc(r.oem)}</td>
+    <td>${r.ref?'<b>Ref: '+esc(r.ref)+'</b>'+(r.notes?' · ':''):''}${esc(r.notes)}</td>
+    <td>${esc(r.wh)}</td>
+    <td style="text-align:center">0</td>
+    <td style="text-align:center">${r.qty}</td>
+    <td style="text-align:center">${r.disp}</td>
+    <td class="est-price">${money(unit)}</td>
+    <td>${money(lineTotal)}</td>
+  </tr>`;}).join('');
+  document.getElementById('quoteOut').innerHTML=`<div class="estimate">
+    <div class="est-top">
+      <div><div class="est-title"><span class="dot"></span>ESTIMATE</div>
+        <div class="est-billship">
+          <div><h4>BILL TO</h4><div>${esc(CUST.acct||'—')}<br>${esc(CUST.contact||'')}${CUST.addr?'<br>'+esc(CUST.addr):''}<br>${esc(CUST.phone||'')}${CUST.email?'<br>'+esc(CUST.email):''}</div></div>
+          <div><h4>SHIP TO</h4><div>${esc(CUST.acct||'—')}<br>${esc(CUST.contact||'')}${CUST.addr?'<br>'+esc(CUST.addr):''}</div></div>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:11px"><b>FLUIDSEAL AB INC.</b><br>17309 - 107 Ave<br>Edmonton, AB T5S 1E5<br>(780) 414-1871<br><br>${today}${CUST.po?'<br>PO# '+esc(CUST.po):''}${CUST.reqby?'<br>Required: '+esc(CUST.reqby):''}<br>Type: ${(CUST.reqtype||'quote').toUpperCase()}</div>
+    </div>
+    <div class="est-banner">★★★★★★★★★★★★★★★ ESTIMATE ★★★★★★★★★★★★★★★ ESTIMATE ★★★★★★★★★★★★★★★</div>
+    <table class="est"><thead><tr>
+      <th>Part Number</th><th>Description</th><th>Customer Part#</th><th>Notes</th><th>Warehouse</th>
+      <th>Qty On Hand</th><th>Qty</th><th>Disp.</th><th>Net Price</th><th>Total</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    <div class="est-totals"><table>
+      <tr><td class="lbl">FREIGHT IN</td><td>$0.00</td></tr>
+      <tr><td class="lbl">TOTAL TAX</td><td>$0.00</td></tr>
+      <tr><td class="lbl">TOTAL</td><td><b>${money(subtotal)}</b></td></tr>
+    </table></div>
+    <div class="est-foot">
+      <div><b>FLUIDSEAL AB INC.</b><br>17309 - 107 Ave, Edmonton AB T5S 1E5 · (780) 414-1871</div>
+      <div style="text-align:right"><b>FLUIDSEAL CG INC.</b><br>Bay #6, 3815 - 61st Ave SE, Calgary AB T2C 1V5</div>
+    </div>
+    ${anyPriced?'':'<div style="margin-top:10px;font-size:10px;color:#999;text-align:center">Net prices are added by Fluidseal staff after you submit — submit this quote and we’ll price it and get back to you.</div>'}
+  </div>`;
 }
 
 function copyJSON(){
@@ -1083,9 +1190,8 @@ function clearAll(){
   document.getElementById('mReqType').value='quote';
   CART=[];CUST={acct:'',contact:'',phone:'',po:'',email:'',addr:'',wh:'6 - Edmonton',reqby:'',reqtype:'quote'};IMAGES=[];PDFS=[];
   CURRENT_QUOTE_ID=null;
-  SUBMITTED=false;SUBMITTED_NO=null;refreshNav();
   renderAttachments();renderCust();renderCart();
-  document.getElementById('quoteOut').innerHTML='<div class="hint">The quote preview appears here once the cart has lines.</div>';
+  document.getElementById('quoteOut').innerHTML='<div class="hint">Generate a quote once the cart is reviewed.</div>';
   setSaveStatus('','');
   document.getElementById('intentBanner').className='intent-banner hidden';
   setStatus('','');

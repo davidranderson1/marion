@@ -37,6 +37,12 @@ Mono, amber/ink/paper palette, the panel + sticky-rail idiom) so it reads as the
 
 ## To-do (added 2026-07-13)
 
+- **Product table + Bill of Materials table (cart Resolve)** — David will provide a Product
+  table (part numbers → price / availability) and a BOM table (kit part# → component lines).
+  Wire the cart's price & availability resolution against them: resolve each line's part number
+  for price/stock, and explode Kit lines via the BOM. Groundwork already in place (2026-07-13):
+  the cart supports drag-and-drop kit nesting, and `quote_lines` carries `line_type`
+  ('item'|'kit') + `kit_group` (migration `quote_lines_kit_support`).
 - **Leaked password protection (Supabase Auth)** — can't be enabled on the Free plan; the toggle
   (Auth → Sign In/Providers → Email → "Prevent use of leaked passwords") is Pro-plan-and-above.
   The security advisor warning stays until/unless the project is upgraded. Left untouched.

@@ -10,6 +10,25 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-13 · Cart Multi Add + drag-and-drop kits
+- quote.html: HOLD "+ Add line" (~0.5s) opens Multi Add — type or paste a
+  parts list, one part per line, optional qty after a comma or tab
+  (`2A95D29A74V90 16ORB-V, 4`); dropdown picks Customer/OEM part #s (conf low)
+  vs Fluidseal part #s (conf high). Normal click still adds a single line.
+- quote.html: new Type column (Item/Kit — mirrors ERP Type) with a light-blue
+  ⋮⋮ drag handle. Drag a line onto another line to nest it into a kit; the
+  target becomes the Kit parent, components render indented below it. ⤴ on a
+  component removes it from the kit. Kits can't nest inside kits; deleting a
+  parent or removing the last component dissolves the kit automatically.
+- Kit structure persists across save/open and renders on the estimate
+  (KIT badge on parents, ↳ on components).
+- DB migration `quote_lines_kit_support`: `quote_lines.line_type`
+  ('item'|'kit', default item) + `quote_lines.kit_group` (int, null =
+  standalone).
+- TODO (next): David to provide a Product table + Bill of Materials table so
+  the cart can Resolve part numbers for price & availability (kits explode via
+  BOM). See NEXT-SESSION-HANDOFF.md.
+
 ## 2026-07-13 · .msg analyze fix
 - Signature images (image001.jpg pattern, <150KB) skipped from .msg staging
 - AI response parsing made tolerant; max_tokens 3900; failures now logged
