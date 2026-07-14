@@ -10,6 +10,11 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-14 · My Quotes: Contact + Total Value columns
+- quote.html (build 2026-07-14.5): My Quotes table adds Contact and Total
+  Value columns — total sums quote_lines.line_total; unpriced quotes show
+  "pending pricing"
+
 ## 2026-07-14 · Restore clobbered dfd15063: submit beside nav, My Quotes lock, email-card preview
 - INCIDENT (repo side this time): commit dfd15063 ("Quote step: on-screen
   preview = same card as the submit email; Submit moved beside wizard nav;

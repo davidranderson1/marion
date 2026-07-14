@@ -585,15 +585,20 @@ async function loadMyQuotes(){
   if(!SESSION)return;
   const box=document.getElementById('myQuotesList');
   const {data,error}=await sb.from('quotes')
-    .select('id,status,acct,po,created_at,quote_lines(id)')
+    .select('id,status,acct,contact,po,created_at,quote_lines(id,line_total)')
     .eq('user_id',SESSION.user.id).order('created_at',{ascending:false});
   if(error){box.innerHTML='<div class="hint">Could not load quotes: '+esc(error.message)+'</div>';return;}
   if(!data.length){box.innerHTML='<div class="hint">No saved quotes yet — build a cart above, then Save draft or Submit.</div>';return;}
-  box.innerHTML='<div style="overflow-x:auto"><table class="cart"><thead><tr><th>Date</th><th>Account</th><th>PO</th><th>Lines</th><th>Status</th><th style="width:60px"></th></tr></thead><tbody>'+
-    data.map(q=>'<tr><td>'+new Date(q.created_at).toLocaleDateString('en-CA')+'</td><td>'+esc(q.acct||'—')+
+  box.innerHTML='<div style="overflow-x:auto"><table class="cart"><thead><tr><th>Date</th><th>Account</th><th>Contact</th><th>PO</th><th>Lines</th><th>Total Value</th><th>Status</th><th style="width:60px"></th></tr></thead><tbody>'+
+    data.map(q=>{
+      const total=q.quote_lines.reduce((s,l)=>s+(l.line_total!=null?+l.line_total:0),0);
+      const totalCell=total>0?'<b>$'+total.toFixed(2)+'</b>':'<span style="color:#999">pending pricing</span>';
+      return '<tr><td>'+new Date(q.created_at).toLocaleDateString('en-CA')+'</td><td>'+esc(q.acct||'—')+
+      '</td><td>'+esc(q.contact||'—')+
       '</td><td>'+esc(q.po||'')+'</td><td>'+q.quote_lines.length+
+      '</td><td>'+totalCell+
       '</td><td><a href="#" onclick="openQuote(\''+q.id+'\');return false" title="Open this quote" style="text-decoration:none"><span class="conf '+(q.status==='draft'?'low':q.status==='submitted'?'med':'high')+'" style="cursor:pointer">'+q.status+'</span></a></td>'+
-      '<td><a href="#" onclick="openQuote(\''+q.id+'\');return false" style="color:var(--red);font-weight:700">open</a></td></tr>').join('')+
+      '<td><a href="#" onclick="openQuote(\''+q.id+'\');return false" style="color:var(--red);font-weight:700">open</a></td></tr>';}).join('')+
     '</tbody></table></div>';
 }
 
@@ -1144,7 +1149,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-14.4';
+const MARION_BUILD='2026-07-14.5';
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
