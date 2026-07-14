@@ -10,6 +10,18 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-14 · Open-quote preview fix + build stamp
+- quote.html: opening a saved quote (My Quotes → "open" or the status badge)
+  now renders the estimate before jumping to step 3 — previously it landed on
+  an empty "Generate a quote once the cart is reviewed" panel (gap in the
+  5e5a4bb change, which navigated to step 3 without calling buildQuote)
+- Build stamp added: hover the PHASE 3 badge or check the browser console
+  ("Marion quote.html build 2026-07-14.3"). If updates seem missing after a
+  push, hard-refresh (Ctrl+F5) — GitHub Pages caches for ~10 minutes
+- End-to-end test with a real customer .msg (PO 99491, 2× 375 O-rings +
+  2× 375 back-ups): cart, Type/kit drag, Multi Add, estimate all verified in
+  a live browser
+
 ## 2026-07-14 · Kit drag-OUT + DB restore after cross-session collision
 - quote.html: a kit component can now be dragged OUT of its kit — drop it
   anywhere in the cart panel off the table rows (panel shows a dashed blue

@@ -191,7 +191,7 @@ table.est td.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
 <div class="top">
   <div class="logo"></div>
   <h1>Marion<small>Quote Intake · Cross-Reference</small></h1>
-  <div class="phase">PHASE 3</div>
+  <div class="phase" id="buildStamp" title="">PHASE 3</div>
   <div class="auth" id="authBox">
     <span id="authForm" class="hidden"><input id="authEmail" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')sendLink()"><button class="abtn" onclick="sendLink()">Send link</button></span>
     <span id="authWho" class="who hidden"></span>
@@ -580,6 +580,7 @@ async function openQuote(id){
     type:(l.line_type==='kit')?'kit':'item',kitGroup:l.kit_group||null,price:l.unit_price}));
   orderKits();renderCust();renderCart();
   setSaveStatus('Opened saved quote ('+data.status+').','');
+  buildQuote(); // render the estimate document, then show it
   goStep(3); // open straight to the Quote / Estimate document — same form as the email
 }
 
@@ -1107,6 +1108,11 @@ function initKitDragOut(){
   });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
+
+/* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
+const MARION_BUILD='2026-07-14.3';
+console.log('Marion quote.html build',MARION_BUILD);
+(function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
 function nextKitGroup(){const used=CART.map(l=>l.kitGroup).filter(Boolean);return used.length?Math.max(...used)+1:1;}
 function dropOnRow(s,t){
