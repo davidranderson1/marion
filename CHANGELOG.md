@@ -10,6 +10,24 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-14 · Restore clobbered dfd15063: submit beside nav, My Quotes lock, email-card preview
+- INCIDENT (repo side this time): commit dfd15063 ("Quote step: on-screen
+  preview = same card as the submit email; Submit moved beside wizard nav;
+  Next: My Quotes locked until submitted") landed 9 minutes before the kit
+  commit 25238df, whose freshness check ran before dfd15063 was pushed —
+  so 25238df silently reverted it. Same lesson as the wizard clobber:
+  re-check blob SHAs at PUSH time, every time.
+- Re-applied on top of kits/Multi Add/drag-out (build 2026-07-14.4):
+  · Submit to Fluidseal removed from Cart + Quote toolbars; lives beside
+    the wizard Next button on step 3
+  · Next: My Quotes locked until submit succeeds ("Submit to Fluidseal
+    first"); ✓ Submitted state; any cart change re-arms Submit
+  · Step 3 preview auto-renders on entry (no Generate button) and is the
+    EXACT email card (cardHTML) Fluidseal receives — status pill shows
+    PREVIEW / draft / quote # after submit
+  · cardHTML: Type + Required shown in DOCUMENT REFERENCES
+  · Kit lines on the card: "KIT:" prefix on parents, ↳ on components
+
 ## 2026-07-14 · Open-quote preview fix + build stamp
 - quote.html: opening a saved quote (My Quotes → "open" or the status badge)
   now renders the estimate before jumping to step 3 — previously it landed on
