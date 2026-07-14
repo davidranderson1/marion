@@ -558,7 +558,7 @@ async function loadMyQuotes(){
   box.innerHTML='<div style="overflow-x:auto"><table class="cart"><thead><tr><th>Date</th><th>Account</th><th>PO</th><th>Lines</th><th>Status</th><th style="width:60px"></th></tr></thead><tbody>'+
     data.map(q=>'<tr><td>'+new Date(q.created_at).toLocaleDateString('en-CA')+'</td><td>'+esc(q.acct||'—')+
       '</td><td>'+esc(q.po||'')+'</td><td>'+q.quote_lines.length+
-      '</td><td><span class="conf '+(q.status==='draft'?'low':q.status==='submitted'?'med':'high')+'">'+q.status+'</span></td>'+
+      '</td><td><a href="#" onclick="openQuote(\''+q.id+'\');return false" title="Open this quote" style="text-decoration:none"><span class="conf '+(q.status==='draft'?'low':q.status==='submitted'?'med':'high')+'" style="cursor:pointer">'+q.status+'</span></a></td>'+
       '<td><a href="#" onclick="openQuote(\''+q.id+'\');return false" style="color:var(--red);font-weight:700">open</a></td></tr>').join('')+
     '</tbody></table></div>';
 }
@@ -578,7 +578,7 @@ async function openQuote(id){
     type:(l.line_type==='kit')?'kit':'item',kitGroup:l.kit_group||null,price:l.unit_price}));
   orderKits();renderCust();renderCart();
   setSaveStatus('Opened saved quote ('+data.status+').','');
-  goStep(2); // guided: review the opened quote in the Cart
+  goStep(3); // open straight to the Quote / Estimate document — same form as the email
 }
 
 /* ---------- Cross-reference knowledge (Phase 1 rules the agent applies) ---------- */
