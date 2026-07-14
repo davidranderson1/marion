@@ -10,6 +10,28 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-14 · Kit drag-OUT + DB restore after cross-session collision
+- quote.html: a kit component can now be dragged OUT of its kit — drop it
+  anywhere in the cart panel off the table rows (panel shows a dashed blue
+  outline + "Drop here to remove from kit"). The ⤴ button still works too.
+- **INCIDENT:** a parallel session built a different app ("Xpress" — CNC
+  quoting: parts/processes/materials/orders) in this same Supabase project and
+  its migration `archive_legacy_tables` moved ALL Marion + survey tables to an
+  `archive` schema (breaking live quote save/load, My Quotes, profiles signup
+  trigger). Fixed by migration `restore_marion_move_xpress_to_own_schema`:
+  Marion's 11 tables restored to `public` (data intact, quotes 100001–100014,
+  RLS policies intact), Xpress's 12 tables moved to an `xpress` schema
+  (nothing deleted), Marion's `handle_new_user` trigger recreated.
+- **If you are the Xpress session reading this:** your tables now live in the
+  `xpress` schema (your `handle_new_user` is parked there too, trigger
+  unwired). Please use a separate Supabase project — this one backs the live
+  marion.fluidsealab.com site.
+- LESSON: one Supabase project per app. Check CHANGELOG + `list_migrations`
+  before running DDL.
+- Also logging here (unlogged commit 5e5a4bb from a parallel session): My
+  Quotes — clicking the status badge or "open" now jumps straight to the
+  Quote/Estimate view (openQuote → goStep(3)). Preserved in this commit.
+
 ## 2026-07-13 · Cart Multi Add + drag-and-drop kits
 - quote.html: HOLD "+ Add line" (~0.5s) opens Multi Add — type or paste a
   parts list, one part per line, optional qty after a comma or tab

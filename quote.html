@@ -141,6 +141,8 @@ tr.kit-child td:first-child{border-left:3px solid #9ec9e8;}
 .typetag.item{background:#eee;color:#777;}
 .unnest{border:none;background:none;color:#4a90c2;cursor:pointer;font-size:13px;padding:0 3px;vertical-align:middle;}
 .unnest:hover{color:#000;}
+#cartPanel.kit-out{outline:2px dashed #4a90c2;outline-offset:-3px;}
+#cartPanel.kit-out .cart-tools::after{content:'Drop here to remove from kit';color:#4a90c2;font-size:12px;font-weight:700;}
 .conf{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
 .conf.high{background:#d6f5e0;color:var(--green);}
 .conf.med{background:#fdf0d0;color:var(--amber);}
@@ -1000,7 +1002,7 @@ function renderCart(){
     const child=!!(r.kitGroup&&r.type!=='kit'), isKit=r.type==='kit';
     const typeCell=isKit
       ? '<span class="drag-h" style="opacity:.35;cursor:default" title="Kits can\'t be nested inside another kit">⋮⋮</span><span class="typetag kit">Kit</span>'
-      : '<span class="drag-h" draggable="true" ondragstart="dragLine(event,'+i+')" title="Drag onto another line to nest into a kit">⋮⋮</span>'
+      : '<span class="drag-h" draggable="true" ondragstart="dragLine(event,'+i+')" title="'+(child?'Drag onto another line to move it — or drop off the rows to remove from kit':'Drag onto another line to nest into a kit')+'">⋮⋮</span>'
         +(child?'<button class="unnest" onclick="unnest('+i+')" title="Remove from kit">⤴</button>'
                :'<span class="typetag item">Item</span>');
     return `<tr class="${child?'kit-child':''}" ondragover="dragOver(event,${i})" ondragleave="dragLeave(event)" ondrop="dropLine(event,${i})">
@@ -1081,10 +1083,30 @@ function dragLine(e,i){DRAG_I=i;e.dataTransfer.effectAllowed='move';
 function dragOver(e,i){if(DRAG_I===null||DRAG_I===i)return;e.preventDefault();
   e.dataTransfer.dropEffect='move';e.currentTarget.classList.add('drop-hint');}
 function dragLeave(e){e.currentTarget.classList.remove('drop-hint');}
-function dropLine(e,i){e.preventDefault();e.currentTarget.classList.remove('drop-hint');
+function dropLine(e,i){e.preventDefault();e.stopPropagation();e.currentTarget.classList.remove('drop-hint');
   const s=DRAG_I;DRAG_I=null;if(s===null||s===i)return;dropOnRow(s,i);}
 document.addEventListener('dragend',()=>{DRAG_I=null;
+  const cp=document.getElementById('cartPanel');if(cp)cp.classList.remove('kit-out');
   document.querySelectorAll('tr.dragging,tr.drop-hint').forEach(t=>t.classList.remove('dragging','drop-hint'));});
+
+/* drop a kit component anywhere in the cart panel (off the rows) to un-nest it */
+function initKitDragOut(){
+  const p=document.getElementById('cartPanel');if(!p)return;
+  const draggingChild=()=>{const l=DRAG_I!==null?CART[DRAG_I]:null;return l&&l.kitGroup&&l.type!=='kit';};
+  const offRows=e=>!(e.target.closest&&e.target.closest('#cartBody tr'));
+  p.addEventListener('dragover',e=>{
+    if(!draggingChild())return;
+    if(offRows(e)){e.preventDefault();e.dataTransfer.dropEffect='move';p.classList.add('kit-out');}
+    else p.classList.remove('kit-out');
+  });
+  p.addEventListener('dragleave',e=>{if(e.target===p)p.classList.remove('kit-out');});
+  p.addEventListener('drop',e=>{
+    p.classList.remove('kit-out');
+    if(!draggingChild()||!offRows(e))return;
+    e.preventDefault();const i=DRAG_I;DRAG_I=null;unnest(i);
+  });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 function nextKitGroup(){const used=CART.map(l=>l.kitGroup).filter(Boolean);return used.length?Math.max(...used)+1:1;}
 function dropOnRow(s,t){
