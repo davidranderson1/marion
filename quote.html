@@ -668,14 +668,20 @@ async function stageMsg(f){
       ta.value=(ta.value.trim()?ta.value.trim()+'\n\n':'')+txt.trim();
     }
     // pull usable attachments out of the email (PDF POs, screenshots)
-    let staged=0;
+    // Outlook inline signature graphics (image001.jpg etc., small) carry no part
+    // info and destabilize the AI read — skip them.
+    let staged=0, skipped=0;
     (msg.attachments||[]).forEach(att=>{
       try{
         const name=(att.fileName||att.name||'attachment').toString();
         if(!/\.(pdf|png|jpe?g|webp|gif)$/i.test(name))return;
         const a=reader.getAttachment(att);
         if(!a||!a.content)return;
-        const b64=u8ToB64(a.content instanceof Uint8Array?a.content:new Uint8Array(a.content));
+        const bytes=a.content instanceof Uint8Array?a.content:new Uint8Array(a.content);
+        if(!/\.pdf$/i.test(name) && /^image\d+\.(png|jpe?g|webp|gif)$/i.test(name) && bytes.length<150000){
+          skipped++; return; // inline signature/logo image
+        }
+        const b64=u8ToB64(bytes);
         if(/\.pdf$/i.test(name)){PDFS.push({name,data:b64});staged++;}
         else{
           const mt=/\.png$/i.test(name)?'image/png':/\.gif$/i.test(name)?'image/gif':/\.webp$/i.test(name)?'image/webp':'image/jpeg';
@@ -685,7 +691,7 @@ async function stageMsg(f){
     });
     renderAttachments();
     if(!txt.trim()&&!staged)throw new Error('empty');
-    setStatus('Loaded '+esc(f.name)+(staged?' + '+staged+' attachment(s)':'')+' — hit Analyze.','');
+    setStatus('Loaded '+esc(f.name)+(staged?' + '+staged+' attachment(s)':'')+(skipped?' ('+skipped+' signature image(s) skipped)':'')+' — hit Analyze.','');
   }catch(e){console.warn('msg read failed',e);
     setStatus('Couldn’t read '+esc(f.name)+' — save it as .eml (or screenshot it) and drop that instead.','err');}
 }
@@ -861,7 +867,7 @@ Return ONLY valid JSON, no markdown, no prose:
   const res=await fetch(SB_URL+"/functions/v1/marion-chat",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+SESSION.access_token},
-    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:2000,temperature:0,
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:3900,temperature:0,
       system:sys,
       messages:[{role:"user",content:userContent}]})
   });
@@ -869,7 +875,18 @@ Return ONLY valid JSON, no markdown, no prose:
   const data=await res.json();
   let raw=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();
   raw=raw.replace(/```json|```/g,"").trim();
-  const j=JSON.parse(raw);
+  // be forgiving: take the outermost {...} in case the model wrapped the JSON in prose
+  const s=raw.indexOf("{"), e=raw.lastIndexOf("}");
+  if(s===-1||e===-1||e<=s){
+    console.warn("Marion AI: no JSON in response. stop_reason="+data.stop_reason+" raw:",raw.slice(0,600));
+    throw new Error(data.stop_reason==="max_tokens"?"response truncated":"no JSON in response");
+  }
+  let j;
+  try{ j=JSON.parse(raw.slice(s,e+1)); }
+  catch(pe){
+    console.warn("Marion AI: JSON parse failed. stop_reason="+data.stop_reason+" tail:",raw.slice(-500));
+    throw pe;
+  }
   if(!j.lines) throw new Error("no lines");
   return j;
 }
