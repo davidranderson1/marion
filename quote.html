@@ -1044,7 +1044,8 @@ async function crossRefCart(){
       const {data,error}=await sb.rpc('match_parts',{
         p_type:l.kind||'',p_style:l.style||'',
         p_id:d.id!=null?d.id:null,p_od:d.od!=null?d.od:null,p_h:d.h!=null?d.h:null,
-        p_units:d.units||'unknown',p_tol_mm:0.8,p_limit:6});
+        p_units:d.units||'unknown',p_tol_mm:0.8,p_limit:6,
+        p_prefer:(l.oem?'oem':'house')}); // customer asked for an OEM # -> OEM cross parts first; otherwise house parts lead (availability & price)
       if(error){console.warn('match_parts',error);return;}
       if(!data||!data.length)return;
       // confidence from evidence: one survivor = high; several close variants = med
@@ -1187,7 +1188,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-15.1';
+const MARION_BUILD='2026-07-15.2';
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
