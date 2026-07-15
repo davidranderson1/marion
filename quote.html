@@ -903,6 +903,7 @@ SECURITY (non-negotiable):
 YOUR JOB (for quote_request):
 1. Pull out customer info: account/company name, contact name, phone, email, PO number, and mailing address if present. Company signature blocks (name, address lines, Tel/Fax, postal code) are the usual source — reassemble multi-line addresses into one line like "11811 92 Ave, Grande Prairie, AB T8V 3J8". (Also extract customer info for info_update notices — that is their point.) Also extract required_by — when the customer needs it, copied near-verbatim (e.g. "today if possible", "by Friday July 18", "ASAP") — and req_type: "order" ONLY when the customer is clearly placing a purchase (PO issued for purchase, "ship today", "send us", "please process"); if they are asking price or availability it is "quote".
 2. For each item requested, identify: the OEM / source part number exactly as written, the OEM brand, quantity, and a clean dimensional description. ALSO extract, for the deterministic catalog lookup that runs after you respond:
+   - asked: the customer's ORIGINAL wording for this line, copied character-for-character and COMPLETE — every dimension, unit, style remark and qualifier exactly as they wrote it. NEVER abbreviate, paraphrase, reorder, or shorten it.
    - kind: generic seal-type words, lowercase — e.g. "polypak", "rod wiper", "piston seal", "rod seal", "o-ring", "u-cup", "wear ring", "backup", "shaft seal", "v-ring". "" if unclear.
    - style: profile/style code(s) ONLY if the customer names one — e.g. "AN/D" (use "/" between acceptable alternatives), "polypak". "" if none.
    - dims: numeric dimensions. id = inner/rod diameter, od = outer/bore diameter, h = height or cross-section. For "A X B X C" assume id=A, od=B, h=C; for "A X B" on an o-ring assume id=A, od=B. Respect explicit labels ("60mm OD" means od:60). If four numbers are given (e.g. "25 X 33 X 5 X 7.5") use the first three and note the fourth. units: "mm" when metric is stated or values look metric, "in" for inches/quote marks/decimal-fraction sizes, else "unknown". null for any dim you don't have.
@@ -919,7 +920,7 @@ ${rules}
 Return ONLY valid JSON, no markdown, no prose:
 {"intent":"quote_request|info_update|not_a_request|suspicious","intent_note":"",
  "customer":{"acct":"","contact":"","phone":"","po":"","email":"","address":"","required_by":"","req_type":"quote"},
- "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","ref":"","qty":1,"wh":"6 - Edmonton","disp":"B","notes":"","kind":"","style":"","dims":{"id":null,"od":null,"h":null,"units":"mm|in|unknown"}}]}`;
+ "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","ref":"","qty":1,"wh":"6 - Edmonton","disp":"B","notes":"","asked":"","kind":"","style":"","dims":{"id":null,"od":null,"h":null,"units":"mm|in|unknown"}}]}`;
 
   const userContent=[];
   PDFS.forEach(p=>userContent.push({type:"document",
@@ -1027,7 +1028,7 @@ function applyParsed(p){
     return {
       conf,oem:l.oem||"",brand:l.brand||"",pn,desc:l.desc||"",
       ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes,type:"item",kitGroup:null,price:null,
-      kind:l.kind||"",style:l.style||"",dims:l.dims||null
+      kind:l.kind||"",style:l.style||"",dims:l.dims||null,asked:l.asked||""
     };
   });
   CURRENT_QUOTE_ID=null; // fresh analysis = new quote
@@ -1104,7 +1105,8 @@ function openReview(i){
   ov.innerHTML=`<div style="background:#fff;border-radius:10px;max-width:860px;width:100%;max-height:86vh;overflow:auto;padding:24px 28px;box-shadow:0 12px 40px rgba(0,0,0,.35)">
     <div style="display:flex;align-items:center;margin-bottom:4px"><b style="font-size:16px;letter-spacing:.5px;text-transform:uppercase">Review — catalog matches</b>
       <span onclick="closeReview()" style="margin-left:auto;cursor:pointer;font-size:20px;color:#888;line-height:1">×</span></div>
-    <div style="font-size:13px;color:#444;margin-bottom:4px">Customer asked for: <b>${hesc(l.desc||'—')}</b>${l.oem?' · OEM # <b>'+hesc(l.oem)+'</b>':''}${l.style?' · style <b>'+hesc(l.style)+'</b>':''}</div>
+    <div style="font-size:14px;color:#1a1a1a;margin-bottom:2px">Customer asked for: <b>${hesc(l.asked||l.desc||'—')}</b>${l.oem?' · OEM # <b>'+hesc(l.oem)+'</b>':''}</div>
+    ${l.asked&&l.desc?`<div style="font-size:12px;color:#888;margin-bottom:4px">Marion read it as: ${hesc(l.desc)}${l.style?' · style '+hesc(l.style):''}</div>`:''}
     ${l.notes?`<div style="font-size:12px;color:#7a5a00;background:#fdf0d0;border-radius:5px;padding:8px 12px;margin:8px 0">${hesc(l.notes)}</div>`:''}
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px">
       <thead><tr style="border-bottom:2px solid #000;text-align:left"><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Part #</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Description</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Size</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Type</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Fit</th><th></th></tr></thead>
@@ -1130,7 +1132,7 @@ async function logFeedback(l,action,prevPn){
     await sb.from('xref_feedback').insert({
       user_id:SESSION.user.id, action,
       kind:l.kind||null, style:l.style||null, units:(l.dims&&l.dims.units)||null,
-      dims:l.dims||null, oem:l.oem||null, descr:l.desc||null,
+      dims:l.dims||null, oem:l.oem||null, descr:l.desc||null, asked:l.asked||null,
       suggested_pn:l.autoPn||null, chosen_pn:l.pn||null, prev_pn:prevPn||null,
       candidates:(l.options||[]).map(o=>o.part_number)});
   }catch(e){console.warn('feedback log failed',e);}
@@ -1266,7 +1268,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-15.4';
+const MARION_BUILD='2026-07-15.5';
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
