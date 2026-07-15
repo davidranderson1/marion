@@ -1036,8 +1036,13 @@ function applyParsed(p){
 async function crossRefCart(){
   const todo=CART.filter(l=>!l.pn&&(l.kind||(l.dims&&(l.dims.id||l.dims.od))));
   if(!todo.length)return;
+  // visible progress: spinner per pending line + live counter in the cart toolbar
+  todo.forEach(l=>l._xref=true);
+  renderCart();
+  let hits=0, done=0;
+  const prog=()=>setSaveStatus('<span class="spin"></span>Marion is searching the catalog… '+done+'/'+todo.length+' line(s)','work');
+  prog();
   setStatus('<span class="spin"></span>Cross-referencing '+todo.length+' line(s) against the catalog…','work');
-  let hits=0;
   await Promise.all(todo.map(async l=>{
     const d=l.dims||{};
     try{
@@ -1057,8 +1062,12 @@ async function crossRefCart(){
         ?'Catalog match (single candidate)'
         :'Catalog match — '+(data.length-1)+' close variant(s): '+alts+' — confirm');
     }catch(e){console.warn('match_parts failed',e);}
+    finally{l._xref=false;done++;prog();renderCart();} // numbers pop in as each line resolves
   }));
   renderCart();
+  setSaveStatus(hits
+    ?'✓ '+hits+' of '+todo.length+' line(s) cross-referenced from the catalog.'
+    :'No catalog matches found — staff cross-reference needed.',hits?'':'err');
   setStatus(hits
     ?'Done — '+CART.length+' line(s) staged, '+hits+' cross-referenced from the catalog. Review in the Cart.'
     :'Done — '+CART.length+' line(s) staged. No catalog matches found — staff cross-reference needed.','');
@@ -1089,7 +1098,7 @@ function renderCart(){
     <td style="white-space:nowrap">${typeCell}</td>
     <td><span class="conf ${r.conf}">${r.conf}</span></td>
     <td>${child?'<span class="kit-indent">↳</span>':''}<input value="${esc(r.oem)}" onchange="upd(${i},'oem',this.value)" placeholder="OEM part #" style="${child?'width:calc(100% - 18px)':''}"></td>
-    <td><input class="pn" value="${esc(r.pn)}" onchange="upd(${i},'pn',this.value)" placeholder="—"></td>
+    <td style="white-space:nowrap">${r._xref?'<span class="spin"></span>':''}<input class="pn" value="${esc(r.pn)}" onchange="upd(${i},'pn',this.value)" placeholder="${r._xref?'searching catalog…':'—'}" style="${r._xref?'display:inline-block;width:calc(100% - 22px)':''}"></td>
     <td><input value="${esc(r.desc)}" onchange="upd(${i},'desc',this.value)" placeholder="size"></td>
     <td><input value="${esc(r.ref||'')}" onchange="upd(${i},'ref',this.value)" placeholder="invoice / PO / comp. #"></td>
     <td><input type="number" min="1" value="${r.qty}" onchange="upd(${i},'qty',this.value)"></td>
@@ -1188,7 +1197,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-15.2';
+const MARION_BUILD='2026-07-15.3';
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
