@@ -147,6 +147,9 @@ tr.kit-child td:first-child{border-left:3px solid #9ec9e8;}
 .conf.high{background:#d6f5e0;color:var(--green);}
 .conf.med{background:#fdf0d0;color:var(--amber);}
 .conf.low{background:#fbdcdc;color:var(--red);}
+.rev-btn{border:1px solid var(--amber);background:#fdf0d0;color:#7a5a00;border-radius:10px;font-family:inherit;
+  font-weight:700;font-size:10px;letter-spacing:.3px;padding:3px 9px;cursor:pointer;white-space:nowrap;}
+.rev-btn:hover{background:var(--yellow);color:#000;border-color:#000;}
 .row-del{cursor:pointer;color:#bbb;font-weight:700;font-size:16px;text-align:center;}
 .row-del:hover{color:var(--red);}
 .flag{font-size:11px;color:var(--amber);padding:2px 6px;display:block;}
@@ -271,12 +274,13 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
     <div style="overflow-x:auto">
     <table class="cart"><thead><tr>
       <th style="width:30px"></th><th style="width:64px">Type</th><th style="width:55px">Conf.</th>
-      <th>OEM / Requested</th><th>Part Number (Fluidseal)</th><th>Description</th>
+      <th>Part Number (Fluidseal)</th><th>Description</th>
+      <th>OEM / Requested</th>
       <th style="width:110px">Reference</th>
       <th style="width:70px">Qty</th><th>Warehouse</th><th style="width:90px">Disposition</th>
-      <th style="width:110px">Notes</th>
+      <th style="width:86px">Review</th><th style="width:110px">Notes</th>
     </tr></thead><tbody id="cartBody">
-      <tr><td colspan="11" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>
+      <tr><td colspan="12" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>
     </tbody></table>
     </div>
     <div class="hint" id="cartFlags"></div>
@@ -492,6 +496,7 @@ async function saveQuote(status){
     : '✓ Draft saved.','');
   loadMyQuotes();
   if(status==='submitted')notifySubmit(id); // fire-and-forget email to Fluidseal
+  if(status==='submitted')CART.forEach(l=>{if(l.autoPn&&l.pn===l.autoPn)logFeedback(l,'confirmed_auto',null);}); // learning: unchanged auto-picks = implicit approval
 }
 
 /* ---------- Submit notification: order-card PDF + email via marion-notify ---------- */
@@ -1052,7 +1057,9 @@ async function crossRefCart(){
         p_units:d.units||'unknown',p_tol_mm:0.8,p_limit:6,
         p_prefer:(l.oem?'oem':'house')}); // customer asked for an OEM # -> OEM cross parts first; otherwise house parts lead (availability & price)
       if(error){console.warn('match_parts',error);return;}
+      l.options=data||[];               // kept for the Review modal
       if(!data||!data.length)return;
+      l.autoPn=data[0].part_number;     // remembered for the learning loop
       // confidence from evidence: one survivor = high; several close variants = med
       l.pn=data[0].part_number;
       l.conf=data.length===1?'high':'med';
@@ -1073,6 +1080,62 @@ async function crossRefCart(){
     :'Done — '+CART.length+' line(s) staged. No catalog matches found — staff cross-reference needed.','');
 }
 
+/* ---- Review modal: readable list of catalog matches; one click sets the
+        part number. Every pick/correction is logged to xref_feedback and
+        feeds back into match_parts ranking (parts chosen before rank higher). ---- */
+function openReview(i){
+  const l=CART[i]; if(!l)return;
+  if(document.getElementById('revOv'))return;
+  const fmt=v=>v!=null&&+v>0?(+v).toFixed(2).replace(/\.?0+$/,''):null;
+  const rows=(l.options||[]).map((o,k)=>{
+    const cur=o.part_number===l.pn;
+    const size=[fmt(o.id_mm),fmt(o.od_mm),fmt(o.height_mm)||fmt(o.cs_mm)].filter(Boolean).join(' × ');
+    const tags=[(o.native_units==='in'?'inch':'metric'),(o.is_oem_cross?'OEM cross':'house'),(o.style_match?'style ✓':null)].filter(Boolean).join(' · ');
+    return `<tr style="${cur?'background:#fffdf0;box-shadow:inset 3px 0 0 var(--yellow)':''}">
+      <td style="padding:9px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap">${hesc(o.part_number)}</td>
+      <td style="padding:9px 10px">${hesc(o.description||'')}</td>
+      <td style="padding:9px 10px;white-space:nowrap">${size?size+' mm':'—'}</td>
+      <td style="padding:9px 10px;font-size:11px;color:#666;white-space:nowrap">${tags}</td>
+      <td style="padding:9px 10px;white-space:nowrap;color:#888">±${(+o.score).toFixed(2)} mm</td>
+      <td style="padding:9px 10px;text-align:right">${cur?'<b style="color:var(--green);font-size:11px">✓ CURRENT</b>':`<button class="btn btn-go" style="padding:6px 14px;font-size:11px" onclick="pickOption(${i},${k})">Use this</button>`}</td>
+    </tr>`;}).join('');
+  const ov=document.createElement('div');ov.id='revOv';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(26,26,26,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML=`<div style="background:#fff;border-radius:10px;max-width:860px;width:100%;max-height:86vh;overflow:auto;padding:24px 28px;box-shadow:0 12px 40px rgba(0,0,0,.35)">
+    <div style="display:flex;align-items:center;margin-bottom:4px"><b style="font-size:16px;letter-spacing:.5px;text-transform:uppercase">Review — catalog matches</b>
+      <span onclick="closeReview()" style="margin-left:auto;cursor:pointer;font-size:20px;color:#888;line-height:1">×</span></div>
+    <div style="font-size:13px;color:#444;margin-bottom:4px">Customer asked for: <b>${hesc(l.desc||'—')}</b>${l.oem?' · OEM # <b>'+hesc(l.oem)+'</b>':''}${l.style?' · style <b>'+hesc(l.style)+'</b>':''}</div>
+    ${l.notes?`<div style="font-size:12px;color:#7a5a00;background:#fdf0d0;border-radius:5px;padding:8px 12px;margin:8px 0">${hesc(l.notes)}</div>`:''}
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px">
+      <thead><tr style="border-bottom:2px solid #000;text-align:left"><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Part #</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Description</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Size</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Type</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Fit</th><th></th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="6" style="padding:18px;color:#888">No catalog candidates for this line — type the part number directly in the cart, or leave it for staff.</td></tr>'}</tbody>
+    </table>
+    <div style="font-size:11px;color:#888;margin-top:14px">Your choice teaches Marion — every pick is recorded and used to rank future matches.</div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)closeReview();});
+}
+function closeReview(){const d=document.getElementById('revOv');if(d)d.remove();}
+function pickOption(i,k){
+  const l=CART[i];if(!l||!l.options||!l.options[k])return;
+  const o=l.options[k], prev=l.pn;
+  l.pn=o.part_number;l.conf='high';
+  l.notes='Confirmed by user'+(l.autoPn&&o.part_number!==l.autoPn?' — corrected from '+l.autoPn:'');
+  logFeedback(l,'picked_option',prev);
+  unlockSubmit();renderCart();closeReview();
+}
+async function logFeedback(l,action,prevPn){
+  try{
+    if(!SESSION)return;
+    await sb.from('xref_feedback').insert({
+      user_id:SESSION.user.id, action,
+      kind:l.kind||null, style:l.style||null, units:(l.dims&&l.dims.units)||null,
+      dims:l.dims||null, oem:l.oem||null, descr:l.desc||null,
+      suggested_pn:l.autoPn||null, chosen_pn:l.pn||null, prev_pn:prevPn||null,
+      candidates:(l.options||[]).map(o=>o.part_number)});
+  }catch(e){console.warn('feedback log failed',e);}
+}
+
 function renderCust(){
   document.getElementById('cAcct').textContent=CUST.acct||"—";
   document.getElementById('cContact').textContent=CUST.contact||"—";
@@ -1084,7 +1147,7 @@ function renderCust(){
 
 function renderCart(){
   const tb=document.getElementById('cartBody');
-  if(!CART.length){tb.innerHTML='<tr><td colspan="11" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>';
+  if(!CART.length){tb.innerHTML='<tr><td colspan="12" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>';
     document.getElementById('cartFlags').textContent='';return;}
   tb.innerHTML=CART.map((r,i)=>{
     const child=!!(r.kitGroup&&r.type!=='kit'), isKit=r.type==='kit';
@@ -1093,17 +1156,22 @@ function renderCart(){
       : '<span class="drag-h" draggable="true" ondragstart="dragLine(event,'+i+')" title="'+(child?'Drag onto another line to move it — or drop off the rows to remove from kit':'Drag onto another line to nest into a kit')+'">⋮⋮</span>'
         +(child?'<button class="unnest" onclick="unnest('+i+')" title="Remove from kit">⤴</button>'
                :'<span class="typetag item">Item</span>');
+    const nOpt=(r.options&&r.options.length)||0;
+    const revCell=r._xref?''
+      :(nOpt?`<button class="rev-btn" onclick="openReview(${i})" title="See the catalog matches and pick the right part">${nOpt} option${nOpt>1?'s':''} ▾</button>`
+      :(r.conf==='low'?'<span style="color:var(--red);font-weight:700;font-size:10px">STAFF</span>':'<span style="color:#bbb">—</span>'));
     return `<tr class="${child?'kit-child':''}" ondragover="dragOver(event,${i})" ondragleave="dragLeave(event)" ondrop="dropLine(event,${i})">
     <td class="row-del" onclick="delRow(${i})" title="remove">×</td>
     <td style="white-space:nowrap">${typeCell}</td>
     <td><span class="conf ${r.conf}">${r.conf}</span></td>
-    <td>${child?'<span class="kit-indent">↳</span>':''}<input value="${esc(r.oem)}" onchange="upd(${i},'oem',this.value)" placeholder="OEM part #" style="${child?'width:calc(100% - 18px)':''}"></td>
-    <td style="white-space:nowrap">${r._xref?'<span class="spin"></span>':''}<input class="pn" value="${esc(r.pn)}" onchange="upd(${i},'pn',this.value)" placeholder="${r._xref?'searching catalog…':'—'}" style="${r._xref?'display:inline-block;width:calc(100% - 22px)':''}"></td>
+    <td style="white-space:nowrap">${child?'<span class="kit-indent">↳</span>':''}${r._xref?'<span class="spin"></span>':''}<input class="pn" value="${esc(r.pn)}" onchange="upd(${i},'pn',this.value)" placeholder="${r._xref?'searching catalog…':'—'}" style="${(child||r._xref)?'display:inline-block;width:calc(100% - 22px)':''}"></td>
     <td><input value="${esc(r.desc)}" onchange="upd(${i},'desc',this.value)" placeholder="size"></td>
+    <td><input value="${esc(r.oem)}" onchange="upd(${i},'oem',this.value)" placeholder="OEM part #"></td>
     <td><input value="${esc(r.ref||'')}" onchange="upd(${i},'ref',this.value)" placeholder="invoice / PO / comp. #"></td>
     <td><input type="number" min="1" value="${r.qty}" onchange="upd(${i},'qty',this.value)"></td>
     <td><input value="${esc(r.wh)}" onchange="upd(${i},'wh',this.value)"></td>
     <td><select onchange="upd(${i},'disp',this.value)">${DISPOSITIONS.map(d=>`<option ${d===r.disp?'selected':''}>${d}</option>`).join('')}</select></td>
+    <td style="text-align:center">${revCell}</td>
     <td><input value="${esc(r.notes)}" onchange="upd(${i},'notes',this.value)" placeholder=""></td>
   </tr>`;}).join('');
   const flags=CART.filter(r=>r.notes||r.conf==='low');
@@ -1112,8 +1180,9 @@ function renderCart(){
     : '✓ All lines look clean. Generate the quote.';
 }
 function esc(s){return (s+'').replace(/"/g,'&quot;');}
-function upd(i,k,v){CART[i][k]=(k==='qty')?(parseInt(v)||1):v;
-  if(k==='pn'&&v) CART[i].conf='high'; unlockSubmit(); renderCart();}
+function upd(i,k,v){const old=CART[i][k];CART[i][k]=(k==='qty')?(parseInt(v)||1):v;
+  if(k==='pn'&&v){CART[i].conf='high';if(v!==old)logFeedback(CART[i],'manual_edit',old);} // learning: hand-typed part numbers are corrections
+  unlockSubmit(); renderCart();}
 function delRow(i){CART.splice(i,1);unlockSubmit();orderKits();renderCart();}
 function addRow(){CART.push({conf:'low',oem:'',brand:'',pn:'',desc:'',ref:'',qty:1,wh:CUST.wh,disp:'B',notes:'manual',type:'item',kitGroup:null,price:null});unlockSubmit();renderCart();}
 
@@ -1197,7 +1266,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-15.3';
+const MARION_BUILD='2026-07-15.4';
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
