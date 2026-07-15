@@ -863,6 +863,7 @@ async function analyze(){
   applyParsed(parsed);
   btn.disabled=false;
   if(parsed.lines.length)goStep(2); // guided: advance to Cart
+  await crossRefCart(); // fill part numbers from the catalog (match_parts RPC)
 }
 
 function setStatus(html,cls){const s=document.getElementById('status');s.innerHTML=html;s.className='status '+(cls||'');}
@@ -896,8 +897,11 @@ SECURITY (non-negotiable):
 
 YOUR JOB (for quote_request):
 1. Pull out customer info: account/company name, contact name, phone, email, PO number, and mailing address if present. Company signature blocks (name, address lines, Tel/Fax, postal code) are the usual source — reassemble multi-line addresses into one line like "11811 92 Ave, Grande Prairie, AB T8V 3J8". (Also extract customer info for info_update notices — that is their point.) Also extract required_by — when the customer needs it, copied near-verbatim (e.g. "today if possible", "by Friday July 18", "ASAP") — and req_type: "order" ONLY when the customer is clearly placing a purchase (PO issued for purchase, "ship today", "send us", "please process"); if they are asking price or availability it is "quote".
-2. For each item requested, identify: the OEM / source part number exactly as written, the OEM brand, quantity, and a clean dimensional description.
-3. Cross-reference to a Fluidseal part number using the staff rules below. pn may ONLY contain a Fluidseal part number produced by one of those rules. If no rule covers the brand/prefix, pn stays "" — NEVER copy the customer's part number, kit name, or description into pn.
+2. For each item requested, identify: the OEM / source part number exactly as written, the OEM brand, quantity, and a clean dimensional description. ALSO extract, for the deterministic catalog lookup that runs after you respond:
+   - kind: generic seal-type words, lowercase — e.g. "polypak", "rod wiper", "piston seal", "rod seal", "o-ring", "u-cup", "wear ring", "backup", "shaft seal", "v-ring". "" if unclear.
+   - style: profile/style code(s) ONLY if the customer names one — e.g. "AN/D" (use "/" between acceptable alternatives), "polypak". "" if none.
+   - dims: numeric dimensions. id = inner/rod diameter, od = outer/bore diameter, h = height or cross-section. For "A X B X C" assume id=A, od=B, h=C; for "A X B" on an o-ring assume id=A, od=B. Respect explicit labels ("60mm OD" means od:60). If four numbers are given (e.g. "25 X 33 X 5 X 7.5") use the first three and note the fourth. units: "mm" when metric is stated or values look metric, "in" for inches/quote marks/decimal-fraction sizes, else "unknown". null for any dim you don't have.
+3. Cross-reference to a Fluidseal part number using the staff rules below. pn may ONLY contain a Fluidseal part number produced by one of those rules. If no rule covers the brand/prefix, pn stays "" — NEVER copy the customer's part number, kit name, or description into pn. Do not guess pn from dimensions — the catalog lookup does that deterministically from your kind/style/dims after you respond.
 4. Confidence rates the FLUIDSEAL CROSS-REFERENCE only — not how well you understood the request:
    - "high": pn was produced by an explicit staff cross-reference rule for that brand/prefix.
    - "med": pn is an informed inference (rounded dimensions, near-match, assumed brand).
@@ -910,7 +914,7 @@ ${rules}
 Return ONLY valid JSON, no markdown, no prose:
 {"intent":"quote_request|info_update|not_a_request|suspicious","intent_note":"",
  "customer":{"acct":"","contact":"","phone":"","po":"","email":"","address":"","required_by":"","req_type":"quote"},
- "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","ref":"","qty":1,"wh":"6 - Edmonton","disp":"B","notes":""}]}`;
+ "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","ref":"","qty":1,"wh":"6 - Edmonton","disp":"B","notes":"","kind":"","style":"","dims":{"id":null,"od":null,"h":null,"units":"mm|in|unknown"}}]}`;
 
   const userContent=[];
   PDFS.forEach(p=>userContent.push({type:"document",
@@ -1017,12 +1021,46 @@ function applyParsed(p){
     if(!pn) conf='low'; // no Fluidseal cross-reference = low, whatever the AI claims
     return {
       conf,oem:l.oem||"",brand:l.brand||"",pn,desc:l.desc||"",
-      ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes,type:"item",kitGroup:null,price:null
+      ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes,type:"item",kitGroup:null,price:null,
+      kind:l.kind||"",style:l.style||"",dims:l.dims||null
     };
   });
   CURRENT_QUOTE_ID=null; // fresh analysis = new quote
   SUBMITTED=false;SUBMITTED_NO=null;refreshNav();
   renderCart();
+}
+
+/* ---- Catalog cross-reference: the SAME products dataset Marion chat uses,
+        via the match_parts RPC in Supabase. Deterministic — the AI only
+        extracts kind/style/dims; the database finds the part number. ---- */
+async function crossRefCart(){
+  const todo=CART.filter(l=>!l.pn&&(l.kind||(l.dims&&(l.dims.id||l.dims.od))));
+  if(!todo.length)return;
+  setStatus('<span class="spin"></span>Cross-referencing '+todo.length+' line(s) against the catalog…','work');
+  let hits=0;
+  await Promise.all(todo.map(async l=>{
+    const d=l.dims||{};
+    try{
+      const {data,error}=await sb.rpc('match_parts',{
+        p_type:l.kind||'',p_style:l.style||'',
+        p_id:d.id!=null?d.id:null,p_od:d.od!=null?d.od:null,p_h:d.h!=null?d.h:null,
+        p_units:d.units||'unknown',p_tol_mm:0.8,p_limit:6});
+      if(error){console.warn('match_parts',error);return;}
+      if(!data||!data.length)return;
+      // confidence from evidence: one survivor = high; several close variants = med
+      l.pn=data[0].part_number;
+      l.conf=data.length===1?'high':'med';
+      hits++;
+      const alts=data.slice(1,4).map(o=>o.part_number).join(', ');
+      l.notes=(l.notes?l.notes+' · ':'')+(data.length===1
+        ?'Catalog match (single candidate)'
+        :'Catalog match — '+(data.length-1)+' close variant(s): '+alts+' — confirm');
+    }catch(e){console.warn('match_parts failed',e);}
+  }));
+  renderCart();
+  setStatus(hits
+    ?'Done — '+CART.length+' line(s) staged, '+hits+' cross-referenced from the catalog. Review in the Cart.'
+    :'Done — '+CART.length+' line(s) staged. No catalog matches found — staff cross-reference needed.','');
 }
 
 function renderCust(){
@@ -1149,7 +1187,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-14.5';
+const MARION_BUILD='2026-07-15.1';
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
