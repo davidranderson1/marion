@@ -1437,20 +1437,23 @@ async function bomCheck(){
     if(changed)renderCart();
   }catch(e){console.warn('bom check',e);}
 }
-/* fill empty Description cells from the products catalog (e.g. manually added lines) */
+/* fill empty Description + Net Price cells from the products catalog (e.g. manually added lines) */
 async function fillDescriptions(){
-  const need=CART.filter(l=>l.pn&&(!l.desc||!(''+l.desc).trim())&&!l._descChk);
+  const noDesc=l=>(!l.desc||!(''+l.desc).trim()), noPrice=l=>(l.price==null||l.price==='');
+  const need=CART.filter(l=>l.pn&&!l._descChk&&(noDesc(l)||noPrice(l)));
   if(!need.length)return;
   need.forEach(l=>l._descChk=true); // one attempt per part number
   const pns=[...new Set(need.map(l=>l.pn))];
   try{
-    const {data,error}=await sb.from('products').select('part_number,description').in('part_number',pns);
-    if(error){console.warn('desc fill',error);return;}
-    const m={};(data||[]).forEach(p=>{if(p.description)m[p.part_number]=p.description;});
+    const {data,error}=await sb.from('products').select('part_number,description,list_price').in('part_number',pns);
+    if(error){console.warn('catalog fill',error);return;}
+    const m={};(data||[]).forEach(p=>{m[p.part_number]=p;});
     let changed=false;
-    CART.forEach(l=>{if(l.pn&&m[l.pn]&&(!l.desc||!(''+l.desc).trim())){l.desc=m[l.pn];changed=true;}});
-    if(changed)renderCart();
-  }catch(e){console.warn('desc fill',e);}
+    CART.forEach(l=>{const p=l.pn&&m[l.pn];if(!p)return;
+      if(noDesc(l)&&p.description){l.desc=p.description;changed=true;}
+      if(noPrice(l)&&p.list_price!=null){l.price=+p.list_price;changed=true;}});
+    if(changed){unlockSubmit();renderCart();}
+  }catch(e){console.warn('catalog fill',e);}
 }
 function esc(s){return (s+'').replace(/"/g,'&quot;');}
 function upd(i,k,v){const old=CART[i][k];CART[i][k]=(k==='qty')?(parseInt(v)||1):(k==='price')?((v===''||v==null)?null:(isNaN(parseFloat(v))?null:parseFloat(v))):v;
@@ -1544,7 +1547,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-16.3'; // + Net Price column (cart + BOM rows); discount matrix lands here later
+const MARION_BUILD='2026-07-16.4'; // + parent lines auto-fill Net Price from products.list_price
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
