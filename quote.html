@@ -140,6 +140,15 @@ tr.kit-child td:first-child{border-left:3px solid #9ec9e8;}
 .typetag.kit{background:#1a6bb5;color:#fff;}
 .typetag.item{background:#eee;color:#777;}
 .unnest{border:none;background:none;color:#4a90c2;cursor:pointer;font-size:13px;padding:0 3px;vertical-align:middle;}
+/* ---- BOM (catalog kit) expansion rows ---- */
+.bom-exp{cursor:pointer;border:1px solid #cfcfcd;background:#fff;border-radius:4px;font-size:11px;line-height:1;
+  padding:2px 6px;margin-right:4px;font-weight:800;color:#1a6bb5;vertical-align:middle;}
+.bom-exp:hover{background:#eef5fb;border-color:#9ec9e8;}
+tr.bom-row td{background:#fbf9f2 !important;color:#555;font-size:12px;border-bottom:1px dashed #e8e2d4;}
+tr.bom-row td:first-child{border-left:3px solid #e3b341;}
+.bom-pn{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#333;}
+.bom-dim{color:#999;}
+.bom-fee{font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px;background:#e3b341;color:#1a1a1a;letter-spacing:.5px;text-transform:uppercase;}
 .unnest:hover{color:#000;}
 #cartPanel.kit-out{outline:2px dashed #4a90c2;outline-offset:-3px;}
 #cartPanel.kit-out .cart-tools::after{content:'Drop here to remove from kit';color:#4a90c2;font-size:12px;font-weight:700;}
@@ -1330,11 +1339,14 @@ function renderCart(){
     document.getElementById('cartFlags').textContent='';return;}
   tb.innerHTML=CART.map((r,i)=>{
     const child=!!(r.kitGroup&&r.type!=='kit'), isKit=r.type==='kit';
+    const bomBtn=(r.pn&&r._bomKit)
+      ? `<button class="bom-exp" onclick="toggleBom(${i})" title="${r._bomOpen?'Hide':'Show'} catalog kit components (BOM)">${r._bomLoading?'…':(r._bomOpen?'−':'+')}</button>`
+      : '';
     const typeCell=isKit
-      ? '<span class="drag-h" style="opacity:.35;cursor:default" title="Kits can\'t be nested inside another kit">⋮⋮</span><span class="typetag kit">Kit</span>'
-      : '<span class="drag-h" draggable="true" ondragstart="dragLine(event,'+i+')" title="'+(child?'Drag onto another line to move it — or drop off the rows to remove from kit':'Drag onto another line to nest into a kit')+'">⋮⋮</span>'
+      ? '<span class="drag-h" style="opacity:.35;cursor:default" title="Kits can\'t be nested inside another kit">⋮⋮</span>'+bomBtn+'<span class="typetag kit">Kit</span>'
+      : '<span class="drag-h" draggable="true" ondragstart="dragLine(event,'+i+')" title="'+(child?'Drag onto another line to move it — or drop off the rows to remove from kit':'Drag onto another line to nest into a kit')+'">⋮⋮</span>'+bomBtn
         +(child?'<button class="unnest" onclick="unnest('+i+')" title="Remove from kit">⤴</button>'
-               :'<span class="typetag item">Item</span>');
+               :(r._bomKit?'<span class="typetag kit" title="This part is a kit in the catalog">Kit</span>':'<span class="typetag item">Item</span>'));
     const nOpt=(r.options&&r.options.length)||0;
     const revCell=r._xref?''
       :(nOpt?`<button class="rev-btn" onclick="openReview(${i})" title="See the catalog matches and pick the right part">${nOpt} option${nOpt>1?'s':''} ▾</button>`
@@ -1352,16 +1364,81 @@ function renderCart(){
     <td><select onchange="upd(${i},'disp',this.value)">${DISPOSITIONS.map(d=>`<option ${d===r.disp?'selected':''}>${d}</option>`).join('')}</select></td>
     <td style="text-align:center">${revCell}</td>
     <td><input value="${esc(r.notes)}" onchange="upd(${i},'notes',this.value)" placeholder=""></td>
-  </tr>`;}).join('');
+  </tr>`+renderBomRows(r,i);}).join('');
   const flags=CART.filter(r=>r.notes||r.conf==='low');
   document.getElementById('cartFlags').innerHTML = flags.length
     ? '<b>Needs review:</b> '+flags.map(r=>`${r.oem||r.pn||'line'} — ${r.notes||'low confidence'}`).join(' · ')
     : '✓ All lines look clean. Generate the quote.';
+  scheduleBomCheck(); // flag lines whose PN is a catalog kit (adds the + expander)
+}
+
+/* ---------- Catalog kit (BOM) expansion — explode_kit RPC, nested to 4 levels ---------- */
+const BOM_MAX_DEPTH=4;
+function fmtBomQty(q){const n=parseFloat(q);return isNaN(n)?'':(n%1?n.toFixed(2):String(n));}
+function renderBomRows(r,i){
+  if(!r._bomOpen||!r._bom||!r._bom.rows||!r._bom.rows.length)return '';
+  const exp=r._bomExp||{};
+  return r._bom.rows.map(b=>{
+    const path=b.path||[], key=path.join('»');
+    // a row is visible only if every ancestor kit on its path is expanded
+    for(let k=2;k<path.length;k++){if(!exp[path.slice(0,k).join('»')])return '';}
+    const canExpand=b.is_subkit&&b.depth<BOM_MAX_DEPTH;
+    const expander=canExpand
+      ? `<button class="bom-exp" data-k="${esc(key)}" onclick="toggleBomNode(${i},this.dataset.k)" title="${exp[key]?'Hide':'Show'} sub-kit components">${exp[key]?'−':'+'}</button>`
+      : '';
+    const tag=b.is_fee?'<span class="bom-fee">Fee</span>'
+      :(b.is_subkit?'<span class="typetag kit">Kit</span>':'<span class="typetag item">Item</span>');
+    const price=(b.unit_list_price!=null&&!b.is_fee)?('$'+(+b.unit_list_price).toFixed(2)):(b.unit_list_price!=null?('$'+(+b.unit_list_price).toFixed(2)):'—');
+    return `<tr class="bom-row">
+    <td></td>
+    <td style="white-space:nowrap;padding-left:${6+(b.depth-1)*16}px">${expander}${tag}</td>
+    <td></td>
+    <td style="white-space:nowrap;padding-left:${(b.depth-1)*16}px"><span class="kit-indent">↳</span><span class="bom-pn">${esc(b.component_part_number)}</span></td>
+    <td><span class="bom-dim">${esc(b.component_description||'')}</span></td>
+    <td></td><td></td>
+    <td style="text-align:center">${fmtBomQty(b.extended_quantity)}</td>
+    <td></td><td></td>
+    <td style="text-align:center;font-size:11px;color:#777">${price}</td>
+    <td><span class="bom-dim" style="font-size:11px">${b.required===false?'optional':''}</span></td>
+  </tr>`;}).join('');
+}
+async function toggleBom(i){
+  const l=CART[i];if(!l||!l.pn)return;
+  if(l._bomOpen){l._bomOpen=false;renderCart();return;}
+  if(!l._bom||l._bom.pn!==l.pn){
+    l._bomLoading=true;renderCart();
+    try{
+      const {data,error}=await sb.rpc('explode_kit',{p_pn:l.pn,p_max_depth:BOM_MAX_DEPTH});
+      l._bom={pn:l.pn,rows:(error?[]:(data||[]))};
+      l._bomExp={};
+      if(error)console.warn('explode_kit',error);
+    }finally{l._bomLoading=false;}
+  }
+  if(!l._bom.rows.length){l._bomKit=false;l._bomOpen=false;}
+  else l._bomOpen=true;
+  renderCart();
+}
+function toggleBomNode(i,key){const l=CART[i];if(!l)return;l._bomExp=l._bomExp||{};l._bomExp[key]=!l._bomExp[key];renderCart();}
+let BOM_CHK=null;
+function scheduleBomCheck(){clearTimeout(BOM_CHK);BOM_CHK=setTimeout(bomCheck,350);}
+async function bomCheck(){
+  const pns=[...new Set(CART.filter(l=>l.pn&&l._bomKit===undefined).map(l=>l.pn))];
+  if(!pns.length)return;
+  CART.forEach(l=>{if(l.pn&&l._bomKit===undefined)l._bomKit=null;}) // mark in-flight so we don't loop
+  try{
+    const {data,error}=await sb.from('bom_lines').select('parent_part_number').in('parent_part_number',pns);
+    if(error){console.warn('bom check',error);return;}
+    const kits=new Set((data||[]).map(x=>x.parent_part_number));
+    let changed=false;
+    CART.forEach(l=>{if(l.pn&&pns.includes(l.pn)){const v=kits.has(l.pn);if(l._bomKit!==v){l._bomKit=v;changed=true;}}});
+    if(changed)renderCart();
+  }catch(e){console.warn('bom check',e);}
 }
 function esc(s){return (s+'').replace(/"/g,'&quot;');}
 function upd(i,k,v){const old=CART[i][k];CART[i][k]=(k==='qty')?(parseInt(v)||1):v;
   if(k==='pn'&&v){CART[i].conf='high';if(v!==old)logFeedback(CART[i],'manual_edit',old);
     CART[i].url=null; // re-resolve the website link for the new number
+    CART[i]._bomKit=undefined;CART[i]._bom=null;CART[i]._bomOpen=false; // re-check BOM for the new number
     sb.rpc('link_for_part',{p_pn:v}).then(({data})=>{if(CART[i]&&CART[i].pn===v){CART[i].url=data||null;renderCart();}});
   } // learning: hand-typed part numbers are corrections
   unlockSubmit(); renderCart();}
@@ -1449,7 +1526,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-15.9';
+const MARION_BUILD='2026-07-16.1'; // + catalog kit (BOM) expansion in cart
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
