@@ -845,6 +845,7 @@ async function analyze(){
     applyParsed(parsed);
     btn.disabled=false;
     if(parsed.lines&&parsed.lines.length)goStep(2); // guided: advance to Cart
+    await crossRefCart(); // catalog verification still runs on locally parsed lines
     return;
   }
   // intent gate: only quote requests build a cart — results render in the banner
@@ -982,13 +983,18 @@ function localParse(text){
     const q=ln.match(/QTY[:\s]+(\d+)/i); if(q){curQty=parseInt(q[1]);continue;}
     const dim=ln.match(/(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:\.\d+)?)/);
     if(dim){curDims=`${Math.round(+dim[1])} X ${Math.round(+dim[2])} X ${Math.round(+dim[3])}`;}
-    // John Deere OEM ref: letter prefix (T, AT, R, TH, H, U, RE, AH, YZ, FYB...) or "4S"-style + digits
-    const deere=ln.match(/\b([A-Z]{1,3}\d{4,8}|\d[A-Z]\d{4,8})\b/i);
-    if(deere){
-      const oem=deere[1].toUpperCase();
+    // OEM ref classifier — patterns mined from the cross-reference catalog:
+    // digit+letter+4-5 digits (3J9133) = Caterpillar; known letter prefixes = John Deere;
+    // anything else alphanumeric = unknown brand (the catalog verification pass decides).
+    const m=ln.match(/\b(\d[A-Z]\d{4,5}|[A-Z]{1,3}\d{4,8})\b/i);
+    if(m){
+      const oem=m[1].toUpperCase();
       const refm=ln.match(/as\s+per\s+([A-Za-z0-9\-]+)/i);
-      out.lines.push({conf:curDims?"high":"med",oem,brand:"John Deere",
-        pn:"RJD-"+oem,desc:curDims||"",ref:refm?refm[1]:"",qty:curQty,wh:"6 - Edmonton",disp:"B",
+      const isCat=/^\d[A-Z]\d{4,5}$/.test(oem);
+      const isJd=/^(AT|AHC|AH|AR|RE|FR|FYA|TD|TH|T|H|U|R)\d{4,8}$/.test(oem);
+      out.lines.push({conf:(curDims&&(isCat||isJd))?"high":"med",oem,
+        brand:isCat?"Caterpillar":(isJd?"John Deere":""),
+        pn:isCat?("RCAT-"+oem):(isJd?("RJD-"+oem):""),desc:curDims||"",ref:refm?refm[1]:"",qty:curQty,wh:"6 - Edmonton",disp:"B",
         notes:curDims?"":"Confirm size — no dimensions found"});
       curDims="";
     }
@@ -1045,7 +1051,7 @@ function applyParsed(p){
         via the match_parts RPC in Supabase. Deterministic — the AI only
         extracts kind/style/dims; the database finds the part number. ---- */
 async function crossRefCart(){
-  const todo=CART.filter(l=>!l.pn&&(l.kind||(l.dims&&(l.dims.id||l.dims.od))));
+  const todo=CART.filter(l=>l.oem||(!l.pn&&(l.kind||(l.dims&&(l.dims.id||l.dims.od))))||(l.pn&&!l.url));
   if(!todo.length)return;
   // visible progress: spinner per pending line + live counter in the cart toolbar
   todo.forEach(l=>l._xref=true);
@@ -1057,6 +1063,35 @@ async function crossRefCart(){
   await Promise.all(todo.map(async l=>{
     const d=l.dims||{};
     try{
+      // 1) OEM number? The catalog decides the brand: search the R<VENDOR>- namespace directly.
+      if(l.oem){
+        const {data:xr}=await sb.rpc('find_cross_refs',{p_oem:l.oem});
+        if(xr&&xr.length){
+          const prev=l.pn;
+          l.options=xr;l.autoPn=xr[0].part_number;l.url=xr[0].url||null;
+          l.pn=xr[0].part_number;l.conf=xr.length===1?'high':'med';
+          let n='OEM cross-reference verified in catalog';
+          if(prev&&prev!==l.pn)n+=' — CORRECTED from '+prev;
+          if(xr.length>1)n+=' — '+(xr.length-1)+' variant(s): '+xr.slice(1,4).map(o=>o.part_number).join(', ');
+          l.notes=(l.notes?l.notes+' · ':'')+n;
+          hits++;return;
+        }
+        if(l.pn){ // rule-built guess with no catalog cross-match: verify the pn itself
+          const {data:pi}=await sb.rpc('part_info',{p_pn:l.pn});
+          const info=pi&&pi[0];
+          if(info&&info.found){l.url=info.url||null;hits++;}
+          else{l.conf='low';l.notes=(l.notes?l.notes+' · ':'')+'⚠ '+l.pn+' NOT in catalog — brand may be wrong, staff confirm';}
+          return;
+        }
+        // no pn yet: fall through to the dimensional search below
+      }
+      if(l.pn){ // pn set some other way (saved quote, manual) — just resolve its link
+        const {data:pi}=await sb.rpc('part_info',{p_pn:l.pn});
+        const info=pi&&pi[0];
+        if(info&&info.found)l.url=info.url||null;
+        return;
+      }
+      // 2) dimensional search (unchanged)
       const {data,error}=await sb.rpc('match_parts',{
         p_type:l.kind||'',p_style:l.style||'',
         p_id:d.id!=null?d.id:null,p_od:d.od!=null?d.od:null,p_h:d.h!=null?d.h:null,
@@ -1113,11 +1148,12 @@ function openReview(i){
     const profChip=l.style
       ? `<span class="mchip ${o.style_match?'ok':'bad'}">Profile ${hesc(o.profile||'?')} ${o.style_match?'✓':'✗ asked '+hesc(l.style)}</span>`
       : (o.profile?`<span class="mchip na">Profile ${hesc(o.profile)}</span>`:'');
-    const chips=chip('ID',d0.id!=null?+d0.id:null,mmOf(o.id_mm,o.id_in))
+    const chips=(o.id_mm!=null||o.od_mm!=null||o.id_in!=null)?(chip('ID',d0.id!=null?+d0.id:null,mmOf(o.id_mm,o.id_in))
       +chip('OD',d0.od!=null?+d0.od:null,mmOf(o.od_mm,o.od_in))
       +chip('Height',wantH,oh)
       +profChip
-      +`<span class="mchip na">${o.native_units==='in'?'inch':'metric'} · ${o.is_oem_cross?'OEM cross':'house'}</span>`;
+      +`<span class="mchip na">${o.native_units==='in'?'inch':'metric'} · ${o.is_oem_cross?'OEM cross':'house'}</span>`)
+      :`<span class="mchip ok">OEM # match ✓</span>`;
     return `<tr style="${cur?'background:#fffdf0;box-shadow:inset 3px 0 0 var(--yellow)':''}">
       <td style="padding:9px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap">${o.url?`<a href="${esc(o.url)}" target="_blank" rel="noopener" title="View on sealsonline.com" style="color:inherit">${hesc(o.part_number)} <span style="color:var(--amber)">↗</span></a>`:hesc(o.part_number)}</td>
       <td style="padding:9px 10px;white-space:nowrap">${hesc(o.description||'')}${size?'<br><span style="color:#888;font-size:11px">'+size+' mm</span>':''}</td>
@@ -1376,6 +1412,7 @@ function resolveMultiAdd(){
       desc:'',ref:'',qty,wh:CUST.wh||'6 - Edmonton',disp:'B',notes:'multi-add',type:'item',kitGroup:null,price:null});
   });
   closeMultiAdd();unlockSubmit();renderCart();
+  crossRefCart(); // resolve OEM numbers / links for the pasted list
 }
 
 /* ---------- Kits: drag a line's ⋮⋮ handle onto another line to nest ---------- */
@@ -1412,7 +1449,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-15.8';
+const MARION_BUILD='2026-07-15.9';
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
