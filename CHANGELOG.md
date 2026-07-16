@@ -10,6 +10,19 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-16 · FluidSeal brand theme on quote.html (build 2026-07-16.7)
+- quote.html re-skinned per the canonical FLUIDSEAL-THEME.md (OneDrive ClaudeAgent folder):
+  §2 brand token block (#231F20 / #FFDD00 / greys, legacy var aliases kept), Helvetica Neue
+  body + Arial Narrow condensed H1, Google Fonts link removed, JetBrains Mono → Consolas.
+- Header: brand black with 3px yellow rule; Marion dot mark on a white pill (Marion keeps its
+  own identity per theme §7); yellow PHASE badge + yellow auth CTA (black text, 800).
+- Panels/stepper get a 3px yellow top rule; cart header bar brand black; functional red now
+  #c8222a; greens/greys mapped to brand tokens.
+- NOT touched: the sealsonline-format quote card (cardHTML — matches email/PDF/staff copies)
+  and the kit-blue drag/type accents (functional). account.html / quotes.html / index.html
+  unchanged — same treatment available on request.
+- FLUIDSEAL-THEME.md §7/§8 updated.
+
 ## 2026-07-16 · Description header aligned with line text (build 2026-07-16.6)
 - Quote-card line-items table: the Description column header now starts where the
   text starts (62px left pad) instead of sitting over the 44px product thumbnail.
