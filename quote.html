@@ -1106,7 +1106,20 @@ function openReview(i){
     <div style="display:flex;align-items:center;margin-bottom:4px"><b style="font-size:16px;letter-spacing:.5px;text-transform:uppercase">Review — catalog matches</b>
       <span onclick="closeReview()" style="margin-left:auto;cursor:pointer;font-size:20px;color:#888;line-height:1">×</span></div>
     <div style="font-size:14px;color:#1a1a1a;margin-bottom:2px">Customer asked for: <b>${hesc(l.asked||l.desc||'—')}</b>${l.oem?' · OEM # <b>'+hesc(l.oem)+'</b>':''}</div>
-    ${l.asked&&l.desc?`<div style="font-size:12px;color:#888;margin-bottom:4px">Marion read it as: ${hesc(l.desc)}${l.style?' · style '+hesc(l.style):''}</div>`:''}
+    ${(()=>{ // labeled search terms — shown ONLY when they add something beyond the ask (e.g. a derived dimension)
+      const d2=l.dims||{}, u2=(d2.units&&d2.units!=='unknown')?' '+d2.units:'';
+      const dd=[];
+      if(d2.id!=null)dd.push('ID '+d2.id+u2);
+      if(d2.od!=null)dd.push('OD '+d2.od+u2);
+      if(d2.h!=null)dd.push('height/CS '+d2.h+u2);
+      const interp=[l.kind||'',l.style?('style '+l.style):'',dd.join(' × ')].filter(Boolean).join(' — ');
+      const nums=s=>((s||'').match(/\d+(?:\.\d+)?/g)||[]).map(Number);
+      const askN=nums(l.asked), dimN=[d2.id,d2.od,d2.h].filter(v=>v!=null).map(Number);
+      let j=0; for(const n of askN){if(j<dimN.length&&n===dimN[j])j++;}
+      const kindHit=!l.kind||l.kind.toLowerCase().split(' ').some(w=>w&&(l.asked||'').toLowerCase().includes(w));
+      const same=!!l.asked&&j>=dimN.length&&kindHit; // every searched number came straight from the ask, in order
+      return (interp&&!same)?`<div style="font-size:12px;color:#888;margin-bottom:4px">Marion searched the catalog for: ${hesc(interp)}</div>`:'';
+    })()}
     ${l.notes?`<div style="font-size:12px;color:#7a5a00;background:#fdf0d0;border-radius:5px;padding:8px 12px;margin:8px 0">${hesc(l.notes)}</div>`:''}
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px">
       <thead><tr style="border-bottom:2px solid #000;text-align:left"><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Part #</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Description</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Size</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Type</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Fit</th><th></th></tr></thead>
@@ -1268,7 +1281,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-15.5';
+const MARION_BUILD='2026-07-15.6';
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
