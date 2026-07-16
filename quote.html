@@ -150,6 +150,11 @@ tr.kit-child td:first-child{border-left:3px solid #9ec9e8;}
 .rev-btn{border:1px solid var(--amber);background:#fdf0d0;color:#7a5a00;border-radius:10px;font-family:inherit;
   font-weight:700;font-size:10px;letter-spacing:.3px;padding:3px 9px;cursor:pointer;white-space:nowrap;}
 .rev-btn:hover{background:var(--yellow);color:#000;border-color:#000;}
+.mchip{display:inline-block;font-size:10px;font-weight:700;border-radius:9px;padding:2px 7px;margin:1px 3px 1px 0;white-space:nowrap;}
+.mchip.ok{background:#d6f5e0;color:var(--green);}
+.mchip.bad{background:#fbdcdc;color:var(--red);}
+.mchip.warn{background:#fdf0d0;color:#7a5a00;}
+.mchip.na{background:#eef0f3;color:#999;}
 .row-del{cursor:pointer;color:#bbb;font-weight:700;font-size:16px;text-align:center;}
 .row-del:hover{color:var(--red);}
 .flag{font-size:11px;color:var(--amber);padding:2px 6px;display:block;}
@@ -906,7 +911,7 @@ YOUR JOB (for quote_request):
    - asked: the customer's ORIGINAL wording for this line, copied character-for-character and COMPLETE — every dimension, unit, style remark and qualifier exactly as they wrote it. NEVER abbreviate, paraphrase, reorder, or shorten it.
    - kind: generic seal-type words, lowercase — e.g. "polypak", "rod wiper", "piston seal", "rod seal", "o-ring", "u-cup", "wear ring", "backup", "shaft seal", "v-ring". "" if unclear.
    - style: profile/style code(s) ONLY if the customer names one — e.g. "AN/D" (use "/" between acceptable alternatives), "polypak". "" if none.
-   - dims: numeric dimensions. id = inner/rod diameter, od = outer/bore diameter, h = height or cross-section. For "A X B X C" assume id=A, od=B, h=C; for "A X B" on an o-ring assume id=A, od=B. Respect explicit labels ("60mm OD" means od:60). If four numbers are given (e.g. "25 X 33 X 5 X 7.5") use the first three and note the fourth. units: "mm" when metric is stated or values look metric, "in" for inches/quote marks/decimal-fraction sizes, else "unknown". null for any dim you don't have.
+   - dims: numeric dimensions. id = inner/rod diameter, od = outer/bore diameter, h = height or cross-section. For "A X B X C" assume id=A, od=B, h=C; for "A X B" on an o-ring assume id=A, od=B. Respect explicit labels ("60mm OD" means od:60). If four numbers are given (e.g. "25 X 33 X 5 X 7.5") use the first three and note the fourth. units: "mm" when metric is stated or values look metric, "in" for inches/quote marks/decimal-fraction sizes, else "unknown". null for any dim you don't have. stated_h = a height the customer stated that is NOT used for filtering (see piston/rod seal rule) — keep it so mismatches can be shown.
 3. Cross-reference to a Fluidseal part number using the staff rules below. pn may ONLY contain a Fluidseal part number produced by one of those rules. If no rule covers the brand/prefix, pn stays "" — NEVER copy the customer's part number, kit name, or description into pn. Do not guess pn from dimensions — the catalog lookup does that deterministically from your kind/style/dims after you respond.
 4. Confidence rates the FLUIDSEAL CROSS-REFERENCE only — not how well you understood the request:
    - "high": pn was produced by an explicit staff cross-reference rule for that brand/prefix.
@@ -920,7 +925,7 @@ ${rules}
 Return ONLY valid JSON, no markdown, no prose:
 {"intent":"quote_request|info_update|not_a_request|suspicious","intent_note":"",
  "customer":{"acct":"","contact":"","phone":"","po":"","email":"","address":"","required_by":"","req_type":"quote"},
- "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","ref":"","qty":1,"wh":"6 - Edmonton","disp":"B","notes":"","asked":"","kind":"","style":"","dims":{"id":null,"od":null,"h":null,"units":"mm|in|unknown"}}]}`;
+ "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","ref":"","qty":1,"wh":"6 - Edmonton","disp":"B","notes":"","asked":"","kind":"","style":"","dims":{"id":null,"od":null,"h":null,"stated_h":null,"units":"mm|in|unknown"}}]}`;
 
   const userContent=[];
   PDFS.forEach(p=>userContent.push({type:"document",
@@ -1088,16 +1093,34 @@ function openReview(i){
   const l=CART[i]; if(!l)return;
   if(document.getElementById('revOv'))return;
   const fmt=v=>v!=null&&+v>0?(+v).toFixed(2).replace(/\.?0+$/,''):null;
+  // per-candidate match chips: exactly WHAT matches the ask and what does not
+  const d0=l.dims||{};
+  const wantH=(d0.h!=null)?+d0.h:((d0.stated_h!=null)?+d0.stated_h:null);
+  const mmOf=(vmm,vin)=>(vmm!=null&&+vmm>0)?+vmm:((vin!=null&&+vin>0)?+vin*25.4:null);
+  const chip=(name,ask,got)=>{
+    if(ask==null)return `<span class="mchip na">${name} —</span>`;
+    if(got==null)return `<span class="mchip warn">${name}? no data</span>`;
+    const diff=Math.abs(got-ask);
+    if(diff<=0.15)return `<span class="mchip ok">${name} ✓</span>`;
+    if(diff<=0.8)return `<span class="mchip warn">${name} ~${fmt(got)} (asked ${fmt(ask)})</span>`;
+    return `<span class="mchip bad">${name} ✗ ${fmt(got)} ≠ ${fmt(ask)} asked</span>`;
+  };
   const rows=(l.options||[]).map((o,k)=>{
     const cur=o.part_number===l.pn;
     const size=[fmt(o.id_mm),fmt(o.od_mm),fmt(o.height_mm)||fmt(o.cs_mm)].filter(Boolean).join(' × ');
-    const tags=[(o.native_units==='in'?'inch':'metric'),(o.is_oem_cross?'OEM cross':'house'),(o.style_match?'style ✓':null)].filter(Boolean).join(' · ');
+    const oh=(o.height_mm&&+o.height_mm>0)?+o.height_mm:((o.cs_mm&&+o.cs_mm>0)?+o.cs_mm:null);
+    const profChip=l.style
+      ? `<span class="mchip ${o.style_match?'ok':'bad'}">Profile ${hesc(o.profile||'?')} ${o.style_match?'✓':'✗ asked '+hesc(l.style)}</span>`
+      : (o.profile?`<span class="mchip na">Profile ${hesc(o.profile)}</span>`:'');
+    const chips=chip('ID',d0.id!=null?+d0.id:null,mmOf(o.id_mm,o.id_in))
+      +chip('OD',d0.od!=null?+d0.od:null,mmOf(o.od_mm,o.od_in))
+      +chip('Height',wantH,oh)
+      +profChip
+      +`<span class="mchip na">${o.native_units==='in'?'inch':'metric'} · ${o.is_oem_cross?'OEM cross':'house'}</span>`;
     return `<tr style="${cur?'background:#fffdf0;box-shadow:inset 3px 0 0 var(--yellow)':''}">
       <td style="padding:9px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap">${hesc(o.part_number)}</td>
-      <td style="padding:9px 10px">${hesc(o.description||'')}</td>
-      <td style="padding:9px 10px;white-space:nowrap">${size?size+' mm':'—'}</td>
-      <td style="padding:9px 10px;font-size:11px;color:#666;white-space:nowrap">${tags}</td>
-      <td style="padding:9px 10px;white-space:nowrap;color:#888">±${(+o.score).toFixed(2)} mm</td>
+      <td style="padding:9px 10px;white-space:nowrap">${hesc(o.description||'')}${size?'<br><span style="color:#888;font-size:11px">'+size+' mm</span>':''}</td>
+      <td style="padding:9px 10px;line-height:1.9">${chips}</td>
       <td style="padding:9px 10px;text-align:right">${cur?'<b style="color:var(--green);font-size:11px">✓ CURRENT</b>':`<button class="btn btn-go" style="padding:6px 14px;font-size:11px" onclick="pickOption(${i},${k})">Use this</button>`}</td>
     </tr>`;}).join('');
   const ov=document.createElement('div');ov.id='revOv';
@@ -1122,10 +1145,13 @@ function openReview(i){
     })()}
     ${l.notes?`<div style="font-size:12px;color:#7a5a00;background:#fdf0d0;border-radius:5px;padding:8px 12px;margin:8px 0">${hesc(l.notes)}</div>`:''}
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px">
-      <thead><tr style="border-bottom:2px solid #000;text-align:left"><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Part #</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Description</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Size</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Type</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Fit</th><th></th></tr></thead>
-      <tbody>${rows||'<tr><td colspan="6" style="padding:18px;color:#888">No catalog candidates for this line — type the part number directly in the cart, or leave it for staff.</td></tr>'}</tbody>
+      <thead><tr style="border-bottom:2px solid #000;text-align:left"><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Part #</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Description</th><th style="padding:6px 10px;font-size:10px;text-transform:uppercase">Match vs. request</th><th></th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="4" style="padding:18px;color:#888">No catalog candidates for this line — create the part below, type a number directly in the cart, or leave it for staff.</td></tr>'}</tbody>
     </table>
-    <div style="font-size:11px;color:#888;margin-top:14px">Your choice teaches Marion — every pick is recorded and used to rank future matches.</div>
+    <div style="display:flex;align-items:center;margin-top:14px">
+      <span style="font-size:11px;color:#888">Your choice teaches Marion — every pick is recorded and used to rank future matches.</span>
+      <button class="btn btn-ghost" style="margin-left:auto;padding:8px 16px;font-size:11px" onclick="openCreatePart(${i})" title="None of these fit? Propose a new house part — Marion pre-fills what it knows">+ Create part #</button>
+    </div>
   </div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{if(e.target===ov)closeReview();});
@@ -1138,6 +1164,107 @@ function pickOption(i,k){
   l.notes='Confirmed by user'+(l.autoPn&&o.part_number!==l.autoPn?' — corrected from '+l.autoPn:'');
   logFeedback(l,'picked_option',prev);
   unlockSubmit();renderCart();closeReview();
+}
+/* ---- Create part #: propose a NEW house part when nothing in the catalog fits.
+        Marion suggests the number from the house numbering logic and pre-fills
+        everything it knows for certain; the draft lands in part_drafts for staff. ---- */
+function suggestPn(l){
+  const d=l.dims||{};const k=(l.kind||'').toLowerCase();
+  const p3=v=>String(Math.round(+v)).padStart(3,'0');       // whole mm, 3 digits
+  const t3=v=>String(Math.round(+v*10)).padStart(3,'0');    // tenths of mm, 3 digits
+  const t4=v=>String(Math.round(+v*10)).padStart(4,'0');    // tenths of mm, 4 digits
+  const h=(d.h!=null)?d.h:d.stated_h;
+  if(k.includes('piston')&&d.od!=null&&d.id!=null)return 'P'+p3(d.od)+p3(d.id)+(h!=null?t3(h):'');          // piston: OD first
+  if(k.includes('wiper')&&d.id!=null&&d.od!=null)return 'W'+p3(d.id)+p3(d.od)+(h!=null?t3(h):'');
+  if((k.includes('o-ring')||k.includes('oring')||k.includes('o ring'))&&d.id!=null){
+    const cs=(h!=null)?h:((d.od!=null)?(d.od-d.id)/2:null);
+    return 'MOR'+t4(d.id)+(cs!=null?t3(cs):'');
+  }
+  if(d.id!=null&&d.od!=null)return 'RP'+p3(d.id)+p3(d.od)+(h!=null?t3(h):'');  // rod / rod-piston family
+  return '';
+}
+function groupOf(k){k=(k||'').toLowerCase();
+  if(k.includes('piston'))return 'Piston Seals';
+  if(k.includes('wiper'))return 'Rod Wipers';
+  if(k.includes('o-ring')||k.includes('oring')||k.includes('o ring'))return 'O-Rings';
+  if(k.includes('polypak')||k.includes('rod'))return 'Rod/Piston Seals';
+  if(k.includes('shaft'))return 'Shaft Seals';
+  return '';}
+function prefixOf(k){k=(k||'').toLowerCase();
+  if(k.includes('piston'))return 'PS.';
+  if(k.includes('wiper'))return 'RW.';
+  if(k.includes('o-ring')||k.includes('oring')||k.includes('o ring'))return 'OR.';
+  return 'RP.';}
+function openCreatePart(i){
+  const l=CART[i];if(!l)return;
+  closeReview();
+  if(document.getElementById('cpOv'))return;
+  const d=l.dims||{};const f2=v=>v!=null?(+v).toFixed(2):'';
+  const toIn=v=>v!=null?(+v/25.4).toFixed(3):'';
+  const h=(d.h!=null)?d.h:d.stated_h;
+  const descAuto=[prefixOf(l.kind),[f2(d.id)||'?',f2(d.od)||'?',f2(h)||'?'].join(' X ')].join(' ');
+  const fld=(id,label,val,ph)=>`<div><label style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666;display:block;margin-bottom:2px">${label}</label><input id="${id}" value="${esc(val||'')}" placeholder="${ph||''}" style="width:100%;border:1px solid #cfcfcd;border-radius:4px;padding:7px 9px;font-size:13px;font-family:inherit"></div>`;
+  const ov=document.createElement('div');ov.id='cpOv';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(26,26,26,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML=`<div style="background:#fff;border-radius:10px;max-width:720px;width:100%;max-height:88vh;overflow:auto;padding:24px 28px;box-shadow:0 12px 40px rgba(0,0,0,.35)">
+    <div style="display:flex;align-items:center;margin-bottom:4px"><b style="font-size:16px;letter-spacing:.5px;text-transform:uppercase">Create part #</b>
+      <span onclick="closeCreatePart()" style="margin-left:auto;cursor:pointer;font-size:20px;color:#888;line-height:1">×</span></div>
+    <div style="font-size:12px;color:#666;margin-bottom:12px">Customer asked for: <b>${hesc(l.asked||l.desc||'—')}</b><br>Marion pre-filled what it knows for certain — complete the rest. The draft goes to staff for catalog entry.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${fld('cpPn','Part # (suggested by Marion — house numbering)',suggestPn(l),'add profile suffix, e.g. PB')}
+      ${fld('cpDesc1','Description',descAuto)}
+      ${fld('cpGroup','Profile Group *',groupOf(l.kind))}
+      ${fld('cpProfile','Profile *',l.style||'','e.g. PB, A, WC, MOR/NBR')}
+      ${fld('cpId','ID mm',f2(d.id))}
+      ${fld('cpOd','OD mm',f2(d.od))}
+      ${fld('cpH','Height mm',f2(h))}
+      ${fld('cpIdIn','ID inch',toIn(d.id))}
+      ${fld('cpOdIn','OD inch',toIn(d.od))}
+      ${fld('cpHIn','Height inch',toIn(h))}
+      ${fld('cpCompound','Compound','')}
+      ${fld('cpMaterial','Material','','e.g. AU/NBR')}
+      ${fld('cpPsi','Pressure psi','')}
+      ${fld('cpChem','Chemicals','')}
+      ${fld('cpTmin','Op temp min °C','')}
+      ${fld('cpTmax','Op temp max °C','')}
+    </div>
+    <div style="margin-top:10px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666;display:block;margin-bottom:2px">Notes</label>
+      <textarea id="cpNotes" rows="2" style="width:100%;border:1px solid #cfcfcd;border-radius:4px;padding:7px 9px;font-size:13px;font-family:inherit">${hesc((l.notes||''))}</textarea></div>
+    <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
+      <button class="btn btn-go" style="padding:9px 20px;font-size:12px" onclick="saveNewPart(${i})">Save draft &amp; use on this quote</button>
+      <span id="cpMsg" style="font-size:12px;color:#666"></span></div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)closeCreatePart();});
+}
+function closeCreatePart(){const d=document.getElementById('cpOv');if(d)d.remove();}
+async function saveNewPart(i){
+  const l=CART[i];if(!l)return;
+  const g=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  const num=v=>v!==''&&!isNaN(+v)?+v:null;
+  const pn=g('cpPn');
+  const msg=document.getElementById('cpMsg');
+  if(!pn){msg.textContent='Part # is required.';return;}
+  if(!g('cpGroup')||!g('cpProfile')){msg.textContent='Profile Group and Profile are required.';return;}
+  msg.innerHTML='<span class="spin"></span>Saving…';
+  try{
+    const {error}=await sb.from('part_drafts').insert({
+      user_id:SESSION.user.id,part_number:pn,
+      descr1:g('cpDesc1'),profile_group:g('cpGroup'),profile:g('cpProfile'),
+      id_mm:num(g('cpId')),od_mm:num(g('cpOd')),height_mm:num(g('cpH')),
+      id_in:num(g('cpIdIn')),od_in:num(g('cpOdIn')),height_in:num(g('cpHIn')),
+      compound:g('cpCompound')||null,material:g('cpMaterial')||null,
+      pressure_psi:num(g('cpPsi')),chemicals:g('cpChem')||null,
+      temp_min_c:num(g('cpTmin')),temp_max_c:num(g('cpTmax')),
+      notes:g('cpNotes')||null,asked:l.asked||null,dims:l.dims||null});
+    if(error){msg.textContent='Save failed: '+error.message;return;}
+    const prev=l.pn;
+    l.pn=pn;l.conf='high';
+    l.notes='NEW PART (draft) — proposed by user, pending catalog entry';
+    logFeedback(l,'created_part',prev);
+    unlockSubmit();renderCart();closeCreatePart();
+    setSaveStatus('✓ Part draft '+pn+' saved and used on this quote.','');
+  }catch(e){msg.textContent='Save failed.';console.warn(e);}
 }
 async function logFeedback(l,action,prevPn){
   try{
@@ -1281,7 +1408,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-15.6';
+const MARION_BUILD='2026-07-15.7';
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
