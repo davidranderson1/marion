@@ -45,7 +45,7 @@ table.qs td{padding:13px 16px;border-bottom:1px solid #f0f1f4;}
 table.qs tr:hover td{background:#fafbfc;cursor:pointer;}
 .chip{font-size:11px;font-weight:700;padding:4px 12px;border-radius:12px;}
 .chip.draft{background:#eee;color:#666;}
-.chip.submitted{background:#fdf0d0;color:var(--amber);}
+.chip.submitted{background:#fdf0d0;color:var(--amber));}
 .chip.priced{background:#d6f5e0;color:var(--green);}
 .chip.sent{background:#d8e9fb;color:#1a5fa8;}
 .chip.won{background:#d6f5e0;color:var(--green);}
@@ -339,12 +339,16 @@ function openDetail(id){
 }
 
 /* ---- order-card renderer (matches the sealsonline order format) ---- */
+function lineThumbHTML(l){ // catalog product image saved with the line (thumb data URL first, CMS url fallback)
+  const src=l.thumb||l.img_url;if(!src)return '';
+  return '<img src="'+(src+'').replace(/"/g,'&quot;')+'" width="44" height="44" style="width:44px;height:44px;object-fit:contain;border:1px solid #e5e7eb;border-radius:6px;background:#fff;vertical-align:middle;margin-right:10px" alt="">';
+}
 function cardHTML(q,lines,custEmail){
   let subtotal=0;
   const rows=lines.map(l=>{
     if(l.line_total!=null)subtotal+=+l.line_total;
     return '<tr>'+
-      '<td style="padding:12px 8px;border-bottom:1px solid #eef0f3;color:#4a5568;font-size:13px">'+(hesc(l.pn)||'<i>unresolved</i>')+(l.descr?' — '+hesc(l.descr):'')+(l.oem?' <span style="color:#8b90a0">(OEM '+hesc(l.oem)+')</span>':'')+(l.reference?' <span style="color:#b8860b;font-weight:700">Ref: '+hesc(l.reference)+'</span>':'')+'</td>'+
+      '<td style="padding:12px 8px;border-bottom:1px solid #eef0f3;color:#4a5568;font-size:13px">'+lineThumbHTML(l)+'<span style="vertical-align:middle">'+(hesc(l.pn)||'<i>unresolved</i>')+(l.descr?' — '+hesc(l.descr):'')+(l.oem?' <span style="color:#8b90a0">(OEM '+hesc(l.oem)+')</span>':'')+(l.reference?' <span style="color:#b8860b;font-weight:700">Ref: '+hesc(l.reference)+'</span>':'')+'</span></td>'+
       '<td align="center" style="padding:12px 8px;border-bottom:1px solid #eef0f3;color:#2b6cb0;font-size:13px">'+hesc(l.qty)+'</td>'+
       '<td align="right" style="padding:12px 8px;border-bottom:1px solid #eef0f3;font-size:13px">'+cmoney(l.unit_price)+'</td>'+
       '<td align="right" style="padding:12px 8px;border-bottom:1px solid #eef0f3;font-weight:700;font-size:13px">'+cmoney(l.line_total)+'</td></tr>';
