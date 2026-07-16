@@ -1420,7 +1420,7 @@ async function toggleBom(i){
 }
 function toggleBomNode(i,key){const l=CART[i];if(!l)return;l._bomExp=l._bomExp||{};l._bomExp[key]=!l._bomExp[key];renderCart();}
 let BOM_CHK=null;
-function scheduleBomCheck(){clearTimeout(BOM_CHK);BOM_CHK=setTimeout(bomCheck,350);}
+function scheduleBomCheck(){clearTimeout(BOM_CHK);BOM_CHK=setTimeout(()=>{bomCheck();fillDescriptions();},350);}
 async function bomCheck(){
   const pns=[...new Set(CART.filter(l=>l.pn&&l._bomKit===undefined).map(l=>l.pn))];
   if(!pns.length)return;
@@ -1434,11 +1434,26 @@ async function bomCheck(){
     if(changed)renderCart();
   }catch(e){console.warn('bom check',e);}
 }
+/* fill empty Description cells from the products catalog (e.g. manually added lines) */
+async function fillDescriptions(){
+  const need=CART.filter(l=>l.pn&&(!l.desc||!(''+l.desc).trim())&&!l._descChk);
+  if(!need.length)return;
+  need.forEach(l=>l._descChk=true); // one attempt per part number
+  const pns=[...new Set(need.map(l=>l.pn))];
+  try{
+    const {data,error}=await sb.from('products').select('part_number,description').in('part_number',pns);
+    if(error){console.warn('desc fill',error);return;}
+    const m={};(data||[]).forEach(p=>{if(p.description)m[p.part_number]=p.description;});
+    let changed=false;
+    CART.forEach(l=>{if(l.pn&&m[l.pn]&&(!l.desc||!(''+l.desc).trim())){l.desc=m[l.pn];changed=true;}});
+    if(changed)renderCart();
+  }catch(e){console.warn('desc fill',e);}
+}
 function esc(s){return (s+'').replace(/"/g,'&quot;');}
 function upd(i,k,v){const old=CART[i][k];CART[i][k]=(k==='qty')?(parseInt(v)||1):v;
   if(k==='pn'&&v){CART[i].conf='high';if(v!==old)logFeedback(CART[i],'manual_edit',old);
     CART[i].url=null; // re-resolve the website link for the new number
-    CART[i]._bomKit=undefined;CART[i]._bom=null;CART[i]._bomOpen=false; // re-check BOM for the new number
+    CART[i]._bomKit=undefined;CART[i]._bom=null;CART[i]._bomOpen=false;CART[i]._descChk=false; // re-check BOM + description for the new number
     sb.rpc('link_for_part',{p_pn:v}).then(({data})=>{if(CART[i]&&CART[i].pn===v){CART[i].url=data||null;renderCart();}});
   } // learning: hand-typed part numbers are corrections
   unlockSubmit(); renderCart();}
@@ -1526,7 +1541,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-16.1'; // + catalog kit (BOM) expansion in cart
+const MARION_BUILD='2026-07-16.2'; // + BOM expansion; auto-fill descriptions from catalog
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
