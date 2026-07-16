@@ -10,6 +10,14 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-16 · Description header aligned with line text (build 2026-07-16.6)
+- Quote-card line-items table: the Description column header now starts where the
+  text starts (62px left pad) instead of sitting over the 44px product thumbnail.
+  Applied conditionally — quotes with no images keep the normal 8px pad.
+- Same change in all three renderers: quote.html cardHTML (build 2026-07-16.6),
+  account.html cardHTML, marion-notify cardHtml (v9 deployed).
+- Both pushed files hash-verified against local (git hash-object == pushed blob SHA).
+
 ## 2026-07-16 · Catalog product image inline on every quote-card line (build 2026-07-16.5)
 - The quote/estimate card now shows a 44px catalog product thumbnail beside each line's
   description — in all four renderings of the form: quote.html step-3 preview, the
