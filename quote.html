@@ -1,40 +1,47 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Marion — Quote Intake</title>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --yellow:#FFD400;--dark:#1a1a1a;--grey:#a7a9ac;--greylt:#e6e7e8;
-  --red:#d0021b;--green:#0a8a3c;--amber:#b8860b;--ink:#1a1a1a;
+  /* FLUIDSEAL-THEME.md §2 — canonical brand tokens */
+  --black:#231F20;--black-soft:#2d2a2b;
+  --yellow:#FFDD00;--yellow-deep:#e8c200;
+  --grey:#939597;--grey-light:#C6C8CA;
+  --surface:#f5f6f8;--surface-alt:#eceef1;--card:#ffffff;
+  --text:#231F20;--text-muted:#5b6066;--border:#dfe2e6;
+  --important:#c8222a;--important-deep:#a81a20;--ok:#2e9e5a;
+  /* legacy aliases used throughout this page */
+  --dark:#231F20;--ink:#231F20;--greylt:#C6C8CA;
+  --red:#c8222a;--green:#2e9e5a;--amber:#b8860b;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Roboto Condensed',Arial,sans-serif;color:var(--ink);background:#f2f2f0;line-height:1.3;}
-.mono{font-family:'JetBrains Mono',monospace;}
+body{font-family:'Helvetica Neue',Helvetica,Arial,'Segoe UI',sans-serif;color:var(--text);background:var(--surface);line-height:1.3;}
+.mono{font-family:Consolas,'Courier New',monospace;}
 
 /* HEADER */
-.top{background:var(--yellow);border-bottom:5px solid #000;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-.top .logo{width:34px;height:34px;border-radius:50%;background:#000;flex:0 0 auto;position:relative;}
-.top .logo:after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--yellow);}
-.top h1{font-size:24px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
-.top h1 small{font-size:13px;font-weight:400;color:#555;letter-spacing:1px;display:block;margin-top:-3px;}
-.top .phase{margin-left:auto;font-size:12px;font-weight:700;background:#000;color:var(--yellow);
+.top{background:var(--black);border-bottom:3px solid var(--yellow);padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;color:#fff;}
+.top .logo{width:40px;height:40px;border-radius:5px;background:#fff;flex:0 0 auto;position:relative;}
+.top .logo:after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--yellow);border:5px solid var(--black);}
+.top h1{font-family:'Arial Narrow','Helvetica Neue',Arial,sans-serif;font-stretch:condensed;font-size:24px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fff;}
+.top h1 small{font-size:13px;font-weight:400;color:var(--grey-light);letter-spacing:1px;display:block;margin-top:-3px;}
+.top .phase{margin-left:auto;font-size:12px;font-weight:800;background:var(--yellow);color:var(--black);
   padding:5px 12px;border-radius:3px;letter-spacing:1px;}
 
 /* AUTH */
 .auth{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;}
-.auth input{border:1px solid #00000055;border-radius:3px;padding:5px 8px;font-family:inherit;font-size:12px;width:190px;background:#fffdf0;}
-.auth .abtn{border:none;border-radius:3px;background:#000;color:var(--yellow);font-family:inherit;font-weight:700;
+.auth input{border:1px solid #ffffff55;border-radius:3px;padding:5px 8px;font-family:inherit;font-size:12px;width:190px;background:#fff;color:var(--text);}
+.auth .abtn{border:none;border-radius:3px;background:var(--yellow);color:var(--black);font-family:inherit;font-weight:800;
   font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:6px 10px;cursor:pointer;}
-.auth .abtn:hover{background:#333;}
-.auth .who{color:#333;}
-.auth a.staff{color:#000;text-decoration:underline;font-weight:700;}
+.auth .abtn:hover{background:var(--yellow-deep);}
+.auth .who{color:#fff;}
+.auth a.staff{color:var(--yellow);text-decoration:underline;font-weight:700;}
 
 .wrap{max-width:1280px;margin:0 auto;padding:22px;}
 
 /* LAYOUT */
 .stage{display:grid;grid-template-columns:1fr;gap:22px;}
-.panel{background:#fff;border:1px solid #d4d4d2;border-radius:5px;overflow:hidden;}
+.panel{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--yellow);border-radius:5px;overflow:hidden;}
 .panel-h{background:var(--ink);color:#fff;padding:10px 16px;font-weight:700;font-size:14px;
   letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
 .panel-h .step{background:var(--yellow);color:#000;width:22px;height:22px;border-radius:3px;
@@ -43,7 +50,7 @@ body{font-family:'Roboto Condensed',Arial,sans-serif;color:var(--ink);background
 .panel-b{padding:16px;}
 
 /* WIZARD — horizontal stepper */
-.stepper{display:flex;background:#fff;border:1px solid #d4d4d2;border-radius:5px;margin-bottom:22px;overflow:hidden;}
+.stepper{display:flex;background:var(--card);border:1px solid var(--border);border-top:3px solid var(--yellow);border-radius:5px;margin-bottom:22px;overflow:hidden;}
 .stepper .st{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 10px;cursor:pointer;
   font-weight:700;font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:#777;
   border-right:1px solid #e4e4e2;background:#fafafa;transition:.12s;white-space:nowrap;user-select:none;}
@@ -68,7 +75,7 @@ body{font-family:'Roboto Condensed',Arial,sans-serif;color:var(--ink);background
 /* INPUT */
 .dropzone{position:relative;}
 textarea#req{width:100%;min-height:420px;border:1px solid #cfcfcd;border-radius:4px;padding:12px;
-  font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.5;resize:vertical;background:#fafafa;}
+  font-family:Consolas,'Courier New',monospace;font-size:13px;line-height:1.5;resize:vertical;background:#fafafa;}
 textarea#req:focus{outline:2px solid var(--yellow);background:#fff;}
 .dropzone.over textarea#req{border-color:var(--yellow);background:#fffdf0;}
 .drop-overlay{position:absolute;inset:0;border:2px dashed var(--yellow);border-radius:4px;
@@ -92,7 +99,7 @@ textarea#req:focus{outline:2px solid var(--yellow);background:#fff;}
 .btn{border:none;border-radius:4px;padding:11px 22px;font-family:inherit;font-weight:700;font-size:14px;
   letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:.12s;}
 .btn-go{background:var(--yellow);color:#000;}
-.btn-go:hover{background:#e6bf00;}
+.btn-go:hover{background:var(--yellow-deep);}
 .btn-go:disabled{background:#ddd;color:#999;cursor:not-allowed;}
 .btn-ghost{background:#fff;border:1px solid #cfcfcd;color:#333;}
 .btn-ghost:hover{background:#f4f4f2;}
@@ -118,7 +125,7 @@ textarea#req:focus{outline:2px solid var(--yellow);background:#fff;}
 .cust-strip .ed:focus{outline:2px solid var(--yellow);background:#fff;border-style:solid;}
 
 table.cart{width:100%;border-collapse:collapse;font-size:13px;}
-table.cart th{background:#2a2a2a;color:#fff;font-size:10px;letter-spacing:.5px;text-transform:uppercase;
+table.cart th{background:var(--black);color:#fff;font-size:10px;letter-spacing:.5px;text-transform:uppercase;
   padding:8px 6px;text-align:left;font-weight:700;border-right:1px solid #444;white-space:nowrap;}
 table.cart td{padding:4px 6px;border-bottom:1px solid #eee;border-right:1px solid #f0f0f0;vertical-align:middle;}
 table.cart tr:nth-child(even) td{background:#fafafa;}
@@ -126,7 +133,7 @@ table.cart input,table.cart select{width:100%;border:1px solid transparent;borde
   font-family:inherit;font-size:13px;background:transparent;}
 table.cart input:hover,table.cart select:hover{border-color:#ddd;background:#fff;}
 table.cart input:focus,table.cart select:focus{outline:none;border-color:var(--yellow);background:#fffdf0;}
-table.cart input.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
+table.cart input.pn{font-family:Consolas,'Courier New',monospace;font-weight:700;}
 /* Multi Add + Kits */
 .drag-h{display:inline-flex;align-items:center;justify-content:center;width:18px;height:22px;border-radius:4px;
   background:#dbeeff;color:#4a90c2;font-size:11px;letter-spacing:1px;cursor:grab;user-select:none;font-weight:700;vertical-align:middle;}
@@ -146,9 +153,9 @@ tr.kit-child td:first-child{border-left:3px solid #9ec9e8;}
 .bom-exp:hover{background:#eef5fb;border-color:#9ec9e8;}
 tr.bom-row td{background:#fbf9f2 !important;color:#555;font-size:12px;border-bottom:1px dashed #e8e2d4;}
 tr.bom-row td:first-child{border-left:3px solid #e3b341;}
-.bom-pn{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#333;}
+.bom-pn{font-family:Consolas,'Courier New',monospace;font-size:12px;font-weight:600;color:#333;}
 .bom-dim{color:#999;}
-.bom-fee{font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px;background:#e3b341;color:#1a1a1a;letter-spacing:.5px;text-transform:uppercase;}
+.bom-fee{font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px;background:#e3b341;color:#231F20;letter-spacing:.5px;text-transform:uppercase;}
 .unnest:hover{color:#000;}
 #cartPanel.kit-out{outline:2px dashed #4a90c2;outline-offset:-3px;}
 #cartPanel.kit-out .cart-tools::after{content:'Drop here to remove from kit';color:#4a90c2;font-size:12px;font-weight:700;}
@@ -186,7 +193,7 @@ table.est{width:100%;border-collapse:collapse;margin-top:6px;}
 table.est th{background:#fff;border-bottom:2px solid #000;font-size:10px;text-transform:uppercase;
   padding:6px 5px;text-align:left;letter-spacing:.5px;}
 table.est td{padding:7px 5px;border-bottom:1px solid #ddd;font-size:12px;}
-table.est td.pn{font-family:'JetBrains Mono',monospace;font-weight:700;}
+table.est td.pn{font-family:Consolas,'Courier New',monospace;font-weight:700;}
 .est-price{color:var(--red);font-weight:700;}
 .est-totals{margin-top:8px;display:flex;justify-content:flex-end;}
 .est-totals table td{padding:4px 14px;font-size:12px;}
@@ -402,8 +409,8 @@ async function enforceMfa(){
     '<div style="font-size:17px;font-weight:800;margin-bottom:8px">&#128274; Two-factor authentication</div>'+
     '<div style="font-size:13px;color:#555;margin-bottom:16px">Enter the 6-digit code from your authenticator app to continue.</div>'+
     '<input id="mfaOvCode" inputmode="numeric" maxlength="6" placeholder="123456" style="border:1px solid #cfcfcd;border-radius:6px;padding:10px 12px;font-size:16px;width:140px;text-align:center">'+
-    '<button id="mfaOvBtn" style="margin-left:8px;background:#FFD400;border:1px solid #000;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer">Verify</button>'+
-    '<div id="mfaOvMsg" style="color:#d0021b;font-size:12px;margin-top:10px"></div>'+
+    '<button id="mfaOvBtn" style="margin-left:8px;background:#FFDD00;border:1px solid #000;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer">Verify</button>'+
+    '<div id="mfaOvMsg" style="color:#c8222a;font-size:12px;margin-top:10px"></div>'+
     '<div style="margin-top:14px"><a href="#" onclick="sb.auth.signOut();document.getElementById(\'mfaOv\').remove();return false" style="font-size:12px;color:#888">Sign out instead</a></div></div>';
   document.body.appendChild(d);
   const go=async()=>{
@@ -1172,7 +1179,7 @@ function openReview(i){
       +`<span class="mchip na">${o.native_units==='in'?'inch':'metric'} · ${o.is_oem_cross?'OEM cross':'house'}</span>`)
       :`<span class="mchip ok">OEM # match ✓</span>`;
     return `<tr style="${cur?'background:#fffdf0;box-shadow:inset 3px 0 0 var(--yellow)':''}">
-      <td style="padding:9px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap">${o.url?`<a href="${esc(o.url)}" target="_blank" rel="noopener" title="View on sealsonline.com" style="color:inherit">${hesc(o.part_number)} <span style="color:var(--amber)">↗</span></a>`:hesc(o.part_number)}</td>
+      <td style="padding:9px 10px;font-family:Consolas,'Courier New',monospace;font-weight:700;white-space:nowrap">${o.url?`<a href="${esc(o.url)}" target="_blank" rel="noopener" title="View on sealsonline.com" style="color:inherit">${hesc(o.part_number)} <span style="color:var(--amber)">↗</span></a>`:hesc(o.part_number)}</td>
       <td style="padding:9px 10px;white-space:nowrap">${hesc(o.description||'')}${size?'<br><span style="color:#888;font-size:11px">'+size+' mm</span>':''}</td>
       <td style="padding:9px 10px;line-height:1.9">${chips}</td>
       <td style="padding:9px 10px;text-align:right">${cur?'<b style="color:var(--green);font-size:11px">✓ CURRENT</b>':`<button class="btn btn-go" style="padding:6px 14px;font-size:11px" onclick="pickOption(${i},${k})">Use this</button>`}</td>
@@ -1182,7 +1189,7 @@ function openReview(i){
   ov.innerHTML=`<div style="background:#fff;border-radius:10px;max-width:860px;width:100%;max-height:86vh;overflow:auto;padding:24px 28px;box-shadow:0 12px 40px rgba(0,0,0,.35)">
     <div style="display:flex;align-items:center;margin-bottom:4px"><b style="font-size:16px;letter-spacing:.5px;text-transform:uppercase">Review — catalog matches</b>
       <span onclick="closeReview()" style="margin-left:auto;cursor:pointer;font-size:20px;color:#888;line-height:1">×</span></div>
-    <div style="font-size:14px;color:#1a1a1a;margin-bottom:2px">Customer asked for: <b>${hesc(l.asked||l.desc||'—')}</b>${l.oem?' · OEM # <b>'+hesc(l.oem)+'</b>':''}</div>
+    <div style="font-size:14px;color:#231F20;margin-bottom:2px">Customer asked for: <b>${hesc(l.asked||l.desc||'—')}</b>${l.oem?' · OEM # <b>'+hesc(l.oem)+'</b>':''}</div>
     ${(()=>{ // labeled search terms — shown ONLY when they add something beyond the ask (e.g. a derived dimension)
       const d2=l.dims||{}, u2=(d2.units&&d2.units!=='unknown')?' '+d2.units:'';
       const dd=[];
@@ -1556,7 +1563,7 @@ function openMultiAdd(){
     +'<div style="font-size:12px;color:#666;margin-bottom:10px">One part per line. Optional quantity after a comma or tab — e.g. <code>2A95D29A74V90 16ORB-V, 4</code></div>'
     +'<select id="maKind" style="width:100%;border:1px solid #cfcfcd;border-radius:6px;padding:8px;font-size:13px;margin-bottom:8px;box-sizing:border-box">'
     +'<option value="oem">Customer / OEM part numbers</option><option value="pn">Fluidseal part numbers</option></select>'
-    +'<textarea id="maList" rows="9" placeholder="Enter each part on a new line" style="width:100%;border:1px solid #cfcfcd;border-radius:6px;padding:10px;font-family:\'JetBrains Mono\',monospace;font-size:12.5px;box-sizing:border-box"></textarea>'
+    +'<textarea id="maList" rows="9" placeholder="Enter each part on a new line" style="width:100%;border:1px solid #cfcfcd;border-radius:6px;padding:10px;font-family:Consolas,\'Courier New\',monospace;font-size:12.5px;box-sizing:border-box"></textarea>'
     +'<div style="margin-top:12px;display:flex;gap:8px;align-items:center">'
     +'<button class="btn btn-go" style="padding:8px 18px;font-size:12px" onclick="resolveMultiAdd()">Add to cart</button>'
     +'<span id="maMsg" style="font-size:12px;color:#666"></span></div></div>';
@@ -1614,7 +1621,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-16.6'; // + Description header aligned with text (not over the line thumbs)
+const MARION_BUILD='2026-07-16.7'; // + FluidSeal brand theme per FLUIDSEAL-THEME.md (tokens/fonts/black header; Marion keeps its own mark)
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
