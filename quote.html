@@ -1066,6 +1066,7 @@ async function crossRefCart(){
       l.options=data||[];               // kept for the Review modal
       if(!data||!data.length)return;
       l.autoPn=data[0].part_number;     // remembered for the learning loop
+      l.url=data[0].url||null;          // sealsonline.com product page (verified by crawl index)
       // confidence from evidence: one survivor = high; several close variants = med
       l.pn=data[0].part_number;
       l.conf=data.length===1?'high':'med';
@@ -1118,7 +1119,7 @@ function openReview(i){
       +profChip
       +`<span class="mchip na">${o.native_units==='in'?'inch':'metric'} · ${o.is_oem_cross?'OEM cross':'house'}</span>`;
     return `<tr style="${cur?'background:#fffdf0;box-shadow:inset 3px 0 0 var(--yellow)':''}">
-      <td style="padding:9px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap">${hesc(o.part_number)}</td>
+      <td style="padding:9px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap">${o.url?`<a href="${esc(o.url)}" target="_blank" rel="noopener" title="View on sealsonline.com" style="color:inherit">${hesc(o.part_number)} <span style="color:var(--amber)">↗</span></a>`:hesc(o.part_number)}</td>
       <td style="padding:9px 10px;white-space:nowrap">${hesc(o.description||'')}${size?'<br><span style="color:#888;font-size:11px">'+size+' mm</span>':''}</td>
       <td style="padding:9px 10px;line-height:1.9">${chips}</td>
       <td style="padding:9px 10px;text-align:right">${cur?'<b style="color:var(--green);font-size:11px">✓ CURRENT</b>':`<button class="btn btn-go" style="padding:6px 14px;font-size:11px" onclick="pickOption(${i},${k})">Use this</button>`}</td>
@@ -1160,7 +1161,7 @@ function closeReview(){const d=document.getElementById('revOv');if(d)d.remove();
 function pickOption(i,k){
   const l=CART[i];if(!l||!l.options||!l.options[k])return;
   const o=l.options[k], prev=l.pn;
-  l.pn=o.part_number;l.conf='high';
+  l.pn=o.part_number;l.conf='high';l.url=o.url||null;
   l.notes='Confirmed by user'+(l.autoPn&&o.part_number!==l.autoPn?' — corrected from '+l.autoPn:'');
   logFeedback(l,'picked_option',prev);
   unlockSubmit();renderCart();closeReview();
@@ -1259,7 +1260,7 @@ async function saveNewPart(i){
       notes:g('cpNotes')||null,asked:l.asked||null,dims:l.dims||null});
     if(error){msg.textContent='Save failed: '+error.message;return;}
     const prev=l.pn;
-    l.pn=pn;l.conf='high';
+    l.pn=pn;l.conf='high';l.url=null;
     l.notes='NEW PART (draft) — proposed by user, pending catalog entry';
     logFeedback(l,'created_part',prev);
     unlockSubmit();renderCart();closeCreatePart();
@@ -1306,7 +1307,7 @@ function renderCart(){
     <td class="row-del" onclick="delRow(${i})" title="remove">×</td>
     <td style="white-space:nowrap">${typeCell}</td>
     <td><span class="conf ${r.conf}">${r.conf}</span></td>
-    <td style="white-space:nowrap">${child?'<span class="kit-indent">↳</span>':''}${r._xref?'<span class="spin"></span>':''}<input class="pn" value="${esc(r.pn)}" onchange="upd(${i},'pn',this.value)" placeholder="${r._xref?'searching catalog…':'—'}" style="${(child||r._xref)?'display:inline-block;width:calc(100% - 22px)':''}"></td>
+    <td style="white-space:nowrap">${child?'<span class="kit-indent">↳</span>':''}${r._xref?'<span class="spin"></span>':''}<input class="pn" value="${esc(r.pn)}" onchange="upd(${i},'pn',this.value)" placeholder="${r._xref?'searching catalog…':'—'}" style="${(child||r._xref||r.url)?'display:inline-block;width:calc(100% - 22px)':''}">${(!r._xref&&r.url)?`<a href="${esc(r.url)}" target="_blank" rel="noopener" title="View ${esc(r.pn)} on sealsonline.com" style="text-decoration:none;font-weight:700;color:var(--amber)">↗</a>`:''}</td>
     <td><input value="${esc(r.desc)}" onchange="upd(${i},'desc',this.value)" placeholder="size"></td>
     <td><input value="${esc(r.oem)}" onchange="upd(${i},'oem',this.value)" placeholder="OEM part #"></td>
     <td><input value="${esc(r.ref||'')}" onchange="upd(${i},'ref',this.value)" placeholder="invoice / PO / comp. #"></td>
@@ -1323,7 +1324,10 @@ function renderCart(){
 }
 function esc(s){return (s+'').replace(/"/g,'&quot;');}
 function upd(i,k,v){const old=CART[i][k];CART[i][k]=(k==='qty')?(parseInt(v)||1):v;
-  if(k==='pn'&&v){CART[i].conf='high';if(v!==old)logFeedback(CART[i],'manual_edit',old);} // learning: hand-typed part numbers are corrections
+  if(k==='pn'&&v){CART[i].conf='high';if(v!==old)logFeedback(CART[i],'manual_edit',old);
+    CART[i].url=null; // re-resolve the website link for the new number
+    sb.rpc('link_for_part',{p_pn:v}).then(({data})=>{if(CART[i]&&CART[i].pn===v){CART[i].url=data||null;renderCart();}});
+  } // learning: hand-typed part numbers are corrections
   unlockSubmit(); renderCart();}
 function delRow(i){CART.splice(i,1);unlockSubmit();orderKits();renderCart();}
 function addRow(){CART.push({conf:'low',oem:'',brand:'',pn:'',desc:'',ref:'',qty:1,wh:CUST.wh,disp:'B',notes:'manual',type:'item',kitGroup:null,price:null});unlockSubmit();renderCart();}
@@ -1408,7 +1412,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-15.7';
+const MARION_BUILD='2026-07-15.8';
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
