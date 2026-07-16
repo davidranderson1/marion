@@ -10,6 +10,30 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-07-16 · Catalog product image inline on every quote-card line (build 2026-07-16.5)
+- The quote/estimate card now shows a 44px catalog product thumbnail beside each line's
+  description — in all four renderings of the form: quote.html step-3 preview, the
+  html2pdf PDF attachment, account.html quote detail, and the marion-notify email body.
+- DB migration `quote_card_line_images`: new `series_images` cache table (series →
+  image_url + 88px JPEG data-URL thumb, RLS authenticated read/write), new
+  `quote_lines.img_url` + `quote_lines.thumb` columns, new `images_for_parts(text[])`
+  RPC — maps part numbers to their product_links series; kits not on sealsonline fall
+  back to their first BOM component's series (e.g. RCAT-1920739 → rod-wipers/j-dl).
+- New edge function `marion-images` (v1): fetches a sealsonline series page server-side,
+  extracts og:image, returns the image base64 (sealsonline/cms hosts only, 4MB cap) and
+  caches image_url in series_images. Client downscales to an 88px thumb and writes it
+  back, so each series is fetched from the website exactly once.
+- quote.html: `fillImages()` in the cart pipeline (scheduleBomCheck), thumbs persist on
+  save (quote_lines.thumb/img_url) and reload on open (older quotes backfill on open);
+  editing a line's PN re-resolves its image. Build stamp 2026-07-16.5.
+- marion-notify (v7): email line rows show the image via the remote CMS img_url
+  (data: URIs are blocked by email clients; https-only guard).
+- Emails/PDF note: the on-screen card + PDF use the data-URL thumb (no CORS taint);
+  only the email uses the remote URL.
+- INCIDENT (recovered same session): the first push of quote.html was truncated to
+  2.7KB, briefly breaking the live page; restored minutes later. Pushed blobs are now
+  hash-verified against local (`git hash-object`) — keep doing that on every push.
+
 ## 2026-07-14 · XPRESS SESSION: xpress-schema repair + app repointed (public/archive untouched)
 - Logged by the Xpress session per the shared-DB protocol. Rules in
   xpress-machining/CLAUDE.md read and followed; `list_migrations` checked first.
