@@ -10,6 +10,23 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-23 · XPRESS SESSION: xpress.machining_prices — 2027 machining list price table
+- Logged by the Xpress session per protocol (`list_migrations` + this file checked first;
+  no conflicts — table name and schema are Xpress-only, public/archive untouched).
+- DB migration `xpress_machining_prices_2027`: new table `xpress.machining_prices`
+  (price_year, product, od_in, size_mm, height_in, style, price, CAD) loaded with the
+  full 2027 machining list — 1,490 rows: Teflon 378, Nylon 462, DYNA-MAX 504,
+  Urethane 120 + 8 trim charges, DU cut-down 18. RLS: read for all (list prices are
+  public), write via xpress.is_admin(). Exposed through the Data API (xpress schema).
+- Source of truth: "2027 Machine price.xlsx" = 2025 list, Nylon 0.375" column fixed,
+  Nylon 0.375"/0.5" reworked for ODs ≥ 7.5" (interpolated between 0.25" and 0.75"),
+  then +6% across all tabs. Same data drives the inside-sales tool at
+  xpress-machining.vercel.app/tools/machining-prices (repo: src/app/tools/machining-prices/data.ts).
+- Any project on this Supabase can read it, e.g.
+  `select price from xpress.machining_prices where product='Nylon' and od_in=7.5 and height_in=0.5;`
+- Noted in passing: migrations `create_lifeos_items` (2026-08-28) and the July 15–Aug 17
+  product/pricing/inventory work aren't logged here — flagging for whichever session owns them.
+
 ## 2026-07-16 · FluidSeal brand theme on quote.html (build 2026-07-16.7)
 - quote.html re-skinned per the canonical FLUIDSEAL-THEME.md (OneDrive ClaudeAgent folder):
   §2 brand token block (#231F20 / #FFDD00 / greys, legacy var aliases kept), Helvetica Neue
