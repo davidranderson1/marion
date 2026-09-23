@@ -10,6 +10,19 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-23 · XPRESS SESSION: staff role + customer/employee split (xpress schema only)
+- DB migration `xpress_staff_role_and_catalog_trim` (checked `list_migrations` + this
+  file first; public/archive untouched):
+  · `xpress.profiles.role` check now ('customer','staff','admin'); NEW `xpress.is_staff()`
+  · `xpress.handle_new_user()` auto-staffs @fluidsealab.com / @sealsonline.com signups
+    (mirrors Marion's own auto-staff; Marion's trigger/functions untouched) + backfill
+  · catalog data: metal CNC materials deactivated (not offered) except Brass C360
+- xpress-machining app: full price matrix at /tools/machining-prices is now employee-only
+  (login + staff/admin gate, price data server-side only); customers get a
+  "Standard sizes" lookup on /quote — searchable dims → single price via new
+  /api/list-price reading `xpress.machining_prices`. Site now at xpress.fluidsealab.com
+  (Azure DNS CNAME + Vercel domain added 2026-09-23).
+
 ## 2026-09-23 · XPRESS SESSION: xpress.machining_prices — 2027 machining list price table
 - Logged by the Xpress session per protocol (`list_migrations` + this file checked first;
   no conflicts — table name and schema are Xpress-only, public/archive untouched).
