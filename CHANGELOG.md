@@ -10,6 +10,27 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-25 · SSG WEBSITE SESSION: flabed schema — customer-facing category mirror (public/archive untouched)
+- Logged by the SSG Website / Updates session per the shared-DB protocol
+  (`list_migrations` + this file checked first; no conflicts — the schema name
+  `flabed` and every object are new and self-contained).
+- DB migration `flabed_website_catalog_v1`: NEW schema `flabed` with four tables
+  — `flabed.sections`, `flabed.groups`, `flabed.items`, `flabed.profiles` — that
+  mirror the customer-facing category tree of sealsonline.com/en/flabed (the
+  Fluidseal storefront). RLS: public read on all four (public catalog data),
+  writes via service_role. Exposed schema (`flabed`) must be added to the Data API
+  in the dashboard before anon clients can query it — pending.
+- Data loaded from the verified home-page mockup: 8 sections, 40 groups, 48 items
+  (profiles table scaffolded, empty — the profile-code leaf level is future work).
+  All URLs verified live against the site; accessory links confirmed at
+  `/categories/{slug}` (NOT `/categories/accessories/{slug}`).
+- Nothing in `public`, `archive`, or `xpress` was created, altered, or read-locked.
+  Marion's tables, triggers and functions untouched.
+- Purpose: backs a new customer-facing mockup at mockup.fluidsealab.com (GitHub
+  Pages + Azure DNS CNAME), mirroring the current storefront structure as a
+  starting scaffold. Live pricing/stock is NOT here — that lives in the Boutik
+  platform and is a later integration.
+
 ## 2026-09-23 · XPRESS SESSION: staff role + customer/employee split (xpress schema only)
 - DB migration `xpress_staff_role_and_catalog_trim` (checked `list_migrations` + this
   file first; public/archive untouched):
