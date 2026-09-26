@@ -10,6 +10,28 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · Find parts page + quote-wizard tab (find.html builds 2026-09-26.2/.3, quote.html build 2026-09-26.5)
+- NEW `find.html` (Training Website session): seal-grammar search ("100mm x 140mm kit", "hitachi 4653862",
+  "RJD-AH173444", "wipers 100mm", questions), Kit view (cylinder cross-section, rod / bore / gland / hard-part
+  slots, Base / -CK / -HPCK), Cards, Lines and stock-by-branch Map views, a quote list, and "Add to quote".
+  Runs LIVE for signed-in staff on the objects quote.html already reads — `search_products()`, `explode_kit()`
+  (depth 1; sibling -CK / -HPCK codes probed), `v_stock_staff` — with the same magic-link sign-in and
+  `profiles.is_staff` gate; not signed in = preview with pattern-derived kits (clearly labelled). Sizes with
+  no bill of materials fall back to the metric-grammar pattern kit, each line checked against the catalogue.
+  Ask Marion goes through `marion-chat` (Sonnet 4.6, kit rules as the system prompt) with canned fallback.
+  `?embed=1` hides the page chrome and posts the list to the parent window.
+- Hand-off to the quote: "Add to quote" copies the list in Multi Add format (`PN, qty` per line), saves it as
+  `localStorage.marion_find_handoff`, and opens quote.html.
+- quote.html build 2026-09-26.5 is PATCHED and syntax-checked but NOT yet pushed (live page stays at .4):
+  step-1 gets a staff-only tab strip Customer request | Find parts (find.html in a same-origin iframe; its
+  "Add to quote" adds straight to CART — real kits become ONE kit line so bomCheck explodes the bill of
+  materials, pattern kits land as component lines with the kit code in Reference), a one-click import banner
+  for a saved `marion_find_handoff`, and a "Find parts" header link beside Staff. The patched file (126 KB,
+  expected blob ff570454) is too large to re-type safely through the GitHub connector from a chat session —
+  the 2026-07-16 truncation broke this page — so branch `find-tab` was created from main for a desktop session
+  with git to push it and merge. No DB changes; no edge-function changes.
+- Hub: `fluidseal-knowledge/data-sources.md` (P21 KIT export facts, live tables, join keys, graph model).
+
 ## 2026-09-26 · ABQUOTE training — phase 1 inventory and sample review DONE (docs only)
 - `HANDOFF-ABQUOTE-TRAINING.md` gains §9 "Phase 1 results (2026-09-26)": where the corpus
   really is (the SharePoint CRM → Quote library reached as a OneDrive shortcut, not a
