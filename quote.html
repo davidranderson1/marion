@@ -1516,7 +1516,7 @@ function renderCart(){
       ? '<span class="drag-h" style="opacity:.35;cursor:default" title="Kits can\'t be nested inside another kit">⋮⋮</span>'+bomBtn+'<span class="typetag kit">Kit</span>'
       : '<span class="drag-h" draggable="true" ondragstart="dragLine(event,'+i+')" title="'+(child?'Drag onto another line to move it — or drop off the rows to remove from kit':'Drag onto another line to nest into a kit')+'">⋮⋮</span>'+bomBtn
         +(child?'<button class="unnest" onclick="unnest('+i+')" title="Remove from kit">⤴</button>'
-               :(r._bomKit?'<span class="typetag kit" title="This part is a kit in the catalog">Kit</span>':'<span class="typetag item">Item</span>'));
+               :(r._bomKit?'<span class="typetag kit" style="'+((r._stockAvail!=null&&r._stockAvail>=(+r.qty||1))?'':'background:var(--red);')+'" title="'+esc((r._stockLabel||'Kit in catalog')+(r._stockAvail!=null?' · '+r._stockAvail+' available':''))+'">Kit</span>':'<span class="typetag item">Item</span>'));
     const nOpt=(r.options&&r.options.length)||0;
     const revCell=r._xref?''
       :(nOpt?`<button class="rev-btn" onclick="openReview(${i})" title="See the catalog matches and pick the right part">${nOpt} option${nOpt>1?'s':''} ▾</button>`
@@ -1609,11 +1609,28 @@ async function bomCheck(){
     const kits=new Set((data||[]).map(x=>x.parent_part_number));
     let changed=false;
     CART.forEach(l=>{if(l.pn&&pns.includes(l.pn)){const v=kits.has(l.pn);if(l._bomKit!==v){l._bomKit=v;changed=true;}}});
-    // BOM is critical for kit pricing/stock actions: auto-load + expand it once per kit line
+    // stock check for kit lines (v_stock_staff, summed across warehouses)
+    const stockPns=[...new Set(CART.filter(l=>l.pn&&l._bomKit===true&&l._stockChk===undefined).map(l=>l.pn))];
+    if(stockPns.length){
+      const stock={};
+      try{
+        const {data:sv,error:se}=await sb.from('v_stock_staff').select('part_number,qty_available,availability').in('part_number',stockPns);
+        if(se)console.warn('stock check',se);
+        (sv||[]).forEach(r=>{const t=stock[r.part_number]=stock[r.part_number]||{avail:0,label:r.availability||''};t.avail+=(+r.qty_available||0);if(r.availability)t.label=r.availability;});
+      }catch(e2){console.warn('stock check',e2);}
+      CART.forEach(l=>{if(l.pn&&stockPns.includes(l.pn)){const st=stock[l.pn];l._stockChk=true;l._stockAvail=st?st.avail:null;l._stockLabel=st?st.label:'No stock record';changed=true;}});
+    }
+    // BOM is critical for kit pricing/stock actions: always LOAD it, but auto-EXPAND only
+    // when the kit itself is not in stock for the ordered qty — that's when staff must
+    // work inside the tree. Stocked kits keep the tree collapsed behind the + button.
     const auto=CART.filter(l=>l.pn&&l._bomKit===true&&!l._bomAutoOpened&&(!l._bom||l._bom.pn!==l.pn));
     if(auto.length){
       await Promise.all(auto.map(loadBomFor));
-      auto.forEach(l=>{l._bomAutoOpened=true;if(l._bom&&l._bom.rows.length)l._bomOpen=true;});
+      auto.forEach(l=>{
+        l._bomAutoOpened=true;
+        const short=(l._stockAvail==null)||(l._stockAvail<(+l.qty||1));
+        if(l._bom&&l._bom.rows.length&&short)l._bomOpen=true;
+      });
       changed=true;
     }
     if(changed)renderCart();
@@ -1703,6 +1720,7 @@ function upd(i,k,v){const old=CART[i][k];CART[i][k]=(k==='qty')?(parseInt(v)||1)
     CART[i]._bomKit=undefined;CART[i]._bom=null;CART[i]._bomOpen=false;CART[i]._descChk=false; // re-check BOM + description for the new number
     CART[i].img=null;CART[i].imgUrl=null;CART[i]._imgChk=false; // re-resolve the catalog image for the new number
     CART[i]._bomAutoOpened=false; // new number: allow its BOM to auto-open again
+    CART[i]._stockChk=undefined;CART[i]._stockAvail=null;CART[i]._stockLabel=null; // re-check stock for the new number
     sb.rpc('link_for_part',{p_pn:v}).then(({data})=>{if(CART[i]&&CART[i].pn===v){CART[i].url=data||null;renderCart();}});
   } // learning: hand-typed part numbers are corrections
   unlockSubmit(); renderCart();}
@@ -1790,7 +1808,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-09-26.3'; // + kit BOMs auto-load & expand in the cart (explode_kit grant fixed)
+const MARION_BUILD='2026-09-26.4'; // + BOM auto-expands only when the kit is not in stock for the qty (v_stock_staff); red Kit badge + availability tooltip
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
