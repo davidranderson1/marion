@@ -10,6 +10,32 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · SSG WEBSITE SESSION: flabed data refresh — live URL scheme + profiles loaded (public/archive/xpress untouched)
+- Logged by the SSG Website / Updates session per the shared-DB protocol (`list_migrations` +
+  this file checked first). DML only, no DDL, no migration — `flabed` rows only.
+- FINDING: sealsonline.com/en/flabed no longer serves `/categories/{inch|metric}/{group}` —
+  the live tree is `/categories/{group}` → `/categories/{group}/{group}-{inch|metric}` →
+  `.../{profile}` (hard parts are top-level: `/categories/lock-nuts`, `/categories/weld-on-ports`;
+  metal face seals and V-rings sit under `shaft-seals/`; SBB bearings under
+  `spherical-ball-bushing/`). The old scheme returns 404 (verified in the browser 2026-09-26).
+- `flabed.groups.url` (16 rows) and `flabed.items.url` (29 rows) re-pointed to the live scheme;
+  the 6 `#` placeholders (Rod Boot, 5 Manufacturers) now carry the mockup's defaults
+  (express / about-us). `flabed.markets.live_url`: 5 slugs corrected (food-beverages, oil-gas,
+  pulp-paper, truck-bus, waste-remediation — the live site has no `-and-`).
+- `flabed.market_oems.url`: Komatsu / John Deere / Hitachi now point at their own kits pages
+  (`.../mobile-equipment-seal-kits/{oem}/{oem}-kits`, 424 / 358 / 367 products).
+- `flabed.profiles` LOADED: 269 rows crawled from the live category pages (20 families:
+  rod wipers, rod seals, symmetrical, piston, vee packings, guiding elements, O'rings, shaft
+  seals incl. metal face seal / V-rings / bearing isolators, flange seals, back-up rings,
+  spherical ball bushings, face & thread seals, head seals, hardened steel bushings, gasket,
+  retaining rings, sealant, caps & plugs, O'ring kits, OEM kits & parts). Columns: code =
+  live label, slug, url, match_count = the live "(N matches)", standard inch/metric, item_id
+  (213 resolved by parent URL), group_id (254; 15 rows in 4 live categories the mockup catalog
+  does not carry: flange-seals, back-up-rings, face-and-thread-seals, head-seals). The
+  workbook's 170 profiles were NOT used as-is — their URLs are the old scheme; a redirect map
+  (194 rows) is in `fluidseal-mockup/redirect-map.csv`.
+- Nothing in `public`, `archive`, or `xpress` touched.
+
 ## 2026-09-26 · TRAINING-WEBSITE SESSION: 6 new Dynamics-sync tables in public (public otherwise untouched)
 - Logged per the shared-DB protocol (`list_migrations` + this file checked first; no name
   collisions — all six table names are new). David chose to place them in `public` alongside
