@@ -10,6 +10,18 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · Kit BOMs auto-load in the cart + explode_kit grant fix (build 2026-09-26.3)
+- ROOT CAUSE of kits showing as plain Items with no BOM: public.explode_kit had no
+  EXECUTE grant for the authenticated role (42501). Migration
+  `explode_kit_authenticated_execute` grants it — the function stays SECURITY INVOKER,
+  so bom_lines RLS (is_staff) still gates the data; non-staff get zero rows.
+- quote.html: kit lines now auto-load AND auto-expand their full BOM tree the moment
+  bomCheck flags them (components, extended qtys, unit list prices, Fee lines) —
+  no + click needed. Collapse with −; auto-open happens once per line (re-arms if the
+  part number is edited). Verified as d.anderson: explode_kit('RCAT-2442067') → 15 rows.
+- Diagnostics confirmed everything else intact: is_staff() true, bom_lines readable
+  (20 rows for the two EMSCO kits), all other RPC grants present.
+
 ## 2026-09-26 · Forwarded-email training loop + source capture (build 2026-09-26.2)
 - Embedded .msg recursion: a forwarded email that carries the customer's ORIGINAL email as
   an attached .msg is now unpacked — its subject/from/body land in the request box (marked
