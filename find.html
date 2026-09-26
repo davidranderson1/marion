@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find parts — Marion · Fluidseal AB</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --ink:#231F20; --yellow:#FFDD00; --grey:#939597; --grey2:#C6C8CA;
+  --surface:#F2F2F0; --paper:#FFFFFF; --red:#C8222A; --line:#DDDEDC;
+  --display:'Arial Narrow','Helvetica Neue Condensed','Roboto Condensed',Arial,sans-serif; --body:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  --max:1240px; --r:6px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--surface);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Masthead */
+.mast{background:var(--ink);color:#fff}
+.mast{border-bottom:3px solid var(--yellow)}
+.mast .wrap{display:flex;align-items:center;gap:18px;height:64px}
+.nav{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.nav a{color:var(--grey2);text-decoration:none;font-size:14px;padding:6px 10px;border-radius:4px}
+.nav a:hover{color:#fff;background:#fff1}
+.nav a.on{color:var(--ink);background:var(--yellow);font-weight:600}
+.badge{font-size:11px;font-weight:700;background:var(--yellow);color:var(--ink);border-radius:3px;padding:2px 6px;letter-spacing:.3px}
+.mdot{width:34px;height:34px;border-radius:50%;background:#fff;display:grid;place-items:center}
+.mdot i{width:14px;height:14px;border-radius:50%;background:var(--ink);display:block}
+.auth{display:flex;align-items:center;gap:8px;font-size:12px}
+.auth input{border:1px solid #fff4;border-radius:3px;padding:5px 8px;font:inherit;font-size:12px;width:180px;background:#fff;color:var(--ink)}
+.auth .abtn{border:0;border-radius:3px;background:#fff2;color:#fff;font:inherit;font-weight:600;font-size:12px;padding:6px 10px;cursor:pointer}
+.auth .abtn:hover{background:var(--yellow);color:var(--ink)}
+.hidden{display:none!important}
+.modebar{background:#FFF8C2;border-bottom:1px solid #EAD97A;font-size:13px;padding:6px 0}
+.modebar .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo .mark{width:34px;height:34px;background:var(--yellow);color:var(--ink);font-family:var(--display);font-weight:700;font-size:26px;display:grid;place-items:center;border-radius:3px}
+.logo .word{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.5px;line-height:1}
+.logo .word small{display:block;font-family:var(--body);font-weight:500;font-size:11px;letter-spacing:.3px;color:var(--grey2);margin-top:2px}
+.mast .grow{flex:1}
+.branch{display:flex;align-items:center;gap:8px;background:#fff1;border:1px solid #fff3;border-radius:var(--r);padding:6px 10px;color:#fff;font-size:14px}
+.branch select{background:transparent;border:0;color:#fff;font-weight:600;padding:0}
+.branch select option{color:var(--ink)}
+.who{font-size:13px;color:var(--grey2);white-space:nowrap}
+.cartbtn{position:relative;background:var(--yellow);color:var(--ink);border:0;border-radius:var(--r);padding:8px 14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.cartbtn .n{background:var(--ink);color:#fff;border-radius:999px;min-width:22px;height:22px;display:grid;place-items:center;font-size:13px;padding:0 6px}
+
+/* Hero / search */
+.hero{background:var(--ink);color:#fff;padding:26px 0 30px;border-top:1px solid #fff1}
+.hero h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,5vw,52px);line-height:1;margin:0 0 16px;letter-spacing:.2px}
+.hero h1 span{color:var(--yellow)}
+.search{display:flex;background:#fff;border-radius:8px;padding:6px;gap:6px;align-items:center;box-shadow:0 8px 30px #0006}
+.search input{flex:1;border:0;background:transparent;color:var(--ink);font-size:18px;padding:12px 12px;min-width:0}
+.search input::placeholder{color:var(--grey)}
+.search .go{background:var(--ink);color:#fff;border:0;border-radius:6px;padding:12px 18px;font-weight:600;white-space:nowrap}
+.search .go:hover{background:#000}
+.claude{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--grey);padding:0 10px;white-space:nowrap}
+.claude i{width:8px;height:8px;border-radius:50%;background:var(--yellow);display:inline-block}
+.intent{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;min-height:30px;align-items:center}
+.intent .lbl{font-size:13px;color:var(--grey2)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #fff4;border-radius:999px;padding:5px 12px;font-size:14px;color:#fff;background:#fff0}
+.chip b{font-family:var(--display);font-size:16px;font-weight:600;color:var(--yellow)}
+.chip.x{background:var(--yellow);color:var(--ink);border-color:var(--yellow)}
+.chip.x b{color:var(--ink)}
+.examples{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.examples button{background:transparent;border:1px solid #fff3;color:var(--grey2);border-radius:999px;padding:6px 12px;font-size:13px}
+.examples button:hover{border-color:var(--yellow);color:#fff}
+
+/* Sections */
+section.block{padding:28px 0 8px}
+.block h2{font-family:var(--display);font-weight:600;font-size:28px;margin:0 0 4px;line-height:1.1}
+.block .sub{color:var(--grey);margin:0 0 16px;font-size:15px}
+.sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.size{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:14px 14px 12px;text-align:left;transition:border-color .15s}
+.size:hover{border-color:var(--ink)}
+.size .dim{font-family:var(--display);font-weight:700;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.size .dim small{font-size:16px;font-weight:600;color:var(--grey)}
+.size .meta{color:var(--grey);font-size:13px;margin-top:6px}
+.size.hot{border-left:4px solid var(--yellow)}
+.oems{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.oem{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:12px;text-align:left}
+.oem:hover{border-color:var(--ink)}
+.oem .pre{font-family:var(--display);font-weight:700;font-size:22px;background:var(--ink);color:var(--yellow);padding:4px 8px;border-radius:3px;min-width:74px;text-align:center}
+.oem .nm{font-weight:600}
+.oem .ct{color:var(--grey);font-size:13px}
+.asks{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.ask{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:var(--r);padding:14px;text-align:left;font-size:15px}
+.ask:hover{border-color:var(--ink)}
+.ask small{display:block;color:var(--grey);margin-top:4px;font-size:13px}
+
+/* Results */
+#results{display:none}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:18px 0 10px}
+.bar h2{font-family:var(--display);font-weight:600;font-size:30px;margin:0;line-height:1.05}
+.bar .count{color:var(--grey);font-size:15px}
+.bar .grow{flex:1}
+.views{display:inline-flex;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.views button{border:0;background:transparent;padding:9px 14px;font-weight:600;font-size:14px;border-right:1px solid var(--line)}
+.views button:last-child{border-right:0}
+.views button.on{background:var(--ink);color:var(--yellow)}
+.back{background:transparent;border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;font-size:14px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;padding:6px 0 14px;align-items:center}
+.filters .f{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;display:flex;align-items:center;gap:6px}
+.filters .f select{border:0;background:transparent;font-weight:600;padding:0}
+.filters .f.on{border-color:var(--ink)}
+.filters .clr{color:var(--grey);font-size:13px;background:none;border:0;text-decoration:underline}
+.bulk{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;margin-bottom:12px;font-size:14px}
+.bulk .grow{flex:1}
+.btn{background:var(--ink);color:#fff;border:0;border-radius:var(--r);padding:9px 14px;font-weight:600;font-size:14px}
+.btn.y{background:var(--yellow);color:var(--ink)}
+.btn.g{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.answer{background:var(--ink);color:#fff;border-radius:var(--r);padding:16px 18px;margin:8px 0 16px;border-left:6px solid var(--yellow)}
+.answer .who{color:var(--yellow);font-family:var(--display);font-size:18px;font-weight:600;margin-bottom:4px;display:flex;gap:8px;align-items:center}
+.answer p{margin:0 0 6px;font-size:15px;line-height:1.5}
+.answer .src{font-size:12px;color:var(--grey2);margin-top:6px}
+
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px;position:relative}
+.card.sel{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.card .fam{font-size:12px;color:var(--grey);display:flex;justify-content:space-between;align-items:center}
+.card .pn{font-family:var(--display);font-weight:700;font-size:22px;line-height:1.05;font-variant-numeric:tabular-nums;word-break:break-all}
+.card .ds{font-size:14px;color:#444}
+.card .dm{font-size:13px;color:var(--grey);font-variant-numeric:tabular-nums}
+.stock{display:flex;gap:4px;flex-wrap:wrap}
+.st{font-size:12px;border-radius:3px;padding:2px 7px;background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums;border:1px solid var(--line)}
+.st.home{background:var(--yellow);border-color:var(--yellow);font-weight:600}
+.st.zero{color:var(--red);border-color:#f1c2c6;background:#fff5f5}
+.card .foot{display:flex;align-items:center;gap:8px;margin-top:auto}
+.price{font-family:var(--display);font-weight:600;font-size:20px;flex:1;font-variant-numeric:tabular-nums}
+.price small{font-size:12px;color:var(--grey);font-family:var(--body);font-weight:400}
+.qty{width:54px;border:1px solid var(--line);border-radius:4px;padding:6px;text-align:center;font-variant-numeric:tabular-nums}
+.add{background:var(--ink);color:#fff;border:0;border-radius:4px;width:36px;height:36px;font-size:20px;line-height:1;display:grid;place-items:center}
+.add:hover{background:var(--yellow);color:var(--ink)}
+.sel-box{position:absolute;top:10px;right:10px;width:20px;height:20px;accent-color:var(--ink)}
+
+/* Lines */
+.tbl{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:820px}
+th{font-size:12px;font-weight:600;color:var(--grey);text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+tr.sel td{background:#FFF8C2}
+td .pn{font-family:var(--display);font-weight:700;font-size:18px}
+td.num{text-align:right}
+td.num.home{background:#FFF8C2;font-weight:600}
+td.num.zero{color:var(--red)}
+th.num{text-align:right}
+
+/* Map */
+.map{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+.map svg{width:100%;height:auto;background:var(--paper);border:1px solid var(--line);border-radius:var(--r)}
+.branches{display:flex;flex-direction:column;gap:10px}
+.br{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;text-align:left;display:flex;align-items:center;gap:12px}
+.br.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.br .code{font-family:var(--display);font-weight:700;font-size:26px;background:var(--ink);color:var(--yellow);width:44px;height:44px;display:grid;place-items:center;border-radius:4px}
+.br .nm{font-weight:600}
+.br .q{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums}
+.br .q b{font-family:var(--display);font-size:24px;font-weight:700;display:block;line-height:1}
+.br .q small{color:var(--grey);font-size:12px}
+.mapnote{grid-column:1/-1;color:var(--grey);font-size:13px}
+
+/* Kit view */
+.kit{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.kithead{grid-column:1/-1;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.kithead .code{font-family:var(--display);font-weight:700;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.kithead .code small{font-size:16px;color:var(--grey);font-weight:600;display:block;font-family:var(--body);margin-top:2px}
+.variants{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.variants button{border:0;background:var(--paper);padding:9px 14px;font-weight:600;font-size:14px;border-right:1px solid var(--line);text-align:left}
+.variants button:last-child{border-right:0}
+.variants button small{display:block;font-weight:400;color:var(--grey);font-size:12px}
+.variants button.on{background:var(--ink);color:#fff}
+.variants button.on small{color:var(--grey2)}
+.kithead .grow{flex:1}
+.alias{display:flex;flex-wrap:wrap;gap:6px;font-size:13px;color:var(--grey);grid-column:1/-1;align-items:center}
+.alias span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--ink)}
+.cyl{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.cyl svg{width:100%;height:auto;display:block}
+.cyl .cap{font-size:13px;color:var(--grey);margin-top:8px}
+.slots{display:flex;flex-direction:column;gap:10px}
+.set{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.set h3{margin:0;padding:10px 14px;font-family:var(--display);font-weight:600;font-size:20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.set h3 .sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+.set h3 .cnt{margin-left:auto;font-family:var(--body);font-weight:400;font-size:13px;color:var(--grey)}
+.slot{display:grid;grid-template-columns:22px 1fr auto;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:center}
+.slot:last-child{border-bottom:0}
+.slot.off{opacity:.45}
+.slot input[type=checkbox]{width:18px;height:18px;accent-color:var(--ink);margin:0}
+.slot .nm{font-size:13px;color:var(--grey)}
+.slot .pn{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.05;font-variant-numeric:tabular-nums}
+.slot .pn .sub{font-family:var(--body);font-weight:400;font-size:13px;color:#444;display:block}
+.slot .alt{margin-top:4px}
+.slot .alt select{font-size:12px;border:1px solid var(--line);border-radius:3px;padding:2px 4px;background:var(--surface)}
+.slot .r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums}
+.slot .r .q{font-family:var(--display);font-weight:600;font-size:16px}
+.slot .r .q small{font-family:var(--body);font-size:12px;color:var(--grey);font-weight:400}
+.slot .tag{font-size:11px;background:var(--yellow);border-radius:3px;padding:1px 6px;font-weight:600;margin-left:6px}
+.kitfoot{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.kitfoot .tot{font-family:var(--display);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.kitfoot .tot small{font-family:var(--body);font-size:13px;color:var(--grey);font-weight:400}
+.kitfoot .grow{flex:1}
+.kitfoot .qty{width:64px}
+
+/* Cart drawer */
+.scrim{position:fixed;inset:0;background:#0007;display:none;z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--paper);z-index:50;transform:translateX(100%);transition:transform .2s;display:flex;flex-direction:column;box-shadow:-10px 0 40px #0004}
+.drawer.open{transform:none}
+.scrim.open{display:block}
+.drawer header{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.drawer header h2{font-family:var(--display);font-weight:600;font-size:26px;margin:0;flex:1}
+.drawer .x{background:transparent;border:0;font-size:24px;line-height:1}
+.drawer .items{flex:1;overflow:auto;padding:8px 18px}
+.ci{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+.ci .pn{font-family:var(--display);font-weight:700;font-size:18px;font-variant-numeric:tabular-nums}
+.ci .ds{font-size:13px;color:var(--grey)}
+.ci .kitof{font-size:12px;color:var(--ink);background:#FFF8C2;display:inline-block;padding:1px 6px;border-radius:3px;margin-top:2px}
+.ci .ctl{display:flex;align-items:center;gap:6px}
+.ci .ctl button{width:28px;height:28px;border:1px solid var(--line);background:var(--paper);border-radius:4px;font-size:16px}
+.ci .ln{font-family:var(--display);font-weight:600;font-size:16px;min-width:70px;text-align:right;font-variant-numeric:tabular-nums}
+.drawer footer{padding:14px 18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.drawer footer .sum{display:flex;justify-content:space-between;font-size:15px}
+.drawer footer .sum b{font-family:var(--display);font-size:24px;font-variant-numeric:tabular-nums}
+.drawer footer .row{display:flex;gap:8px}
+.drawer footer .row .btn{flex:1}
+.empty{color:var(--grey);padding:30px 0;text-align:center}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;z-index:60;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.toast b{color:var(--yellow)}
+
+/* Footer */
+footer.site{margin-top:40px;background:var(--ink);color:var(--grey2);padding:22px 0;font-size:13px}
+footer.site .wrap{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+footer.site .pill{border:1px solid #fff3;border-radius:999px;padding:4px 10px}
+footer.site .grow{flex:1}
+
+@media (max-width:820px){
+  .mast .wrap{gap:10px}
+  .who{display:none}
+  .logo .word small{display:none}
+  .map,.kit{grid-template-columns:1fr}
+  .kithead .code{font-size:28px}
+  .search input{font-size:16px;padding:10px 8px}
+  .claude{display:none}
+  .search .go{padding:10px 14px}
+  .bar h2{font-size:24px}
+  .views button{padding:8px 10px;font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<div class="mast">
+  <div class="wrap">
+    <a class="logo" href="index.html" title="Marion home">
+      <span class="mdot"><i></i></span>
+      <span class="word">MARION <small>Fluidseal AB · sealing agent</small></span>
+    </a>
+    <nav class="nav" aria-label="Marion pages">
+      <a href="quote.html">Quote</a><a href="quotes.html">My Quotes</a><a href="account.html">Account</a><a href="knowledge.html">Knowledge</a><a class="on" href="find.html">Find parts</a>
+    </nav>
+    <div class="grow"></div>
+    <span class="badge" id="modeBadge" title="Marion build find 2026-09-26.2">FIND · PREVIEW</span>
+    <span class="auth" id="authBox"><span id="authForm" class="hidden"><input id="authEmail" type="email" placeholder="you@fluidsealab.com" onkeydown="if(event.key==='Enter')sendLink()"><button class="abtn" onclick="sendLink()">Send link</button></span><span id="authWho" class="who"></span><button class="abtn" id="authBtn" onclick="authAction()">Sign in</button></span>
+    <label class="branch">Branch
+      <select id="branch" onchange="setBranch(this.value)">
+        <option value="6">Edmonton (6)</option>
+        <option value="7">Calgary (7)</option>
+        <option value="4">Richmond (4)</option>
+      </select>
+    </label>
+    <button class="cartbtn" onclick="openCart()">Quote list <span class="n" id="cartN">0</span></button>
+  </div>
+</div>
+
+<div class="modebar" id="modebar"><div class="wrap"><span id="modeText">Preview: pattern-derived data. Sign in with your @fluidsealab.com email for live products, bills of materials and stock.</span></div></div>
+<div class="hero">
+  <div class="wrap">
+    <h1>Find the seal. Build the kit. <span>Send the quote.</span></h1>
+    <form class="search" onsubmit="runSearch(event)">
+      <input id="q" type="search" placeholder="Try: 100mm x 140mm kit · hitachi 4653862 · viton o-ring 2-214 · what does HPCK include?" autocomplete="off" oninput="previewIntent(this.value)">
+      <span class="claude"><i></i>Powered by Claude</span>
+      <button class="go" type="submit">Search</button>
+    </form>
+    <div class="intent" id="intent"><span class="lbl">Type a size, a part number, an OEM number, or a question.</span></div>
+    <div class="examples">
+      <button type="button" onclick="quick('100mm x 140mm kit')">100mm x 140mm kit</button>
+      <button type="button" onclick="quick('95 x 135 hpck')">95 x 135 HPCK</button>
+      <button type="button" onclick="quick('hitachi 4653862')">hitachi 4653862</button>
+      <button type="button" onclick="quick('RJD-AH173444')">RJD-AH173444</button>
+      <button type="button" onclick="quick('wipers 100mm')">wipers 100mm</button>
+      <button type="button" onclick="quick('what is the difference between CK and HPCK?')">what is the difference between CK and HPCK?</button>
+    </div>
+  </div>
+</div>
+
+<main id="home" class="wrap">
+  <section class="block">
+    <h2>Kits by size</h2>
+    <p class="sub">The Tier A rod × bore sizes — proven demand, 5 or more customers each over the last 24 months. Tap one to build it.</p>
+    <div class="sizes" id="sizes"></div>
+  </section>
+
+  <section class="block">
+    <h2>Replacement kits by OEM number</h2>
+    <p class="sub">Search the OEM part number as written on the customer's order; the shop resolves it to the Fluidseal R-kit and its components.</p>
+    <div class="oems" id="oems"></div>
+  </section>
+
+  <section class="block">
+    <h2>Ask Marion</h2>
+    <p class="sub">Answers come from the training knowledge base — kit rules, part-number grammar, materials — not from the web.</p>
+    <div class="asks">
+      <button class="ask" onclick="quick('what is the difference between CK and HPCK?')">What is the difference between a CK and an HPCK kit?<small>Kit variants</small></button>
+      <button class="ask" onclick="quick('what does 30K mean on a rod seal?')">What does /30K mean on a rod seal?<small>Materials</small></button>
+      <button class="ask" onclick="quick('how do I read W100114080WR-2?')">How do I read W100114080WR-2?<small>Part-number grammar</small></button>
+      <button class="ask" onclick="quick('customer only gave a 100mm rod, which bore?')">Customer only gave a 100 mm rod — which bore?<small>Open rule (board item 8)</small></button>
+    </div>
+  </section>
+</main>
+
+<main id="results" class="wrap">
+  <div class="bar">
+    <button class="back" onclick="goHome()">← Home</button>
+    <h2 id="rTitle">Results</h2>
+    <span class="count" id="rCount"></span>
+    <div class="grow"></div>
+    <div class="views" id="views">
+      <button data-v="kit" onclick="setView('kit')">Kit</button>
+      <button data-v="cards" onclick="setView('cards')">Cards</button>
+      <button data-v="lines" onclick="setView('lines')">Lines</button>
+      <button data-v="map" onclick="setView('map')">Map</button>
+    </div>
+  </div>
+  <div id="answer"></div>
+  <div class="filters" id="filters"></div>
+  <div class="bulk" id="bulk">
+    <label><input type="checkbox" id="selAll" onchange="toggleAll(this.checked)"> Select all</label>
+    <span id="selCount">0 selected</span>
+    <div class="grow"></div>
+    <button class="btn g" onclick="clearSel()">Clear</button>
+    <button class="btn y" id="addSel" onclick="addSelected()" disabled>Add selected to cart</button>
+  </div>
+  <div id="view"></div>
+</main>
+
+<div class="scrim" id="scrim" onclick="closeCart()"></div>
+<aside class="drawer" id="drawer" aria-label="Cart">
+  <header><h2>Quote list</h2><span id="cartBranch" style="color:var(--grey);font-size:13px"></span><button class="x" onclick="closeCart()" aria-label="Close">×</button></header>
+  <div class="items" id="cartItems"></div>
+  <footer>
+    <div class="sum"><span>Subtotal (list price)</span><b id="cartTot">$0.00</b></div>
+    <div class="row">
+      <button class="btn g" onclick="emptyCart()">Empty</button>
+      <button class="btn y" onclick="handoff()">Add to quote</button>
+    </div>
+  </footer>
+</aside>
+<div class="toast" id="toast"></div>
+<div class="scrim" id="hscrim" onclick="closeHandoff()"></div>
+<aside class="drawer" id="hdrawer" aria-label="Add to quote">
+  <header><h2>Add to quote</h2><button class="x" onclick="closeHandoff()" aria-label="Close">×</button></header>
+  <div class="items" style="padding:14px 18px;font-size:14px">
+    <p style="margin:0 0 10px">These lines are copied to your clipboard in the quote wizard's Multi Add format (part number, quantity).</p>
+    <textarea id="hlist" readonly style="width:100%;height:180px;font-family:Consolas,monospace;font-size:13px;border:1px solid var(--line);border-radius:4px;padding:8px"></textarea>
+    <ol style="padding-left:20px;margin:12px 0 0;line-height:1.7">
+      <li>OPEN the <a href="quote.html" target="_blank" rel="noopener">quote wizard</a> and go to the Cart step.</li>
+      <li>HOLD the <b>+ Add line</b> button for half a second to open <b>Multi Add</b>.</li>
+      <li>PASTE, then click <b>Add</b>.</li>
+    </ol>
+    <p style="margin:12px 0 0;color:var(--grey);font-size:12px">When the Find tab moves into the quote wizard this becomes one click; the list is also saved for that (marion_find_handoff).</p>
+  </div>
+  <footer><div class="row"><button class="btn g" onclick="copyList()">Copy again</button><a class="btn y" style="text-align:center;text-decoration:none" href="quote.html" target="_blank" rel="noopener">Open the quote wizard</a></div></footer>
+</aside>
+
+<footer class="site">
+  <div class="wrap">
+    <span class="pill">Find parts · preview build 2026-09-26.1</span>
+    <span class="pill" id="footData">Data: preview</span>
+    <div class="grow"></div>
+    <span>Fluidseal AB · Sealing Solutions Group · Edmonton · Calgary · Richmond</span>
+  </div>
+</footer>
+
+<script>
+/* Marion — Find parts. Build 2026-09-26.2
+   Live data (signed-in Fluidseal staff): search_products(), explode_kit(), v_stock_staff — same
+   objects quote.html uses. Preview (not signed in): pattern-derived kits from the metric grammar. */
+const SB_URL="https://hnmbjqhxvxakhdzgetxw.supabase.co";
+const SB_KEY="sb_publishable_HbRa8tV_Vmj5WPdvDc37uw_Vp7WajUe";
+let sb=null,SESSION=null,LIVE=false;
+const p3=n=>String(Math.round(n)).padStart(3,'0');const p4=n=>String(Math.round(n)).padStart(4,'0');
+const money=n=>n==null?'—':'$'+(+n).toFixed(2);const esc=s=>(s==null?'':s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+function seed(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return()=>{h=(h*1664525+1013904223)>>>0;return h/4294967296}}
+function stockFor(pn){const r=seed(pn);const f=()=>{const v=r();return v<.18?0:Math.round(v*40)};return{Edmonton:f(),Calgary:f(),Richmond:f()}}
+function priceFor(pn,base){const r=seed(pn+'p');return +(base*(0.8+r()*.6)).toFixed(2)}
+let WH=['Edmonton','Calgary','Richmond'];let branch='Edmonton';
+const WH_CODE={Edmonton:'6',Calgary:'7',Richmond:'4'};
+function whLabel(w){return w}
+
+/* ---------- reference content (from the 2024–2025 KIT invoice-line analytics) ---------- */
+const TIER_A=[{rod:85,bore:120,kits:231,cust:67},{rod:105,bore:150,kits:194,cust:41},{rod:95,bore:135,kits:193,cust:38},{rod:115,bore:170,kits:181,cust:29},{rod:100,bore:140,kits:160,cust:33},{rod:80,bore:115,kits:126,cust:27},{rod:90,bore:130,kits:99,cust:22},{rod:100,bore:145,kits:97,cust:19},{rod:75,bore:110,kits:95,cust:21},{rod:70,bore:100,kits:64,cust:14},{rod:110,bore:160,kits:58,cust:12},{rod:120,bore:170,kits:51,cust:11}];
+const OEMS=[{pre:'RCAT-',name:'Caterpillar',kits:3311},{pre:'RPH-',name:'Parker Hannifin',kits:1892},{pre:'RJD-',name:'John Deere',kits:403},{pre:'RCI-',name:'Commercial Intertech',kits:235},{pre:'RDEN-',name:'Denison',kits:203},{pre:'RHIT-',name:'Hitachi',kits:197},{pre:'RKOM-',name:'Komatsu',kits:140},{pre:'RROY-',name:'Royal',kits:80}];
+const OEM_KITS={'RJD-AH173444':{rod:95,bore:135,oem:'John Deere',note:'Stick cylinder · same components as 95MM ROD X 135MM BORE'},'RJD-AH173457':{rod:100,bore:145,oem:'John Deere',note:'Boom cylinder'},'RHIT-4653862':{rod:160,bore:225,oem:'Hitachi',note:'Top seller Edmonton and Richmond (-HPCK)'},'RHIT-4653863':{rod:140,bore:200,oem:'Hitachi',note:'Shares component families with 4653861/2'},'RHIT-4653861':{rod:120,bore:170,oem:'Hitachi',note:'Smallest of the 4653861/2/3 family'},'RCAT-2442067':{rod:100,bore:140,oem:'Caterpillar',note:'Made-to-order kit (bill of materials on file)'},'RKOM-707-99-58080':{rod:105,bore:150,oem:'Komatsu',note:'Arm cylinder'}};
+const OEM_PRE={'Caterpillar':'RCAT-','Hitachi':'RHIT-','John Deere':'RJD-','Komatsu':'RKOM-','Parker Hannifin':'RPH-','Commercial Intertech':'RCI-','Denison':'RDEN-','Royal':'RROY-'};
+const FAM_NAMES={W:'Wipers',R:'Rod & buffer seals',BU:'Back-up rings',P:'Piston seals',G:'Guide rings',MOR:'Metric o-rings','2':'Inch o-rings','8':'Inch back-ups',GMB:'Bushings',HSM:'Head seals',ES:'End seals',FEE:'Charges',OTHER:'Other'};
+const KNOWLEDGE=`Fluidseal replacement kits: R + OEM abbreviation + - + the OEM part number (RCAT- Caterpillar, RPH- Parker Hannifin, RJD- John Deere, RHIT- Hitachi, RKOM- Komatsu, RJIS- generic JIS). Suffix none = standard soft-seal kit; -CK = complete kit adding hard parts (GMB rod bushing, pin guide rings); -HPCK = high-performance complete kit (30K rod seal RC/30K, HNBR 90 gland o-ring, U641 buffer; head/end seal HSM/ES may replace the gland o-ring + back-up; pin wipers usually added). Metric part grammar: family letters + three-digit mm dimension blocks (last block ×10) + profile code + /material. Kit slot model: rod set (wiper, rod seal, buffer, back-up) + bore set (piston seal, 2 back-ups, 2 phenolic guides, 2 PTFE guides) + gland set (o-ring, back-up). Same rod × bore = same seals whatever OEM name is on the kit. Rod alone does not define a kit (board item 8). Proposed convention RJIS-<rod>X<bore> (board item 7).`;
+const CANNED=[{k:['difference','ck','hpck'],a:'A -CK (complete kit) is the standard soft-seal kit plus the hard parts: the GMB rod bushing and the pin guide rings. An -HPCK (high-performance complete kit) is a CK where the rod seal is upgraded to the RC/30K high-performance polyurethane, the gland o-ring moves from NBR 90 to HNBR 90 (/HNBR90G), the buffer is U641, a head seal (HSM/ES) may replace the gland o-ring and back-up where the gland allows, and pin wipers are usually added. Same rod × bore, same soft-seal geometry — the difference is materials and hard parts.'},{k:['30k'],a:'/30K is the material code for the 30K high-performance polyurethane used on RC-profile rod seals (for example R100115090RC/30K). The standard equivalent is the RA profile in AU polyurethane. 30K is what an -HPCK kit substitutes for RA.'},{k:['read','w100114080wr','grammar','how do i read'],a:'W100114080WR-2 reads as: W = rod wiper family; 100 = rod diameter 100.00 mm; 114 = outside diameter 114.00 mm; 080 = height 8.0 mm (last block is ×10); WR = profile (AU/steel wiper); -2 = revision 2. The same pattern holds for every metric family: letters, three-digit millimetre blocks, profile code, then /material or -revision.'},{k:['rod','bore','only','which'],a:'A rod size alone does not define a kit. From the 2024–2025 invoice lines, 100 mm rods paired with a 140 mm bore 42% of the time, 145 mm 22%, then 180, 105 and 150. The rule for rod-only orders is open on the board (item 8). Until it is decided, ask the customer for the bore or the OEM number.'},{k:['rjis','convention','naming'],a:'The proposed convention (board item 7, awaiting approval) is RJIS-<rod>X<bore> for the base kit, with -CK and -HPCK suffixes, plus RJIS-<rod>R for a rod set and RJIS-<bore>B for a bore set.'}];
+
+/* ---------- pattern kit (preview, and fallback for sizes with no bill of materials) ---------- */
+function patternKit(rod,bore){
+  const R=rod,B=bore;const mk=o=>{o.stock=stockFor(o.pn);o.price=priceFor(o.pn,o.base);delete o.base;o.src='pattern';return o};
+  const rodSet=[mk({slot:'Rod wiper',set:'rod',pn:`W${p3(R)}${p3(R+14)}080WR`,desc:`RW. ${R}.00 X ${R+14}.00 X 8.00 · AU/steel`,fam:'W',mat:'AU',qty:1,base:29}),
+    mk({slot:'Rod seal',set:'rod',pn:`R${p3(R)}${p3(R+15)}090RA`,desc:`RS. ${R}.00 X ${R+15}.00 X 9.00 · AU standard`,fam:'R',mat:'AU',qty:1,base:58,alts:[{pn:`R${p3(R)}${p3(R+15)}090RC/30K`,desc:`RS. ${R}.00 X ${R+15}.00 X 9.00 · 30K high-performance`,mat:'30K',base:78}]}),
+    mk({slot:'Buffer seal',set:'rod',pn:`R${p3(R)}${p3(R+15)}060RH`,desc:`RH. ${R}.00 X ${R+15}.00 X 6.00 · buffer`,fam:'R',mat:'U641',qty:1,base:100}),
+    mk({slot:'Rod back-up ring',set:'rod',pn:`BU${p3(R)}${p3(R+15)}030ST/N`,desc:`BU. ${R}.00 X ${R+15}.00 X 3.00 · nylon`,fam:'BU',mat:'N',qty:1,base:22})];
+  const boreSet=[mk({slot:'Piston seal',set:'bore',pn:`P${p3(B)}${p3(B-21)}081P2B/GM`,desc:`PS. ${B}.00 X ${B-21}.00 X 8.10 · two-piece GFM PTFE`,fam:'P',mat:'PTFE',qty:1,base:78}),
+    mk({slot:'Piston back-up rings',set:'bore',pn:`BU${p3(B-6)}${p3(B)}030ST/N`,desc:`BU. ${B-6}.00 X ${B}.00 X 3.00 · nylon`,fam:'BU',mat:'N',qty:2,base:27}),
+    mk({slot:'Guide rings, phenolic',set:'bore',pn:`G${p3(B)}${p3(B-5)}080GC`,desc:`GR. ${B}.00 X ${B-5}.00 X 8.00 · phenolic`,fam:'G',mat:'phenolic',qty:2,base:25}),
+    mk({slot:'Guide rings, PTFE',set:'bore',pn:`G${p3(B)}${p3(B-8)}080GB`,desc:`GR. ${B}.00 X ${B-8}.00 X 8.00 · PTFE`,fam:'G',mat:'PTFE',qty:2,base:76})];
+  const gland=[mk({slot:'Gland o-ring',set:'gland',pn:`MOR${p4((B-5.6)*10)}031/N90`,desc:`O-ring ${(B-5.6).toFixed(1)} X 3.1 · NBR 90`,fam:'MOR',mat:'N90',qty:1,base:5.2,alts:[{pn:`MOR${p4((B-5.6)*10)}031/HNBR90G`,desc:`O-ring ${(B-5.6).toFixed(1)} X 3.1 · HNBR 90`,mat:'HNBR90',base:8}]}),
+    mk({slot:'Gland back-up ring',set:'gland',pn:`BU${p3(B-5)}${p3(B)}013SD/U`,desc:`BU. ${B-5}.00 X ${B}.00 X 1.30 · polyurethane`,fam:'BU',mat:'U',qty:1,base:2.7})];
+  const hard=[mk({slot:'Rod bushing',set:'hard',pn:`GMB${p3(R)}035DV`,desc:`Rod bushing ${R} X ${R+5} X 35 · PTFE/steel`,fam:'GMB',mat:'PTFE/steel',qty:1,base:31,ck:true}),
+    mk({slot:'Pin guide rings',set:'hard',pn:`G${p3(R-20)}${p3(R-25)}060GE`,desc:`GR. ${R-20}.00 X ${R-25}.00 X 6.00 · nylon`,fam:'G',mat:'nylon',qty:2,base:4.2,ck:true})];
+  const hp=[mk({slot:'Head seal',set:'gland',pn:`HSM${p3(B-6)}${p3(B-13)}065`,desc:`HS. ${B-6}.00 X ${B-13}.00 X 6.50 · AU (replaces gland o-ring + back-up where the gland allows)`,fam:'HSM',mat:'AU',qty:1,base:16,hp:true,optional:true}),
+    mk({slot:'Pin wipers',set:'hard',pn:`W${p3(R-20)}${p3(R-6)}070WS`,desc:`RW. ${R-20}.00 X ${R-6}.00 X 7.00 · pin wiper`,fam:'W',mat:'AU',qty:2,base:7.2,hp:true})];
+  return{mode:'pattern',rod,bore,rodSet,boreSet,gland,hard,hp};
+}
+function kitParts(kit,variant){
+  if(kit.mode==='bom')return kit.parts.map(o=>({...o}));
+  const use=a=>a.map(o=>({...o}));let parts=[...use(kit.rodSet),...use(kit.boreSet),...use(kit.gland)];
+  if(variant==='CK'||variant==='HPCK')parts=parts.concat(use(kit.hard));
+  if(variant==='HPCK'){parts=parts.map(p=>{if(p.alts&&p.alts[0]){const a=p.alts[0];return{...p,pn:a.pn,desc:a.desc,mat:a.mat,price:priceFor(a.pn,a.base),stock:stockFor(a.pn),hp:true,alts:[{pn:p.pn,desc:p.desc,mat:p.mat,base:p.price}]}}return p});parts=parts.concat(use(kit.hp))}
+  return parts;
+}
+/* preview catalog */
+const CATALOG=[];const seenPn=new Set();
+function addParts(parts,size){for(const p of parts){if(seenPn.has(p.pn))continue;seenPn.add(p.pn);CATALOG.push({...p,size});if(p.alts)for(const a of p.alts){if(seenPn.has(a.pn))continue;seenPn.add(a.pn);CATALOG.push({...p,pn:a.pn,desc:a.desc,mat:a.mat,price:priceFor(a.pn,a.base),stock:stockFor(a.pn),alts:undefined,size})}}}
+for(const [r,b] of [...TIER_A.map(s=>[s.rod,s.bore]),...Object.values(OEM_KITS).map(k=>[k.rod,k.bore])]){const k=patternKit(r,b);addParts(kitParts(k,'HPCK'),`${r}×${b}`);addParts(kitParts(k,'BASE'),`${r}×${b}`)}
+[['2-214/N70','O-ring AS568-214 · NBR 70','2','N70',.42],['2-214/V','O-ring AS568-214 · FPM 80 (Viton)','2','V',1.9],['2-217/N90','O-ring AS568-217 · NBR 90','2','N90',.55],['2-241/N70','O-ring AS568-241 · NBR 70','2','N70',.6],['8-214/N','Back-up ring AS568-214 · nylon','8','N',.9]].forEach(([pn,desc,fam,mat,base])=>CATALOG.push({pn,desc,fam,mat,qty:1,slot:'',set:'',price:priceFor(pn,base),stock:stockFor(pn),size:'',src:'pattern'}));
+
+/* ---------- part-number grammar helpers ---------- */
+function famOf(pn){const m=pn.match(/^(MOR|GMB|HSM|ES|BU|W|R|P|G|[28])(?=\d|-)/);return m?m[1]:'OTHER'}
+function matOf(pn){const m=pn.match(/\/([A-Z0-9]+)/);return m?m[1]:''}
+function blocks(pn){const m=pn.match(/^[A-Z]+(\d{3})(\d{3})(\d{3})/);return m?[+m[1],+m[2],+m[3]/10]:null}
+function slotFor(pn,rod,bore,isFee){
+  if(isFee)return['Charge','fee'];const f=famOf(pn),b=blocks(pn);
+  if(f==='W'){return(rod&&b&&b[0]<rod-5)?['Pin wipers','hard']:['Rod wiper','rod']}
+  if(f==='R'){return/RH\b|RH\//.test(pn)?['Buffer seal','rod']:['Rod seal','rod']}
+  if(f==='BU'){if(/SD/.test(pn))return['Gland back-up ring','gland'];return(rod&&b&&Math.abs(b[0]-rod)<=2)?['Rod back-up ring','rod']:['Piston back-up rings','bore']}
+  if(f==='P')return['Piston seal','bore'];
+  if(f==='G'){if(rod&&b&&b[0]<rod)return['Pin guide rings','hard'];return/GC/.test(pn)?['Guide rings, phenolic','bore']:/GB/.test(pn)?['Guide rings, PTFE','bore']:['Guide rings','bore']}
+  if(f==='MOR'||f==='2')return['Gland o-ring','gland'];if(f==='8')return['Gland back-up ring','gland'];
+  if(f==='GMB')return['Rod bushing','hard'];if(f==='HSM'||f==='ES')return['Head seal','gland'];
+  return['Component','other'];
+}
+function rowFromProduct(r){return{pn:r.part_number,desc:(r.description||'').replace(/\s+/g,' ').trim()+(r.profile_group?' · '+r.profile_group:''),fam:famOf(r.part_number),mat:matOf(r.part_number),group:r.profile_group||'',price:r.price_on_request?null:r.list_price,por:!!r.price_on_request,stock:{},size:'',src:'live',qty:1,slot:'',set:''}}
+
+/* ---------- live data ---------- */
+async function liveSearch(term,n=40){const{data,error}=await sb.rpc('search_products',{term,max_results:n});if(error){console.warn(error);return[]}return(data||[]).map(rowFromProduct)}
+async function liveKit(code){
+  const{data,error}=await sb.rpc('explode_kit',{p_pn:code,p_max_depth:1});if(error||!data||!data.length)return null;
+  const lines=data.filter(x=>x.depth===1);
+  const w=lines.find(x=>/^W\d/.test(x.component_part_number)),r=lines.find(x=>/^R\d/.test(x.component_part_number)),p=lines.find(x=>/^P\d/.test(x.component_part_number));
+  const rod=blocks((w||r||{component_part_number:''}).component_part_number),bo=blocks((p||{component_part_number:''}).component_part_number);
+  const kit={mode:'bom',code,rod:rod?rod[0]:null,bore:bo?bo[0]:null,parts:[]};
+  kit.parts=lines.map(x=>{const[slot,set]=slotFor(x.component_part_number,kit.rod,kit.bore,x.is_fee);return{slot,set,pn:x.component_part_number,desc:(x.component_description||'').replace(/\s+/g,' ').trim()+(x.is_subkit?' · made from stock (has its own bill of materials)':''),fam:x.is_fee?'FEE':famOf(x.component_part_number),mat:matOf(x.component_part_number),qty:+x.line_quantity||1,price:x.unit_list_price,stock:{},src:'bom',fee:!!x.is_fee}});
+  const order={rod:0,bore:1,gland:2,hard:3,fee:4,other:5};kit.parts.sort((a,b)=>order[a.set]-order[b.set]);
+  return kit;
+}
+async function liveStock(pns){
+  if(!pns.length)return{};const{data,error}=await sb.from('v_stock_staff').select('part_number,warehouse,qty_available,availability,lead_time_days').in('part_number',pns.slice(0,300));
+  if(error){console.warn(error);return{}}const out={};const seen=new Set();
+  for(const s of data||[]){const w=String(s.warehouse||'').trim()||'—';seen.add(w);(out[s.part_number]=out[s.part_number]||{})[w]=+s.qty_available||0;if(s.availability)(out[s.part_number].__avail=out[s.part_number].__avail||{})[w]=s.availability}
+  if(seen.size){const known=WH.filter(w=>seen.has(w));const extra=[...seen].filter(w=>!WH.includes(w)).sort();WH=known.concat(extra);if(!WH.includes(branch))branch=WH[0]}
+  return out;
+}
+async function resolvePattern(kit){ /* attach real prices/descriptions to pattern lines that exist in the catalog */
+  const all=[...kit.rodSet,...kit.boreSet,...kit.gland,...kit.hard,...kit.hp];
+  await Promise.all(all.map(async p=>{const rows=await liveSearch(p.pn,3);const hit=rows.find(r=>r.pn===p.pn);if(hit){p.price=hit.price;p.desc=hit.desc;p.src='live'}else{p.src='pattern';p.missing=true}}));
+  return kit;
+}
+
+/* ---------- parser ---------- */
+function parse(q){
+  const s=q.trim().replace(/×/g,'x').replace(/\s+/g,' ');const l=s.toLowerCase();
+  const out={raw:s,rod:null,bore:null,kit:false,variant:null,fam:null,mat:null,oem:null,pn:null,question:false};
+  if(/^(what|how|which|why|when|does|do|is|are|can|explain|difference)\b/.test(l)||/\?$/.test(l))out.question=true;
+  const m=l.match(/(\d{2,3}(?:\.\d+)?)\s*(?:mm)?\s*(?:rod)?\s*(?:x|by|\/)\s*(\d{2,3}(?:\.\d+)?)\s*(?:mm)?\s*(?:bore)?/);
+  if(m){out.rod=+m[1];out.bore=+m[2]}else{const one=l.match(/(\d{2,3})\s*mm/);if(one)out.rod=+one[1]}
+  if(/\bkits?\b/.test(l))out.kit=true;
+  if(/\bhpck\b|high[- ]?perf/.test(l))out.variant='HPCK';else if(/\bck\b|complete/.test(l))out.variant='CK';else if(/\bbase\b|soft/.test(l))out.variant='BASE';
+  for(const[re,f]of[[/wiper/,'W'],[/rod seal|buffer/,'R'],[/piston/,'P'],[/guide|wear ring/,'G'],[/back-?up/,'BU'],[/bushing/,'GMB'],[/head seal|end seal/,'HSM'],[/metric o-?ring/,'MOR'],[/o-?ring/,'O']]){if(re.test(l)){out.fam=f;break}}
+  for(const[re,mt]of[[/viton|fpm|fkm/,'V'],[/hnbr/,'HNBR90'],[/nbr|nitrile|buna/,'N'],[/30k/,'30K'],[/ptfe|teflon/,'PTFE'],[/u641/,'U641'],[/phenolic/,'phenolic']]){if(re.test(l)){out.mat=mt;break}}
+  for(const[re,n]of[[/caterpillar|\bcat\b/,'Caterpillar'],[/hitachi/,'Hitachi'],[/deere/,'John Deere'],[/komatsu/,'Komatsu'],[/parker/,'Parker Hannifin'],[/denison/,'Denison'],[/royal/,'Royal']]){if(re.test(l)){out.oem=n;break}}
+  const pnm=s.match(/\b(R[A-Z]{2,4}-[\w\-\/]+|[A-Z]{1,3}\d{6,9}[A-Z0-9]*(?:\/[A-Z0-9]+)?(?:-\d)?|[28]-\d{3}(?:\/[A-Z0-9]+)?)\b/i);
+  if(pnm)out.pn=pnm[1].toUpperCase();
+  if(!out.pn&&out.oem){const num=s.match(/\b(\d{6,9}|[A-Z]{1,3}\d{5,9}|\d{3}-\d{2}-\d{5})\b/i);if(num)out.pn=OEM_PRE[out.oem]+num[1].toUpperCase()}
+  if(out.pn&&/^R[A-Z]{2,4}-/.test(out.pn)&&!/^RJIS-/.test(out.pn)){out.kitCode=out.pn;const base=out.pn.replace(/-(CK|HPCK)$/,'');const k=OEM_KITS[base];if(k){out.rod=k.rod;out.bore=k.bore;out.oem=k.oem}out.kit=true;out.oemKit=base;if(!out.variant)out.variant=out.pn.endsWith('HPCK')?'HPCK':out.pn.endsWith('-CK')?'CK':null}
+  if(out.pn&&/^RJIS-(\d+)X(\d+)/i.test(out.pn)){const mm=out.pn.match(/^RJIS-(\d+)X(\d+)(?:-(CK|HPCK))?/i);out.rod=+mm[1];out.bore=+mm[2];out.kit=true;out.kitCode=out.pn;if(mm[3])out.variant=mm[3].toUpperCase()}
+  if(out.rod&&out.bore&&!out.fam)out.kit=true;
+  return out;
+}
+function intentChips(p){const c=[];if(p.question)c.push(['Question for Marion','']);if(p.oemKit)c.push([(OEM_KITS[p.oemKit]||{}).oem?OEM_KITS[p.oemKit].oem+' kit':'Replacement kit',p.kitCode]);else if(p.pn)c.push(['Part number',p.pn]);if(p.rod&&p.bore)c.push(['Rod × bore',`${p.rod} × ${p.bore} mm`]);else if(p.rod)c.push(['Rod',`${p.rod} mm`]);if(p.kit&&!p.oemKit&&!p.kitCode)c.push(['Kit','']);if(p.variant)c.push(['Variant',p.variant]);if(p.fam)c.push(['Family',FAM_NAMES[p.fam]||(p.fam==='O'?'O-rings':p.fam)]);if(p.mat)c.push(['Material',p.mat]);if(p.oem&&!p.oemKit)c.push(['OEM',p.oem]);return c}
+function previewIntent(v){const el=document.getElementById('intent');if(!v.trim()){el.innerHTML='<span class="lbl">Type a size, a part number, an OEM number, or a question.</span>';return}const chips=intentChips(parse(v));el.innerHTML='<span class="lbl">Claude reads this as</span>'+(chips.length?chips.map(([k,v2])=>`<span class="chip">${k}${v2?' <b>'+esc(v2)+'</b>':''}</span>`).join(''):'<span class="chip">Free text — catalogue search</span>')}
+async function askMarion(q){const l=q.toLowerCase();let best=null,score=0;for(const c of CANNED){const sc=c.k.filter(k=>l.includes(k)).length;if(sc>score){score=sc;best=c}}return{text:best?best.a:'Not in the kit-rules knowledge yet. In the quote wizard, Marion answers from the full knowledge base through marion-chat.',src:'Kit-rules knowledge base'}}
+
+/* ---------- state + search ---------- */
+let state={p:null,view:'cards',rows:[],filters:{fam:'',mat:'',branch:'',inStock:false},sel:new Set(),kit:null,variant:'BASE',kitSel:null,kitQty:1,oemList:null,siblings:null};
+const cart=[];
+function quick(q){document.getElementById('q').value=q;previewIntent(q);runSearch()}
+function goHome(){document.getElementById('results').style.display='none';document.getElementById('home').style.display='';window.scrollTo({top:0})}
+function setBranch(b){branch=b;document.getElementById('cartBranch').textContent='Ship from '+b;if(state.rows.length||state.kit)render()}
+function famTerm(p){const map={W:'W',R:'R',P:'P',G:'G',BU:'BU',GMB:'GMB',HSM:'HSM',MOR:'MOR',O:'MOR'};return(map[p.fam]||'')+(p.rod?p3(p.rod):'')}
+
+async function runSearch(ev){
+  if(ev)ev.preventDefault();const q=document.getElementById('q').value.trim();if(!q)return;
+  const p=parse(q);state.p=p;state.sel.clear();state.kit=null;state.oemList=null;state.siblings=null;state.kitSel=null;state.kitQty=1;
+  document.getElementById('answer').innerHTML='';document.getElementById('home').style.display='none';document.getElementById('results').style.display='block';
+  document.getElementById('rTitle').textContent=LIVE?'Searching the catalogue…':'Searching…';document.getElementById('rCount').textContent='';document.getElementById('view').innerHTML='';
+  if(p.question){askMarion(q).then(a=>{document.getElementById('answer').innerHTML=`<div class="answer"><div class="who">Marion</div><p>${esc(a.text)}</p><div class="src">${a.src}</div></div>`})}
+  state.filters={fam:p.fam&&p.fam!=='O'?p.fam:'',mat:p.mat||'',branch:'',inStock:false};
+  try{ if(LIVE)await searchLive(p); else searchPreview(p); }catch(e){console.error(e);toast('Search failed: '+esc(e.message||e))}
+  render();document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function searchPreview(p){
+  if(p.oem&&!(p.rod&&p.bore)&&!p.fam&&!p.pn){state.oemList=Object.entries(OEM_KITS).filter(([c,o])=>o.oem===p.oem).map(([c,o])=>({code:c,...o}));state.rows=[];state.view='cards';return}
+  if(p.rod&&p.bore&&p.kit){state.kit=patternKit(p.rod,p.bore);state.variant=p.variant||'BASE';state.view='kit'}else{state.view=state.view==='kit'?'cards':state.view}
+  state.rows=CATALOG.filter(r=>{if(p.pn&&!p.kitCode)return r.pn.includes(p.pn);if(p.rod&&p.bore)return r.size===`${p.rod}×${p.bore}`;if(p.rod){const rr=p3(p.rod);if(p.fam&&p.fam!=='O')return r.fam===p.fam&&r.pn.slice(r.fam.length,r.fam.length+3)===rr;return r.pn.includes(rr)}if(p.fam==='O')return r.fam==='2'||r.fam==='MOR';if(p.fam)return r.fam===p.fam;if(p.mat)return true;return false});
+}
+async function searchLive(p){
+  let rows=[],kit=null;
+  if(p.kitCode){kit=await liveKit(p.kitCode);if(!kit&&p.rod&&p.bore){kit=await resolvePattern(patternKit(p.rod,p.bore));kit.alias=p.kitCode}rows=await liveSearch(p.kitCode.replace(/-(CK|HPCK)$/,''),40)}
+  else if(p.rod&&p.bore&&p.kit){kit=await liveKit(`RJIS-${p.rod}X${p.bore}${p.variant&&p.variant!=='BASE'?'-'+p.variant:''}`);if(!kit)kit=await resolvePattern(patternKit(p.rod,p.bore));const[a,b]=await Promise.all([liveSearch(`${p.rod}MM ROD X ${p.bore}MM BORE`,20),liveSearch(`RJIS-${p.rod}X${p.bore}`,20)]);rows=dedupe(a.concat(b))}
+  else if(p.pn)rows=await liveSearch(p.pn,40);
+  else if(p.oem&&!p.fam){rows=await liveSearch(OEM_PRE[p.oem]||p.oem,40);state.oemList=rows.filter(r=>/^R[A-Z]{2,4}-/.test(r.pn)).map(r=>({code:r.pn,oem:p.oem,note:r.desc,rod:null,bore:null}));rows=[];state.view='cards';}
+  else if(p.fam&&p.rod)rows=await liveSearch(famTerm(p),40);
+  else rows=await liveSearch(p.raw,40);
+  if(kit){state.kit=kit;state.variant=kit.mode==='bom'?(p.variant||(kit.code&&kit.code.endsWith('HPCK')?'HPCK':kit.code&&kit.code.endsWith('-CK')?'CK':'BASE')):(p.variant||'BASE');state.view='kit';
+    if(kit.mode==='bom'){const base=kit.code.replace(/-(CK|HPCK)$/,'');const sib=await Promise.all([base,base+'-CK',base+'-HPCK'].map(async c=>{if(c===kit.code)return c;const{data}=await sb.rpc('explode_kit',{p_pn:c,p_max_depth:1});return(data&&data.length)?c:null}));state.siblings=sib}
+    const kp=kitParts(kit,state.variant);const kitPns=new Set(kp.map(x=>x.pn));rows=rows.filter(r=>!kitPns.has(r.pn));}
+  else state.view=state.view==='kit'?'cards':state.view;
+  state.rows=rows;
+  const pns=[...new Set(rows.map(r=>r.pn).concat(kit?kitParts(kit,'HPCK').concat(kitParts(kit,'BASE')).map(x=>x.pn):[]))];
+  const st=await liveStock(pns);
+  const apply=r=>{r.stock=st[r.pn]||{};r.avail=(st[r.pn]||{}).__avail||{}};rows.forEach(apply);
+  if(kit){(kit.mode==='bom'?kit.parts:[...kit.rodSet,...kit.boreSet,...kit.gland,...kit.hard,...kit.hp]).forEach(apply)}
+}
+function dedupe(rows){const s=new Set();return rows.filter(r=>!s.has(r.pn)&&s.add(r.pn))}
+
+/* ---------- render ---------- */
+function title(p){if(p.kitCode)return p.kitCode+(state.kit&&state.kit.rod&&state.kit.bore?` · ${state.kit.rod} × ${state.kit.bore} mm`:'');if(p.rod&&p.bore&&p.kit)return`Kit for ${p.rod} mm rod × ${p.bore} mm bore`;if(p.rod&&p.bore)return`${p.rod} × ${p.bore} mm`;if(p.pn)return p.pn;if(p.oem&&!p.fam)return`${p.oem} replacement kits`;if(p.fam)return(FAM_NAMES[p.fam]||'O-rings')+(p.rod?` · ${p.rod} mm`:'');if(p.mat)return`${p.mat} parts`;return`Results for “${p.raw}”`}
+function filtered(){const f=state.filters;return state.rows.filter(r=>(!f.fam||r.fam===f.fam)&&(!f.mat||r.mat===f.mat)&&(!f.inStock||(r.stock[branch]||0)>0)&&(!f.branch||(r.stock[f.branch]||0)>0))}
+function render(){
+  const p=state.p;if(!p)return;const rows=filtered();
+  document.getElementById('rTitle').textContent=title(p);
+  document.getElementById('rCount').textContent=state.oemList?`${state.oemList.length} kits`:state.kit?`${kitParts(state.kit,state.variant).length} lines in this kit · ${rows.length} related parts`:`${rows.length} parts`;
+  document.querySelectorAll('#views button').forEach(b=>{b.classList.toggle('on',b.dataset.v===state.view);b.style.display=(b.dataset.v==='kit'&&!state.kit)?'none':''});
+  const v=document.getElementById('view');
+  document.getElementById('filters').style.display=(state.oemList||(p.question&&!rows.length&&!state.kit))?'none':'';
+  if(state.oemList){document.getElementById('bulk').style.display='none';v.innerHTML=renderKitCards(state.oemList);updateSel();return}
+  renderFilters();document.getElementById('bulk').style.display=state.view==='kit'||state.view==='map'?'none':'';
+  if(p.question&&!rows.length&&!state.kit){document.getElementById('bulk').style.display='none';v.innerHTML='<div class="empty">Search a size, a part number or an OEM number to see parts.</div>';updateSel();return}
+  if(state.view==='kit')v.innerHTML=renderKit();else if(state.view==='cards')v.innerHTML=renderCards(rows);else if(state.view==='lines')v.innerHTML=renderLines(rows);else v.innerHTML=renderMap(rows);
+  updateSel();
+}
+function setView(v){state.view=v;render()}
+function renderFilters(){const fams=[...new Set(state.rows.map(r=>r.fam))];const mats=[...new Set(state.rows.map(r=>r.mat).filter(Boolean))];const f=state.filters;const opt=(list,cur,name)=>list.map(x=>`<option value="${esc(x)}" ${x===cur?'selected':''}>${name?esc(name[x]||x):esc(x)}</option>`).join('');
+  document.getElementById('filters').innerHTML=`<label class="f ${f.fam?'on':''}">Family <select onchange="setF('fam',this.value)"><option value="">all</option>${opt(fams,f.fam,FAM_NAMES)}</select></label><label class="f ${f.mat?'on':''}">Material <select onchange="setF('mat',this.value)"><option value="">all</option>${opt(mats,f.mat)}</select></label><label class="f ${f.branch?'on':''}">In stock at <select onchange="setF('branch',this.value)"><option value="">any branch</option>${opt(WH,f.branch)}</select></label><label class="f ${f.inStock?'on':''}"><input type="checkbox" ${f.inStock?'checked':''} onchange="setF('inStock',this.checked)"> In stock at ${esc(branch)}</label>${(f.fam||f.mat||f.branch||f.inStock)?'<button class="clr" onclick="clearF()">Clear filters</button>':''}`}
+function setF(k,v){state.filters[k]=v;render()}function clearF(){state.filters={fam:'',mat:'',branch:'',inStock:false};render()}
+function stockHtml(r){if(!LIVE)return WH.map(b=>`<span class="st ${b===branch?'home':''} ${(r.stock[b]||0)===0?'zero':''}" title="${esc(b)} (sample)">${esc(b[0])} ${r.stock[b]||0}</span>`).join('');
+  const ws=Object.keys(r.stock||{}).filter(k=>!k.startsWith('__'));if(!ws.length)return`<span class="st zero">no stock row · made to order</span>`;return ws.map(b=>`<span class="st ${b===branch?'home':''} ${(r.stock[b]||0)===0?'zero':''}" title="${esc(b)}${r.avail&&r.avail[b]?' · '+esc(r.avail[b]):''}">${esc(b.slice(0,3))} ${r.stock[b]}</span>`).join('')}
+function priceHtml(r){return r.por?'<span class="price"><small>price on request</small></span>':`<span class="price">${money(r.price)}<small> list</small></span>`}
+function cssId(s){return s.replace(/[^A-Za-z0-9]/g,'_')}
+function renderCards(rows){if(!rows.length)return`<div class="empty">No parts match. Clear a filter or search a different size.</div>`;return`<div class="cards">${rows.map(r=>`<div class="card ${state.sel.has(r.pn)?'sel':''}"><input class="sel-box" type="checkbox" ${state.sel.has(r.pn)?'checked':''} onchange="toggleSel('${esc(r.pn)}',this.checked)" aria-label="Select ${esc(r.pn)}"><div class="fam">${esc(FAM_NAMES[r.fam]||r.fam)}${r.size?`<span>${esc(r.size)}</span>`:''}${r.group?`<span>${esc(r.group)}</span>`:''}</div><div class="pn">${esc(r.pn)}</div><div class="ds">${esc(r.desc)}</div><div class="stock">${stockHtml(r)}</div><div class="foot">${priceHtml(r)}<input class="qty" type="number" min="1" value="${r.qty||1}" id="q-${cssId(r.pn)}" aria-label="Quantity"><button class="add" onclick="addOne('${esc(r.pn)}')" aria-label="Add">+</button></div></div>`).join('')}</div>`}
+function renderKitCards(list){if(!list.length)return`<div class="empty">No replacement kits found for this OEM.</div>`;return`<div class="cards">${list.map(k=>`<button class="card" style="text-align:left;cursor:pointer" onclick="quick('${esc(k.code)}')"><div class="fam">${esc(k.oem)} replacement kit${k.rod?`<span>${k.rod}×${k.bore}</span>`:''}</div><div class="pn">${esc(k.code)}</div><div class="ds">${esc(k.note||'')}</div><div class="foot"><span class="price" style="font-size:15px;color:var(--grey);font-family:var(--body);font-weight:400">Open kit view</span><span class="add" aria-hidden="true">›</span></div></button>`).join('')}</div>`}
+function renderLines(rows){if(!rows.length)return`<div class="empty">No parts match. Clear a filter or search a different size.</div>`;const cols=LIVE?WH:WH;return`<div class="tbl"><table><thead><tr><th></th><th>Part number</th><th>Description</th><th>Family</th><th>Material</th>${cols.map(w=>`<th class="num">${esc(w.slice(0,4))}</th>`).join('')}<th class="num">List</th><th>Qty</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr class="${state.sel.has(r.pn)?'sel':''}"><td><input type="checkbox" ${state.sel.has(r.pn)?'checked':''} onchange="toggleSel('${esc(r.pn)}',this.checked)" aria-label="Select"></td><td><span class="pn">${esc(r.pn)}</span></td><td>${esc(r.desc)}</td><td>${esc(FAM_NAMES[r.fam]||r.fam)}</td><td>${esc(r.mat)}</td>${cols.map(b=>`<td class="num ${b===branch?'home':''} ${(r.stock[b]||0)===0?'zero':''}">${r.stock[b]==null?'—':r.stock[b]}</td>`).join('')}<td class="num">${r.por?'on request':money(r.price)}</td><td><input class="qty" type="number" min="1" value="${r.qty||1}" id="q-${cssId(r.pn)}" aria-label="Quantity"></td><td><button class="add" onclick="addOne('${esc(r.pn)}')" aria-label="Add">+</button></td></tr>`).join('')}</tbody></table></div>`}
+function renderMap(rows){const src=state.kit?rows.concat(kitParts(state.kit,state.variant)):rows;const tot={},lines={};for(const w of WH){tot[w]=0;lines[w]=0}for(const r of src)for(const w of WH){tot[w]+=r.stock[w]||0;if((r.stock[w]||0)>0)lines[w]++}
+  const pts={Edmonton:[275,205],Calgary:[262,278],Richmond:[92,318]};const dot=(w,x,y)=>`<g onclick="setF('branch','${esc(w)}')" style="cursor:pointer"><circle cx="${x}" cy="${y}" r="${18+Math.min(22,Math.sqrt(tot[w]||0)*2)}" fill="#FFDD00" opacity=".35"/><circle cx="${x}" cy="${y}" r="9" fill="#231F20"/><text x="${x+16}" y="${y+5}" font-family="Arial Narrow, Helvetica, Arial, sans-serif" font-weight="700" font-size="20" fill="#231F20">${esc(w)} · ${tot[w]||0}</text></g>`;
+  return`<div class="map"><svg viewBox="0 0 400 380" role="img" aria-label="Stock by branch"><path d="M60 30 H345 V150 L340 340 L300 355 L230 360 L150 355 L60 300 Z" fill="#F2F2F0" stroke="#C6C8CA"/><path d="M215 30 V340" stroke="#C6C8CA" stroke-dasharray="4 4"/><text x="110" y="70" font-family="Arial Narrow, Helvetica, Arial, sans-serif" font-size="22" fill="#939597">British Columbia</text><text x="250" y="70" font-family="Arial Narrow, Helvetica, Arial, sans-serif" font-size="22" fill="#939597">Alberta</text>${WH.filter(w=>pts[w]).map(w=>dot(w,...pts[w])).join('')}</svg><div class="branches">${WH.map(w=>`<button class="br ${state.filters.branch===w?'on':''}" onclick="setF('branch','${state.filters.branch===w?'':esc(w)}')"><span class="code">${esc(WH_CODE[w]||w.slice(0,2))}</span><span><span class="nm">${esc(w)}</span><br><span style="color:var(--grey);font-size:13px">${lines[w]} of ${src.length} parts available</span></span><span class="q"><b>${tot[w]}</b><small>available</small></span></button>`).join('')}<div style="font-size:13px;color:var(--grey)">Tap a branch to keep only what it has available. ${LIVE?'Live from v_stock_staff.':'Sample figures until you sign in.'}</div></div></div>`}
+function renderKit(){
+  const k=state.kit,parts=kitParts(k,state.variant);if(!state.kitSel)state.kitSel=new Set(parts.filter(x=>!x.optional&&!x.fee).map(x=>x.pn));
+  const p=state.p;const code=k.mode==='bom'?k.code:(k.alias||`RJIS-${k.rod}X${k.bore}${state.variant==='BASE'?'':'-'+state.variant}`);
+  const oemk=OEM_KITS[(k.code||k.alias||'').replace(/-(CK|HPCK)$/,'')];const empSize=TIER_A.find(s=>s.rod===k.rod&&s.bore===k.bore);
+  const sets=[['rod','Rod set','#231F20'],['bore','Bore set','#FFDD00'],['gland','Gland set','#939597'],['hard','Hard parts','#C6C8CA'],['fee','Charges','#EDEEEF'],['other','Other components','#EDEEEF']];
+  const sub=parts.filter(x=>state.kitSel.has(x.pn)).reduce((a,x)=>a+(x.price||0)*x.qty,0);const missing=parts.filter(x=>x.missing).length;
+  let variants='';
+  if(k.mode==='bom'){const base=k.code.replace(/-(CK|HPCK)$/,'');const sib=state.siblings||[];variants=[[base,'Base','soft seals'],[base+'-CK','-CK','+ hard parts'],[base+'-HPCK','-HPCK','high performance']].map(([c,l,s])=>`<button class="${c===k.code?'on':''}" ${sib.includes(c)?`onclick="quick('${esc(c)}')"`:'disabled title="No bill of materials on file for this variant"'}>${l}<small>${sib.includes(c)?s:'not on file'}</small></button>`).join('')}
+  else variants=`<button class="${state.variant==='BASE'?'on':''}" onclick="setVariant('BASE')">Base<small>soft seals, 10 lines</small></button><button class="${state.variant==='CK'?'on':''}" onclick="setVariant('CK')">-CK<small>+ bushing, pin guides</small></button><button class="${state.variant==='HPCK'?'on':''}" onclick="setVariant('HPCK')">-HPCK<small>30K, HNBR, head seal</small></button>`;
+  const source=k.mode==='bom'?'components from the Dynamics bill of materials':(missing?`pattern-derived · ${missing} of ${parts.length} part numbers not found in the catalogue`:LIVE?'pattern-derived · every part number found in the catalogue':'pattern-derived (preview)');
+  return`<div class="kit"><div class="kithead"><div><div class="code">${esc(code)}<small>${oemk?`${esc(oemk.oem)} · ${esc(oemk.note)} · `:''}${k.mode==='pattern'?'Proposed RJIS code (board item 7) · ':''}${empSize?`${empSize.kits} kits to ${empSize.cust} customers in 24 months · `:''}${source}</small></div></div><div class="grow"></div><div class="variants">${variants}</div><div class="alias">Also known as ${k.rod&&k.bore?`<span>${k.rod}MM ROD X ${k.bore}MM BORE</span><span>RJIS-${k.rod}X${k.bore}</span>`:''}${Object.entries(OEM_KITS).filter(([c,o])=>k.rod&&o.rod===k.rod&&o.bore===k.bore&&c!==(k.code||'').replace(/-(CK|HPCK)$/,'')).map(([c])=>`<span>${c}</span>`).join('')}</div></div>
+  <div class="cyl">${cylinderSvg(k,parts)}<div class="cap">Cross-section of a ${k.rod||'?'} × ${k.bore||'?'} cylinder. Each marker is a slot in the kit; colours match the sets on the right. Untick a slot to leave it out.</div></div>
+  <div class="slots">${sets.map(([id,name,col])=>{const ps=parts.filter(x=>x.set===id);if(!ps.length)return'';return`<div class="set"><h3><span class="sw" style="background:${col}"></span>${name}<span class="cnt">${ps.length} slot${ps.length>1?'s':''}</span></h3>${ps.map(x=>`<div class="slot ${state.kitSel.has(x.pn)?'':'off'} ${x.hp?'hp':''}"><input type="checkbox" ${state.kitSel.has(x.pn)?'checked':''} onchange="kitToggle('${esc(x.pn)}',this.checked)" aria-label="Include ${esc(x.slot)}"><div><div class="nm">${esc(x.slot)}${x.hp?'<span class="tag">HP</span>':''}${x.src==='bom'?'<span class="tag" style="background:var(--ink);color:var(--yellow)">BOM</span>':x.src==='live'?'<span class="tag" style="background:var(--surface);border:1px solid var(--line)">catalogue</span>':x.missing?'<span class="tag" style="background:#fff5f5;color:var(--red);border:1px solid #f1c2c6">not in catalogue</span>':''}</div><div class="pn">${esc(x.pn)}<span class="sub">${esc(x.desc)}</span></div>${x.alts&&x.alts.length?`<div class="alt"><select onchange="kitSwap('${esc(x.pn)}',this.value)"><option>${esc(x.pn)} — as specified</option>${x.alts.map(a=>`<option value="${esc(a.pn)}">${esc(a.pn)} — ${esc(a.mat)}</option>`).join('')}</select></div>`:''}<div class="stock" style="margin-top:6px">${stockHtml(x)}</div></div><div class="r"><span class="q">×${x.qty}<small> per kit</small></span><span>${money((x.price||0)*x.qty)}</span></div></div>`).join('')}</div>`}).join('')}</div>
+  <div class="kitfoot"><span class="tot">${money(sub)}<small> list per kit · ${[...state.kitSel].length} of ${parts.length} slots</small></span><div class="grow"></div><label>Kits <input class="qty" type="number" min="1" value="${state.kitQty}" onchange="state.kitQty=Math.max(1,+this.value||1);render()"></label><button class="btn g" onclick="addKit(false)">Add components</button><button class="btn y" onclick="addKit(true)">Add as kit ${esc(code)}</button></div></div>`}
+function cylinderSvg(k,parts){const on=pn=>state.kitSel.has(pn);const col={rod:'#231F20',bore:'#FFDD00',gland:'#939597',hard:'#C6C8CA',fee:'#EDEEEF',other:'#EDEEEF'};
+  const pos={'Rod wiper':[118,120],'Rod seal':[150,120],'Buffer seal':[176,120],'Rod back-up ring':[196,120],'Gland o-ring':[224,96],'Gland back-up ring':[224,144],'Head seal':[240,96],'Piston seal':[420,120],'Piston back-up rings':[400,120],'Guide rings, phenolic':[372,120],'Guide rings, PTFE':[448,120],'Guide rings':[448,120],'Rod bushing':[80,120],'Pin guide rings':[520,220],'Pin wipers':[520,190]};
+  const marks=parts.map(p=>{const q=pos[p.slot];if(!q)return'';const c=col[p.set]||'#231F20';return`<g opacity="${on(p.pn)?1:.25}"><line x1="${q[0]}" y1="${q[1]-42}" x2="${q[0]}" y2="${q[1]+42}" stroke="${c}" stroke-width="${p.qty>1?6:4}" ${p.qty>1?'stroke-dasharray="10 4"':''}/><circle cx="${q[0]}" cy="${q[1]-52}" r="7" fill="${c}" stroke="#fff" stroke-width="2"/></g>`}).join('');
+  const ff='font-family="Arial Narrow, Helvetica, Arial, sans-serif" font-size="14" fill="#939597"';
+  return`<svg viewBox="0 0 560 260" role="img" aria-label="Cylinder cross-section with kit slots"><rect x="60" y="60" width="440" height="120" rx="6" fill="#F2F2F0" stroke="#C6C8CA" stroke-width="2"/><rect x="60" y="88" width="440" height="64" fill="#fff" stroke="#C6C8CA"/><rect x="0" y="104" width="460" height="32" rx="3" fill="#DDDEDC" stroke="#939597"/><rect x="360" y="92" width="100" height="56" rx="3" fill="#C6C8CA" stroke="#939597"/><rect x="70" y="84" width="180" height="72" fill="none" stroke="#939597" stroke-dasharray="3 3"/><rect x="500" y="90" width="40" height="60" rx="3" fill="#DDDEDC" stroke="#939597"/><text x="16" y="98" ${ff}>rod ${k.rod||'?'} mm</text><text x="392" y="200" ${ff}>piston · bore ${k.bore||'?'} mm</text><text x="70" y="200" ${ff}>gland</text><text x="496" y="240" ${ff}>pin end</text>${marks}</svg>`}
+function setVariant(v){state.variant=v;state.kitSel=null;render()}
+function kitToggle(pn,on){if(on)state.kitSel.add(pn);else state.kitSel.delete(pn);render()}
+function kitSwap(oldPn,newPn){const k=state.kit;if(k.mode==='bom')return;const swap=arr=>{for(const p of arr){if(p.pn===oldPn&&p.alts){const a=p.alts.find(x=>x.pn===newPn);if(!a)return;const prev={pn:p.pn,desc:p.desc,mat:p.mat,base:p.price};Object.assign(p,{pn:a.pn,desc:a.desc,mat:a.mat,price:priceFor(a.pn,a.base||prev.base),stock:stockFor(a.pn)});p.alts=[prev]}}};[k.rodSet,k.boreSet,k.gland].forEach(swap);if(state.kitSel.has(oldPn)){state.kitSel.delete(oldPn);state.kitSel.add(newPn)}render()}
+
+/* ---------- selection + quote list ---------- */
+function toggleSel(pn,on){if(on)state.sel.add(pn);else state.sel.delete(pn);render()}
+function toggleAll(on){state.sel=on?new Set(filtered().map(r=>r.pn)):new Set();render()}
+function clearSel(){state.sel.clear();render()}
+function updateSel(){const n=state.sel.size;document.getElementById('selCount').textContent=`${n} selected`;document.getElementById('addSel').disabled=!n;document.getElementById('selAll').checked=n>0&&n===filtered().length}
+function findPart(pn){return state.rows.find(r=>r.pn===pn)||(state.kit?kitParts(state.kit,'HPCK').concat(kitParts(state.kit,'BASE')).find(r=>r.pn===pn):null)||CATALOG.find(r=>r.pn===pn)}
+function addToCart(r,qty,kitOf){if(!r)return;const ex=cart.find(c=>c.pn===r.pn&&c.kitOf===kitOf);if(ex)ex.qty+=qty;else cart.push({pn:r.pn,desc:r.desc,price:r.price||0,qty,kitOf});renderCart()}
+function addOne(pn){const r=findPart(pn);const q=document.getElementById('q-'+cssId(pn));const qty=Math.max(1,+(q&&q.value)||1);addToCart(r,qty);toast(`Added <b>${qty} × ${esc(pn)}</b>`)}
+function addSelected(){let n=0;for(const pn of state.sel){const q=document.getElementById('q-'+cssId(pn));addToCart(findPart(pn),Math.max(1,+(q&&q.value)||1));n++}state.sel.clear();render();toast(`Added <b>${n} lines</b> to the quote list`)}
+function addKit(asKit){const parts=kitParts(state.kit,state.variant).filter(x=>state.kitSel.has(x.pn));const k=state.kit;const code=k.mode==='bom'?k.code:(k.alias||`RJIS-${k.rod}X${k.bore}${state.variant==='BASE'?'':'-'+state.variant}`);for(const x of parts)addToCart(x,x.qty*state.kitQty,asKit?code:undefined);toast(asKit?`Added <b>${state.kitQty} × ${esc(code)}</b> (${parts.length} lines)`:`Added <b>${parts.length} components</b>`)}
+function renderCart(){const n=cart.reduce((a,c)=>a+c.qty,0);document.getElementById('cartN').textContent=n;const el=document.getElementById('cartItems');
+  if(!cart.length){el.innerHTML='<div class="empty">Nothing in the quote list yet. Search a size or an OEM number and add lines or a whole kit.</div>'}
+  else{const groups={};for(const c of cart){const g=c.kitOf||'';(groups[g]=groups[g]||[]).push(c)}el.innerHTML=Object.entries(groups).map(([g,items])=>`${g?`<div style="font-family:var(--display);font-weight:600;font-size:18px;padding:10px 0 2px">${esc(g)} <span style="font-family:var(--body);font-size:12px;color:var(--grey)">kit · ${items.length} lines</span></div>`:''}${items.map(c=>`<div class="ci"><div><div class="pn">${esc(c.pn)}</div><div class="ds">${esc(c.desc)}</div></div><div class="ctl"><button onclick="cartQty('${esc(c.pn)}','${esc(g)}',-1)" aria-label="Less">−</button><span>${c.qty}</span><button onclick="cartQty('${esc(c.pn)}','${esc(g)}',1)" aria-label="More">+</button><span class="ln">${money(c.price*c.qty)}</span></div></div>`).join('')}`).join('')}
+  document.getElementById('cartTot').textContent=money(cart.reduce((a,c)=>a+c.price*c.qty,0))}
+function cartQty(pn,g,d){const c=cart.find(x=>x.pn===pn&&(x.kitOf||'')===g);if(!c)return;c.qty+=d;if(c.qty<=0)cart.splice(cart.indexOf(c),1);renderCart()}
+function emptyCart(){cart.length=0;renderCart()}
+function openCart(){renderCart();document.getElementById('drawer').classList.add('open');document.getElementById('scrim').classList.add('open')}
+function closeCart(){document.getElementById('drawer').classList.remove('open');document.getElementById('scrim').classList.remove('open')}
+function multiAddText(){return cart.map(c=>`${c.pn}, ${c.qty}`).join('\n')}
+function copyList(){const t=multiAddText();if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>toast('<b>Copied</b> — paste into Multi Add'),()=>{});const ta=document.getElementById('hlist');ta.focus();ta.select()}
+function handoff(){if(!cart.length){toast('Nothing to add yet');return}document.getElementById('hlist').value=multiAddText();try{localStorage.setItem('marion_find_handoff',JSON.stringify({at:new Date().toISOString(),branch,lines:cart}))}catch(e){}closeCart();document.getElementById('hdrawer').classList.add('open');document.getElementById('hscrim').classList.add('open');copyList()}
+function closeHandoff(){document.getElementById('hdrawer').classList.remove('open');document.getElementById('hscrim').classList.remove('open')}
+let toastT;function toast(html){const t=document.getElementById('toast');t.innerHTML=html;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400)}
+
+/* ---------- auth (same pattern as quotes.html) ---------- */
+function setMode(){const b=document.getElementById('modeBadge'),bar=document.getElementById('modebar'),t=document.getElementById('modeText'),f=document.getElementById('footData');
+  if(LIVE){b.textContent='FIND · LIVE';bar.style.display='none';f.textContent='Data: live catalogue (search_products), bills of materials (explode_kit) and stock (v_stock_staff) — the same objects the quote wizard reads'}
+  else if(SESSION){b.textContent='FIND · PREVIEW';bar.style.display='';t.textContent='Signed in, but this account is not marked as Fluidseal staff — showing preview data.';f.textContent='Data: preview (pattern-derived)'}
+  else{b.textContent='FIND · PREVIEW';bar.style.display='';t.textContent='Preview: pattern-derived data. Sign in with your @fluidsealab.com email for live products, bills of materials and stock.';f.textContent='Data: preview (pattern-derived)'}}
+function renderAuth(){const form=document.getElementById('authForm'),who=document.getElementById('authWho'),btn=document.getElementById('authBtn');if(SESSION){form.classList.add('hidden');who.textContent=SESSION.user.email;btn.textContent='Sign out'}else{who.textContent='';btn.textContent='Sign in'}}
+function authAction(){if(!sb)return;if(SESSION){sb.auth.signOut();return}const f=document.getElementById('authForm');f.classList.toggle('hidden');if(!f.classList.contains('hidden'))document.getElementById('authEmail').focus()}
+async function sendLink(){const email=document.getElementById('authEmail').value.trim();if(!email||!sb)return;const{error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});toast(error?'Could not send link: '+esc(error.message):'Magic link sent to '+esc(email)+' — check your email');document.getElementById('authForm').classList.add('hidden')}
+async function initAuth(){
+  if(!window.supabase){setMode();return}sb=window.supabase.createClient(SB_URL,SB_KEY);
+  sb.auth.onAuthStateChange(async(_e,session)=>{SESSION=session;LIVE=false;if(session){try{const{data}=await sb.from('profiles').select('is_staff').eq('id',session.user.id).single();LIVE=!!(data&&data.is_staff)}catch(e){}}renderAuth();setMode();if(state.p)runSearch()});
+}
+
+/* ---------- home ---------- */
+document.getElementById('sizes').innerHTML=TIER_A.map((s,i)=>`<button class="size ${i<3?'hot':''}" onclick="quick('${s.rod}mm x ${s.bore}mm kit')"><div class="dim">${s.rod}<small> × </small>${s.bore}</div><div class="meta">${s.kits} kits · ${s.cust} customers</div></button>`).join('');
+document.getElementById('oems').innerHTML=OEMS.map(o=>`<button class="oem" onclick="quick('${o.name.toLowerCase()} kits')"><span class="pre">${o.pre}</span><span><span class="nm">${o.name}</span><br><span class="ct">${o.kits.toLocaleString()} kits in 24 months</span></span></button>`).join('');
+const brSel=document.getElementById('branch');if(brSel){brSel.innerHTML=WH.map(w=>`<option value="${w}">${w} (${WH_CODE[w]||''})</option>`).join('')}
+document.getElementById('cartBranch').textContent='Ship from '+branch;
+renderCart();setMode();initAuth();
+
+</script>
+</body>
+</html>
