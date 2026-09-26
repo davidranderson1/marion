@@ -10,6 +10,36 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · SSG WEBSITE SESSION: flabed equipment graph — OEM brands, models, fitments (public/archive/xpress untouched)
+- Logged by the SSG Website / Updates session per the shared-DB protocol (`list_migrations` +
+  this file checked first; no name collisions — all objects are new and in `flabed`).
+- DB migration `flabed_equipment_graph_v1`: three NEW tables in `flabed` — `flabed.oem_brands`
+  (part-number prefix → OEM name, confidence, part count, Dynamics name candidates, live slug,
+  approved flag + Dynamics id columns), `flabed.equipment_models` (oem_prefix → model, equipment
+  type, sources, counts, `market_equipment_id` link to the Mining cards), `flabed.equipment_fitments`
+  (model/application → kit part number, bore/rod/unit, kit_match exact|variant|none, catalog page,
+  approved flag); public-read RLS + grants to anon/authenticated; view `flabed.v_kit_components`
+  (security_invoker) over `public.bom_lines` join `public.products` (no cost columns). READ-only
+  use of `public.products` / `public.bom_lines`; `public.account_products` NOT used (private,
+  one customer — David's rule).
+- Data loaded (DML, `flabed` rows only): oem_brands 311 (182 named; 2 confirmed RCAT/RJD),
+  equipment_models 1,483 across 27 prefixes (1,482 from the Seal Kit Catalog Vol.2 section PDFs
+  + `R{OEM}-{MODEL}/{APPLICATION}` part numbers, plus Euclid-Hitachi EH5000), equipment_fitments
+  246 (mining scope: Cat 797/793/D11/D10/6090/MD6250, Komatsu 930E/830E/HM400/PC490LC/PC2000/
+  PC4000/PC8000/HD785/HD465, Hitachi EX8000/EX5500/EX3600/EX2500, JD 870/460E/400D/450DLC/470GLC/
+  992E, EH5000; 203 exact Dynamics kit matches). The full extraction is 12,187 fitments / 1,488
+  models — too large to load through the chat connector; file copies in the Website folder
+  `kit-catalog/` and the approval workbook `Dynamics-Equipment-Graph-Approval-2026-09-26.xlsx`.
+  `market_equipment_id` set for 8 of 9 Mining cards (797F, D11T, 930E for the 980E card, HM400,
+  EX8000, EH5000 for the Hitachi truck card, 870, 460E; PC290LC-11 has no kit in Dynamics).
+- Mockup: `fluidseal-mockup/markets/mining.html` rebuilt — photo equipment cards, per-machine
+  order panel (kits by application → components by product type from BOMs → Add to Cart),
+  curated "Products For Mining Equipment" band on top, profile groups renamed "Mining Products
+  by Type" at the bottom; data ships as `data/mining-equipment.gz.js` + `assets/photo-*.js`.
+- Nothing in `public`, `archive`, or `xpress` touched. Dynamics NOT written — approval workbook
+  first (new_oembrand / new_manufacturer / new_equipmenttype / new_equipment /
+  new_equipment_product / product new_model, new_application, new_cylindergroup, new_cylinderassembly).
+
 ## 2026-09-26 · Find parts page + quote-wizard tab (find.html builds 2026-09-26.2/.3, quote.html build 2026-09-26.5)
 - NEW `find.html` (Training Website session): seal-grammar search ("100mm x 140mm kit", "hitachi 4653862",
   "RJD-AH173444", "wipers 100mm", questions), Kit view (cylinder cross-section, rod / bore / gland / hard-part
