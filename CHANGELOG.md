@@ -10,6 +10,25 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-25 · SSG WEBSITE SESSION: flabed markets — Mining market data (public/archive untouched)
+- Logged by the SSG Website / Updates session per the shared-DB protocol
+  (`list_migrations` + this file checked first; no conflicts — flabed-only objects).
+- DB migration `flabed_markets_v1`: four NEW tables in the `flabed` schema —
+  `flabed.markets` (32 rows: the live site's Markets index; `is_built` flags which
+  have a full mockup page — Mining only for now), `flabed.market_oems` (Mining: Caterpillar,
+  Komatsu, John Deere, Hitachi), `flabed.market_equipment` (9 Mining machines from the
+  Dropbox Equipment Order Forms — Cat 797F & D11T, Komatsu 980E/HM400/PC290LC-11, Hitachi
+  EX8000-6 & Mining Truck, John Deere 870G LC & ADT — each carrying the same 5 part
+  categories: Hardened Bearings, Spherical Bearings, Stud Ball Kits, Seal Kit,
+  High-Performance Replacements), and `flabed.market_groups` (Mining → 17 profile-group
+  links). Public-read RLS on all four; writes via service_role.
+- mockup.fluidsealab.com is LIVE: GitHub Pages on `davidranderson1/fluidseal-mockup`
+  (made public for Pages), Azure DNS CNAME `mockup` → `davidranderson1.github.io` added
+  2026-09-25; the Markets index and the Mining page render with the live site's header,
+  hero image and CDN product images (no CSP restriction on GitHub Pages, unlike published
+  claude.ai artifacts).
+- Nothing in `public`, `archive`, or `xpress` touched.
+
 ## 2026-09-25 · SSG WEBSITE SESSION: flabed schema — customer-facing category mirror (public/archive untouched)
 - Logged by the SSG Website / Updates session per the shared-DB protocol
   (`list_migrations` + this file checked first; no conflicts — the schema name
