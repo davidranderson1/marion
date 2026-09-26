@@ -10,6 +10,15 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · Handoff doc: ABQUOTE (SharePoint) → quote-intake training
+- New `HANDOFF-ABQUOTE-TRAINING.md` (repo root; copy in ClaudeAgent\Marion\) for a
+  dedicated chat: mine the historical ABQUOTE quote files in SharePoint as ground truth
+  for the cross-reference training loop (xref_feedback / p21_ground_truth / customer:NAME
+  ai_rules). Covers access options ranked by token cost (Microsoft 365 connector not
+  connectable as of today; copy-into-ClaudeAgent is the cheap fallback), the existing
+  training machinery, P21 PDF format facts, a 6-phase pipeline, and the shared-DB /
+  push / notify protocols. No code or DB changes.
+
 ## 2026-09-26 · BOM auto-expand only when kit not in stock (build 2026-09-26.4)
 - Refinement of .3 per David: kit BOMs still ALWAYS auto-load (pricing/stock actions
   derive from the components), but the tree now auto-EXPANDS only when the kit itself
