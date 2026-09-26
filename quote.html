@@ -1574,17 +1574,23 @@ function renderBomRows(r,i){
     <td><span class="bom-dim" style="font-size:11px">${b.required===false?'optional':''}</span></td>
   </tr>`;}).join('');
 }
+async function loadBomFor(l){ // fetch a line's full BOM tree (components, qtys, list prices, fees)
+  if(!l||!l.pn)return;
+  if(l._bom&&l._bom.pn===l.pn)return;
+  try{
+    const {data,error}=await sb.rpc('explode_kit',{p_pn:l.pn,p_max_depth:BOM_MAX_DEPTH});
+    l._bom={pn:l.pn,rows:(error?[]:(data||[]))};
+    l._bomExp={};
+    if(error)console.warn('explode_kit',error);
+  }catch(e){console.warn('explode_kit',e);l._bom={pn:l.pn,rows:[]};}
+}
 async function toggleBom(i){
   const l=CART[i];if(!l||!l.pn)return;
   if(l._bomOpen){l._bomOpen=false;renderCart();return;}
   if(!l._bom||l._bom.pn!==l.pn){
     l._bomLoading=true;renderCart();
-    try{
-      const {data,error}=await sb.rpc('explode_kit',{p_pn:l.pn,p_max_depth:BOM_MAX_DEPTH});
-      l._bom={pn:l.pn,rows:(error?[]:(data||[]))};
-      l._bomExp={};
-      if(error)console.warn('explode_kit',error);
-    }finally{l._bomLoading=false;}
+    await loadBomFor(l);
+    l._bomLoading=false;
   }
   if(!l._bom.rows.length){l._bomKit=false;l._bomOpen=false;}
   else l._bomOpen=true;
@@ -1603,6 +1609,13 @@ async function bomCheck(){
     const kits=new Set((data||[]).map(x=>x.parent_part_number));
     let changed=false;
     CART.forEach(l=>{if(l.pn&&pns.includes(l.pn)){const v=kits.has(l.pn);if(l._bomKit!==v){l._bomKit=v;changed=true;}}});
+    // BOM is critical for kit pricing/stock actions: auto-load + expand it once per kit line
+    const auto=CART.filter(l=>l.pn&&l._bomKit===true&&!l._bomAutoOpened&&(!l._bom||l._bom.pn!==l.pn));
+    if(auto.length){
+      await Promise.all(auto.map(loadBomFor));
+      auto.forEach(l=>{l._bomAutoOpened=true;if(l._bom&&l._bom.rows.length)l._bomOpen=true;});
+      changed=true;
+    }
     if(changed)renderCart();
   }catch(e){console.warn('bom check',e);}
 }
@@ -1689,6 +1702,7 @@ function upd(i,k,v){const old=CART[i][k];CART[i][k]=(k==='qty')?(parseInt(v)||1)
     CART[i].url=null; // re-resolve the website link for the new number
     CART[i]._bomKit=undefined;CART[i]._bom=null;CART[i]._bomOpen=false;CART[i]._descChk=false; // re-check BOM + description for the new number
     CART[i].img=null;CART[i].imgUrl=null;CART[i]._imgChk=false; // re-resolve the catalog image for the new number
+    CART[i]._bomAutoOpened=false; // new number: allow its BOM to auto-open again
     sb.rpc('link_for_part',{p_pn:v}).then(({data})=>{if(CART[i]&&CART[i].pn===v){CART[i].url=data||null;renderCart();}});
   } // learning: hand-typed part numbers are corrections
   unlockSubmit(); renderCart();}
@@ -1776,7 +1790,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-09-26.2'; // + embedded-.msg recursion, P21 ground-truth training, per-customer rules, source capture (ask + PDF)
+const MARION_BUILD='2026-09-26.3'; // + kit BOMs auto-load & expand in the cart (explode_kit grant fixed)
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
