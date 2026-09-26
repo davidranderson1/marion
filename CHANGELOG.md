@@ -10,6 +10,36 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · TRAINING-WEBSITE SESSION: 6 new Dynamics-sync tables in public (public otherwise untouched)
+- Logged per the shared-DB protocol (`list_migrations` + this file checked first; no name
+  collisions — all six table names are new). David chose to place them in `public` alongside
+  the existing Dynamics-sync tables (products/inventory/accounts/…), the same schema the sync
+  already writes to.
+- DB migration `dynamics_sync_add_codes_employee_pricing_tables`: six NEW tables in `public`,
+  identical locked-down pattern to the existing sync tables (uuid Dynamics-GUID PK; RLS
+  enabled with NO policies = service_role only; nothing exposed to anon/authenticated):
+  · `customer_code` (4,797) ← Dynamics `new_customercode` (P21 code in `new_customercodep21`)
+  · `vendor_code` (3,133) ← `cr5da_vendorcode`
+  · `employee` (158) ← `new_employee` — **CURATED**: identity, work/personal email, title,
+    department, P21 user role, manager, status ONLY. NO passwords / SIN / salary / health /
+    birthday / gender / logins (deliberately not selected; the table has no `raw` column).
+  · `net_discount` (12,123) ← `new_accountpricingconfigurations` ("Sales Pricing Configurator")
+  · `volume_discount` (56) ← `new_volumediscountlist`
+  · `percentage_discount` (494) ← `new_pricingconfigurator` ("Sales Percentage Configurator")
+- Row counts reconcile exactly against Dataverse. `net_discount` loaded in 3 `createdon`
+  slices to stay under the ~10k edge-function death point.
+- Edge function `dynamics-sync` deployed v7: six `TABLES` entries added (five via the existing
+  `generic()` helper, one hand-written curated map for `employee`). Existing entries unchanged.
+- pg_cron: six nightly created-date jobs added, 08:42–08:52 UTC (before the 09:00 delta job),
+  each `select public.sync_nightly('<table>')`. `sync_state` rows seeded, `enabled=true`.
+- Marion's own tables, triggers and functions untouched. No `archive` / `xpress` / `flabed`
+  changes. `sync_nightly` / `delta_nightly` / cron infra reused, not modified.
+- SKIPPED for now: the seventh requested table "Sales Discount Group" → `discount_group` —
+  its Dynamics entity was not identifiable by name; David chose to confirm it later.
+- Also verified this session: the six original nightly sync jobs are HEALTHY (all clean over
+  8 days, no token/401/client-secret errors) — the connector-access outage that blocked the
+  2026-08-31 and 2026-09-14 scheduled health checks is resolved.
+
 ## 2026-09-26 · Kit BOMs auto-load in the cart + explode_kit grant fix (build 2026-09-26.3)
 - ROOT CAUSE of kits showing as plain Items with no BOM: public.explode_kit had no
   EXECUTE grant for the authenticated role (42501). Migration
