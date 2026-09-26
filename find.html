@@ -266,7 +266,7 @@ footer.site .grow{flex:1}
       <a href="quote.html">Quote</a><a href="quotes.html">My Quotes</a><a href="account.html">Account</a><a href="knowledge.html">Knowledge</a><a class="on" href="find.html">Find parts</a>
     </nav>
     <div class="grow"></div>
-    <span class="badge" id="modeBadge" title="Marion build find 2026-09-26.2">FIND · PREVIEW</span>
+    <span class="badge" id="modeBadge" title="Marion build find 2026-09-26.3">FIND · PREVIEW</span>
     <span class="auth" id="authBox"><span id="authForm" class="hidden"><input id="authEmail" type="email" placeholder="you@fluidsealab.com" onkeydown="if(event.key==='Enter')sendLink()"><button class="abtn" onclick="sendLink()">Send link</button></span><span id="authWho" class="who"></span><button class="abtn" id="authBtn" onclick="authAction()">Sign in</button></span>
     <label class="branch">Branch
       <select id="branch" onchange="setBranch(this.value)">
@@ -381,7 +381,7 @@ footer.site .grow{flex:1}
 
 <footer class="site">
   <div class="wrap">
-    <span class="pill">Find parts · preview build 2026-09-26.1</span>
+    <span class="pill">Find parts · build 2026-09-26.3</span>
     <span class="pill" id="footData">Data: preview</span>
     <div class="grow"></div>
     <span>Fluidseal AB · Sealing Solutions Group · Edmonton · Calgary · Richmond</span>
@@ -389,7 +389,7 @@ footer.site .grow{flex:1}
 </footer>
 
 <script>
-/* Marion — Find parts. Build 2026-09-26.2
+/* Marion — Find parts. Build 2026-09-26.3
    Live data (signed-in Fluidseal staff): search_products(), explode_kit(), v_stock_staff — same
    objects quote.html uses. Preview (not signed in): pattern-derived kits from the metric grammar. */
 const SB_URL="https://hnmbjqhxvxakhdzgetxw.supabase.co";
@@ -509,7 +509,14 @@ function parse(q){
 }
 function intentChips(p){const c=[];if(p.question)c.push(['Question for Marion','']);if(p.oemKit)c.push([(OEM_KITS[p.oemKit]||{}).oem?OEM_KITS[p.oemKit].oem+' kit':'Replacement kit',p.kitCode]);else if(p.pn)c.push(['Part number',p.pn]);if(p.rod&&p.bore)c.push(['Rod × bore',`${p.rod} × ${p.bore} mm`]);else if(p.rod)c.push(['Rod',`${p.rod} mm`]);if(p.kit&&!p.oemKit&&!p.kitCode)c.push(['Kit','']);if(p.variant)c.push(['Variant',p.variant]);if(p.fam)c.push(['Family',FAM_NAMES[p.fam]||(p.fam==='O'?'O-rings':p.fam)]);if(p.mat)c.push(['Material',p.mat]);if(p.oem&&!p.oemKit)c.push(['OEM',p.oem]);return c}
 function previewIntent(v){const el=document.getElementById('intent');if(!v.trim()){el.innerHTML='<span class="lbl">Type a size, a part number, an OEM number, or a question.</span>';return}const chips=intentChips(parse(v));el.innerHTML='<span class="lbl">Claude reads this as</span>'+(chips.length?chips.map(([k,v2])=>`<span class="chip">${k}${v2?' <b>'+esc(v2)+'</b>':''}</span>`).join(''):'<span class="chip">Free text — catalogue search</span>')}
-async function askMarion(q){const l=q.toLowerCase();let best=null,score=0;for(const c of CANNED){const sc=c.k.filter(k=>l.includes(k)).length;if(sc>score){score=sc;best=c}}return{text:best?best.a:'Not in the kit-rules knowledge yet. In the quote wizard, Marion answers from the full knowledge base through marion-chat.',src:'Kit-rules knowledge base'}}
+function cannedAnswer(q){const l=q.toLowerCase();let best=null,score=0;for(const c of CANNED){const sc=c.k.filter(k=>l.includes(k)).length;if(sc>score){score=sc;best=c}}return{text:best?best.a:'Not in the kit-rules knowledge yet. Sign in and Marion answers from the full knowledge base.',src:'Kit-rules knowledge base (offline)'}}
+async function askMarion(q){
+  if(!(sb&&SESSION))return cannedAnswer(q);
+  try{const res=await fetch(SB_URL+'/functions/v1/marion-chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SESSION.access_token},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,temperature:0,system:'You are Marion, Fluidseal AB\'s sealing-products agent, answering a counter-sales colleague inside the Find parts page. Answer in plain English, at most 120 words, no markdown headings. Use only the kit rules below plus general hydraulic-seal knowledge; if the rules do not cover it, say so and suggest what to search on the page.\n\nKIT RULES:\n'+KNOWLEDGE,messages:[{role:'user',content:q}]})});
+    if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    if(!text)throw new Error('empty');return{text,src:'Marion (marion-chat · Claude) · kit rules from the training knowledge base'}}
+  catch(e){console.warn('marion-chat',e);const c=cannedAnswer(q);c.src+=' · live answer unavailable ('+(e.message||e)+')';return c}}
 
 /* ---------- state + search ---------- */
 let state={p:null,view:'cards',rows:[],filters:{fam:'',mat:'',branch:'',inStock:false},sel:new Set(),kit:null,variant:'BASE',kitSel:null,kitQty:1,oemList:null,siblings:null};
@@ -627,7 +634,8 @@ function openCart(){renderCart();document.getElementById('drawer').classList.add
 function closeCart(){document.getElementById('drawer').classList.remove('open');document.getElementById('scrim').classList.remove('open')}
 function multiAddText(){return cart.map(c=>`${c.pn}, ${c.qty}`).join('\n')}
 function copyList(){const t=multiAddText();if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>toast('<b>Copied</b> — paste into Multi Add'),()=>{});const ta=document.getElementById('hlist');ta.focus();ta.select()}
-function handoff(){if(!cart.length){toast('Nothing to add yet');return}document.getElementById('hlist').value=multiAddText();try{localStorage.setItem('marion_find_handoff',JSON.stringify({at:new Date().toISOString(),branch,lines:cart}))}catch(e){}closeCart();document.getElementById('hdrawer').classList.add('open');document.getElementById('hscrim').classList.add('open');copyList()}
+const EMBED=/[?&]embed=1/.test(location.search);
+function handoff(){if(!cart.length){toast('Nothing to add yet');return}if(EMBED&&window.parent!==window){window.parent.postMessage({type:'marion-find-lines',lines:cart.map(c=>({pn:c.pn,qty:c.qty,desc:c.desc,kitOf:c.kitOf}))},location.origin);return}document.getElementById('hlist').value=multiAddText();try{localStorage.setItem('marion_find_handoff',JSON.stringify({at:new Date().toISOString(),branch,lines:cart}))}catch(e){}closeCart();document.getElementById('hdrawer').classList.add('open');document.getElementById('hscrim').classList.add('open');copyList()}
 function closeHandoff(){document.getElementById('hdrawer').classList.remove('open');document.getElementById('hscrim').classList.remove('open')}
 let toastT;function toast(html){const t=document.getElementById('toast');t.innerHTML=html;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400)}
 
@@ -649,6 +657,7 @@ document.getElementById('sizes').innerHTML=TIER_A.map((s,i)=>`<button class="siz
 document.getElementById('oems').innerHTML=OEMS.map(o=>`<button class="oem" onclick="quick('${o.name.toLowerCase()} kits')"><span class="pre">${o.pre}</span><span><span class="nm">${o.name}</span><br><span class="ct">${o.kits.toLocaleString()} kits in 24 months</span></span></button>`).join('');
 const brSel=document.getElementById('branch');if(brSel){brSel.innerHTML=WH.map(w=>`<option value="${w}">${w} (${WH_CODE[w]||''})</option>`).join('')}
 document.getElementById('cartBranch').textContent='Ship from '+branch;
+if(EMBED){['.mast','footer.site'].forEach(sel=>{const el=document.querySelector(sel);if(el)el.style.display='none'})}
 renderCart();setMode();initAuth();
 
 </script>
