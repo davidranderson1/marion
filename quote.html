@@ -495,9 +495,14 @@ async function saveQuote(status){
   if(!SESSION){setSaveStatus('Sign in (top right) to save quotes.','err');return;}
   if(!CART.length){setSaveStatus('Cart is empty.','err');return;}
   setSaveStatus('<span class="spin"></span>Saving…','work');
+  const srcPdf=(PDFS&&PDFS[0]&&PDFS[0].data&&PDFS[0].data.length<4000000)?PDFS[0]:null;
   const q={status,acct:CUST.acct,contact:CUST.contact,phone:CUST.phone,po:CUST.po,
     email:CUST.email||null,address:CUST.addr||null,wh:CUST.wh,
-    required_by:CUST.reqby||null,req_type:CUST.reqtype||'quote',user_id:SESSION.user.id};
+    required_by:CUST.reqby||null,req_type:CUST.reqtype||'quote',user_id:SESSION.user.id,
+    request_text:(document.getElementById('req').value||'').trim()||null, // the customer's original ask, kept for the outgoing customer email
+    p21_quote_no:LAST_P21_NO||null,
+    source_pdf_name:srcPdf?srcPdf.name:null,
+    source_pdf_b64:srcPdf?srcPdf.data:null};
   let id=CURRENT_QUOTE_ID,error=null;
   if(id){
     ({error}=await sb.from('quotes').update(q).eq('id',id));
@@ -759,6 +764,10 @@ async function openQuote(id){
     img:l.thumb||null,imgUrl:l.img_url||null,_imgChk:false})); // _imgChk false: older quotes without images pick them up on open
   SUBMITTED=(data.status==='submitted');
   SUBMITTED_NO=SUBMITTED?(data.quote_no||null):null;
+  document.getElementById('req').value=data.request_text||''; // restore the original ask
+  LAST_P21_NO=data.p21_quote_no||'';
+  IMAGES=[];PDFS=data.source_pdf_b64?[{name:data.source_pdf_name||'source.pdf',data:data.source_pdf_b64}]:[];
+  renderAttachments();
   orderKits();renderCust();renderCart();
   setSaveStatus('Opened saved quote ('+data.status+').','');
   goStep(3); // open straight to the Quote / Estimate document — same form as the email
@@ -779,6 +788,7 @@ const DISPOSITIONS = ["B","S","T"]; // Buy / Stock / Transfer  (B = default per 
 let CART = [];      // [{conf, oem, brand, pn, desc, qty, wh, disp, notes, price}]
 let CUST = {acct:"",contact:"",phone:"",po:"",email:"",addr:"",wh:"6 - Edmonton",reqby:"",reqtype:"quote"};
 let IMAGES = [];    // [{name, media_type, data(base64), url(objectURL)}]
+let LAST_P21_NO = ''; // QUOTATION NUMBER when the analyzed request carried our own P21 quote PDF
 let PDFS = [];      // [{name, data(base64)}] — sent to the AI as document blocks
 
 /* ---------- Drag & drop ---------- */
@@ -872,6 +882,30 @@ async function stageMsg(f){
     let staged=0, skipped=0;
     (msg.attachments||[]).forEach(att=>{
       try{
+        if(att.innerMsgContent){ // the customer's ORIGINAL email, forwarded as an embedded .msg
+          const inner=att.innerMsgContentFields||{};
+          let it='';
+          if(inner.subject)it+='--- ORIGINAL CUSTOMER EMAIL ---\nSubject: '+inner.subject+'\n';
+          if(inner.senderName||inner.senderEmail)it+='From: '+(inner.senderName||'')+(inner.senderEmail?' <'+inner.senderEmail+'>':'')+'\n';
+          const ib=(inner.body||'').trim();
+          if(ib)it+='\n'+ib;
+          if(it.trim()){const ta=document.getElementById('req');ta.value=(ta.value.trim()?ta.value.trim()+'\n\n':'')+it.trim();staged++;}
+          (inner.attachments||[]).forEach(ia=>{ // nested customer attachments (PDF POs, screenshots)
+            try{
+              const iname=(ia.fileName||ia.name||'attachment').toString();
+              if(!/\.(pdf|png|jpe?g|webp|gif)$/i.test(iname))return;
+              const a2=reader.getAttachment(ia);
+              if(!a2||!a2.content)return;
+              const ib2=a2.content instanceof Uint8Array?a2.content:new Uint8Array(a2.content);
+              if(!/\.pdf$/i.test(iname)&&/^image\d+\.(png|jpe?g|webp|gif)$/i.test(iname)&&ib2.length<150000){skipped++;return;}
+              const bb=u8ToB64(ib2);
+              if(/\.pdf$/i.test(iname)){PDFS.push({name:iname,data:bb});staged++;}
+              else{const mt2=/\.png$/i.test(iname)?'image/png':/\.gif$/i.test(iname)?'image/gif':/\.webp$/i.test(iname)?'image/webp':'image/jpeg';
+                IMAGES.push({name:iname,media_type:mt2,data:bb,url:'data:'+mt2+';base64,'+bb});staged++;}
+            }catch(e2){console.warn('inner attachment skipped',e2);}
+          });
+          return;
+        }
         const name=(att.fileName||att.name||'attachment').toString();
         if(!/\.(pdf|png|jpe?g|webp|gif)$/i.test(name))return;
         const a=reader.getAttachment(att);
@@ -1051,14 +1085,22 @@ YOUR JOB (for quote_request):
    - "med": pn is an informed inference (rounded dimensions, near-match, assumed brand).
    - "low": no applicable rule — pn is "" and staff must cross-reference. Any line with empty pn is automatically "low".
 5. Fill desc / ref / notes strictly per the field-discipline rules below.
+6. OUR OWN P21/ERP QUOTATION PDF: an attached PDF titled "Quotation" with QUOTATION NUMBER boxes, "GST: R-87321 2575" and a sealsonline.com footer is OUR OWN ERP quote — a CONFIRMED answer, not a customer request.
+   - Its ITEM CODE column contains Fluidseal part numbers: copy each VERBATIM into pn with conf "high". qty = the ORDERED column. Extract UNIT PRICE into the line's price (plain number). price may ONLY come from our own P21 PDF — leave it null in every other case.
+   - Set the top-level p21_quote_no to the QUOTATION NUMBER (e.g. "6142663-0000").
+   - SKIP note-only lines (no quantity) and AB/* charge lines (AB/FREIGHT-IN, AB/CSP, ...) — summarize freight/delivery remarks in notes instead of making part lines for them.
+   - Customer info = the BILL TO block + CUSTOMER P.O. (the sealsonline.com signature in the email is OUR staff, not the customer).
+   - If the customer's ORIGINAL request is ALSO present (forwarded text or an embedded original email), the P21 is the confirmed interpretation of it: build the lines from the P21, set each line's asked to the customer's own wording that produced that line, and oem to the customer's part number if they used one. NEVER copy the Fluidseal pn into oem — this pairing trains the cross-reference.
+
+CUSTOMER-SPECIFIC RULES: a staff rule whose [category] is "customer:NAME" applies ONLY when this request's account/customer matches NAME (case-insensitive). Every other rule applies to all customers.
 
 === EXTRACTION & CROSS-REFERENCE RULES (maintained by Fluidseal staff — follow exactly) ===
 ${rules}
 
 Return ONLY valid JSON, no markdown, no prose:
-{"intent":"quote_request|info_update|not_a_request|suspicious","intent_note":"",
+{"intent":"quote_request|info_update|not_a_request|suspicious","intent_note":"","p21_quote_no":"",
  "customer":{"acct":"","contact":"","phone":"","po":"","email":"","address":"","required_by":"","req_type":"quote"},
- "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","ref":"","qty":1,"wh":"6 - Edmonton","disp":"B","notes":"","asked":"","kind":"","style":"","dims":{"id":null,"od":null,"h":null,"stated_h":null,"units":"mm|in|unknown"}}]}`;
+ "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","ref":"","qty":1,"price":null,"wh":"6 - Edmonton","disp":"B","notes":"","asked":"","kind":"","style":"","dims":{"id":null,"od":null,"h":null,"stated_h":null,"units":"mm|in|unknown"}}]}`;
 
   const userContent=[];
   PDFS.forEach(p=>userContent.push({type:"document",
@@ -1170,10 +1212,15 @@ function applyParsed(p){
     if(!pn) conf='low'; // no Fluidseal cross-reference = low, whatever the AI claims
     return {
       conf,oem:l.oem||"",brand:l.brand||"",pn,desc:l.desc||"",
-      ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes,type:"item",kitGroup:null,price:null,
+      ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes,type:"item",kitGroup:null,
+      price:(l.price!=null&&l.price!==''&&!isNaN(parseFloat(l.price)))?parseFloat(l.price):null,
       kind:l.kind||"",style:l.style||"",dims:l.dims||null,asked:l.asked||""
     };
   });
+  LAST_P21_NO=(p.p21_quote_no||'').toString().trim();
+  if(LAST_P21_NO){ // our ERP quote is the confirmed answer: log every asked->pn pairing as training data
+    CART.forEach(l=>{if(l.pn)logFeedback(l,'p21_ground_truth',null);});
+  }
   CURRENT_QUOTE_ID=null; // fresh analysis = new quote
   SUBMITTED=false;SUBMITTED_NO=null;refreshNav();
   renderCart();
@@ -1729,7 +1776,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-09-26.1'; // + P21/ERP quotation card style with Fluidseal/P21 toggle on the Quote step
+const MARION_BUILD='2026-09-26.2'; // + embedded-.msg recursion, P21 ground-truth training, per-customer rules, source capture (ask + PDF)
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
@@ -1806,7 +1853,7 @@ function clearAll(){
   document.getElementById('req').value='';
   ['mCust','mContact','mPhone','mPO','mEmail','mAddr','mReqBy'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mReqType').value='quote';
-  CART=[];CUST={acct:'',contact:'',phone:'',po:'',email:'',addr:'',wh:'6 - Edmonton',reqby:'',reqtype:'quote'};IMAGES=[];PDFS=[];
+  CART=[];CUST={acct:'',contact:'',phone:'',po:'',email:'',addr:'',wh:'6 - Edmonton',reqby:'',reqtype:'quote'};IMAGES=[];PDFS=[];LAST_P21_NO='';
   CURRENT_QUOTE_ID=null;
   SUBMITTED=false;SUBMITTED_NO=null;refreshNav();
   renderAttachments();renderCust();renderCart();
