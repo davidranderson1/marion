@@ -10,6 +10,18 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · P21/ERP quotation card + card-style toggle (build 2026-09-26.1)
+- quote.html Quote step gets a Fluidseal / P21-ERP toggle (persisted per browser in
+  localStorage). The new P21 card mirrors the "Quote XXXXXXX-0001.pdf" our ERP emails:
+  monospace Quotation layout, BILL TO / SHIP TO, ***QUOTATION*** banner, info boxes,
+  QUANTITY/DISP./ITEM CODE AND DESCRIPTION/U/M/UNIT PRICE/AMOUNT table (4-decimal unit
+  prices), SUB TOTAL + GST/HST @5% + PST + TOTAL AMOUNT DUE, code-explanation legend,
+  30-day validity + warranty footer. Unpriced quotes show TOTAL AMOUNT DUE: PENDING PRICING.
+- The original Fluidseal card is unchanged and stays the default; the submitted PDF
+  attachment follows whichever style is selected (email body unchanged, marion-notify
+  untouched). buildQuote now passes each line's Disposition through to the card.
+- Built from 4 real P21 samples (QT#6142660/6142663/7026938/7026939, 2026-09-25).
+
 ## 2026-09-25 · SSG WEBSITE SESSION: flabed markets — Mining market data (public/archive untouched)
 - Logged by the SSG Website / Updates session per the shared-DB protocol
   (`list_migrations` + this file checked first; no conflicts — flabed-only objects).
