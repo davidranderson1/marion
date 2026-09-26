@@ -10,6 +10,21 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · BOM auto-expand only when kit not in stock (build 2026-09-26.4)
+- Refinement of .3 per David: kit BOMs still ALWAYS auto-load (pricing/stock actions
+  derive from the components), but the tree now auto-EXPANDS only when the kit itself
+  is NOT in stock for the ordered qty — that's when staff must work inside it. Stocked
+  kits keep the tree collapsed behind the + expander.
+- Stock source: `v_stock_staff` (already granted to authenticated; per-warehouse rows
+  summed client-side on qty_available). `v_stock_total` has no authenticated grant —
+  deliberately left alone. In-stock test: total qty_available >= line qty; no stock
+  row at all counts as not-in-stock (expand).
+- Kit badge is now availability-aware: red (functional --red) with tooltip
+  "<availability label> · N available" when short; normal blue when covered.
+  Editing a line's part number resets the stock check + re-arms auto-expand.
+- No DB changes. Verified before shipping via role-impersonation as d.anderson:
+  RCAT-2442067 → 0 available "Made to order" (expands), 2-241/N70 → 4056 "In stock".
+
 ## 2026-09-26 · SSG WEBSITE SESSION: flabed data refresh — live URL scheme + profiles loaded (public/archive/xpress untouched)
 - Logged by the SSG Website / Updates session per the shared-DB protocol (`list_migrations` +
   this file checked first). DML only, no DDL, no migration — `flabed` rows only.
