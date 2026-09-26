@@ -10,6 +10,27 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · Forwarded-email training loop + source capture (build 2026-09-26.2)
+- Embedded .msg recursion: a forwarded email that carries the customer's ORIGINAL email as
+  an attached .msg is now unpacked — its subject/from/body land in the request box (marked
+  "--- ORIGINAL CUSTOMER EMAIL ---") and its own PDF/image attachments are staged too. The
+  AI now sees the customer ask AND our P21 quote together.
+- P21 ground truth: the AI prompt recognizes our own P21 Quotation PDF (item codes → pn
+  conf high, ORDERED → qty, UNIT PRICE → net price — price may only come from our own P21;
+  AB/* charge + note-only lines skipped; BILL TO = customer). When the customer ask is also
+  present, each line's `asked` is set to the customer's wording and every asked→pn pairing
+  is logged to xref_feedback as action 'p21_ground_truth' — a growing training set for the
+  cross-reference, mineable into rules.
+- Per-customer AI rules: rules whose category is `customer:ACCOUNT NAME` now apply only to
+  that customer (prompt-enforced); all other rules stay global. Convention documented as a
+  seeded ai_rules row; P21 recognition also seeded as a staff-editable rule.
+- Source capture for the future outgoing customer email: DB migration
+  `quote_source_capture` adds quotes.request_text, p21_quote_no, source_pdf_name,
+  source_pdf_b64 (<4MB). saveQuote stores the ask + first staged PDF + ERP quote number;
+  openQuote restores them (request box + attachment chip round-trip). The outgoing
+  customer email itself (original ask quoted + OUR card replacing the P21 PDF) is the
+  next build — marion-notify recipient stays locked per the 2-approval rule.
+
 ## 2026-09-26 · P21/ERP quotation card + card-style toggle (build 2026-09-26.1)
 - quote.html Quote step gets a Fluidseal / P21-ERP toggle (persisted per browser in
   localStorage). The new P21 card mirrors the "Quote XXXXXXX-0001.pdf" our ERP emails:
