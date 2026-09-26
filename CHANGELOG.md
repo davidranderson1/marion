@@ -10,6 +10,18 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · ABQUOTE training — phase 1 inventory and sample review DONE (docs only)
+- `HANDOFF-ABQUOTE-TRAINING.md` gains §9 "Phase 1 results (2026-09-26)": where the corpus
+  really is (the SharePoint CRM → Quote library reached as a OneDrive shortcut, not a
+  ClaudeAgent copy), its shape (13,440 files / 4.34 GB; 3,408 Dynamics Document Management
+  record folders Dec 2025 → Sep 2026 each holding the sent-quote `.eml` + `Quote NNNNNNN-0001.pdf`;
+  974 root `.msg` from the Feb 2026 upload; 3,684 distinct P21 quote numbers), the sample
+  findings (24/24 PDFs parse in the §5 layout; 22/40 emails carry the customer's ask in the
+  quoted thread), the pre-2026 gap (Outlook AB Quote folder only), the placeholder/hydration
+  blocker, and the tooling facts. Decisions are on the Marion Open Items board (items 28–33).
+- No code, no build bump, no DB changes. Customer data stays out of this repo (manifest lives
+  in Drive Claude/Files and ClaudeWorkspace).
+
 ## 2026-09-26 · Handoff doc: ABQUOTE (SharePoint) → quote-intake training
 - New `HANDOFF-ABQUOTE-TRAINING.md` (repo root; copy in ClaudeAgent\Marion\) for a
   dedicated chat: mine the historical ABQUOTE quote files in SharePoint as ground truth

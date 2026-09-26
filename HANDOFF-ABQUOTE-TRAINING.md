@@ -137,3 +137,57 @@ RLS-gated Supabase tables only — never commit extracted customer data to the G
 > Read HANDOFF-ABQUOTE-TRAINING.md in the marion repo, then help me get you access to the
 > ABQUOTE SharePoint files (try the Microsoft 365 connector first) and start phase 1:
 > inventory and review what's there.
+
+---
+
+## 9. Phase 1 results (2026-09-26, AI Data Training chat)
+
+**Where ABQUOTE actually is.** Not a ClaudeAgent copy and not the Microsoft 365 connector
+(David: no connector access). The corpus is the SharePoint site **CRM**, document library
+**Quote** — the library Dynamics Document Management files every sent quote email into.
+David added it as a OneDrive shortcut (`OneDrive - Sealing Solutions Group\Shortcuts\CRM - Quote`)
+and granted that folder to the session; the inventory ran in the device shell at near-zero
+token cost. Nothing is written into that folder.
+
+**Shape (all 13,440 files, 4.34 GB; from names/sizes/dates):**
+- 3,408 Dynamics record folders named `<quote email subject>_<32-hex GUID>`, one per CRM
+  quote record, Dec 2025 → Sep 2026 (filing started 19 Dec 2025; ~1,000–2,400 files/month).
+  Typical folder = the sent `.eml` (attachments embedded, ~0.7 MB) + the P21
+  `Quote NNNNNNN-0001.pdf` + 1–2 signature images. 3,167 P21 quote PDFs.
+- 974 root `.msg` from a Feb 2026 drag-and-drop upload (subjects Dec 2025–Feb 2026;
+  618 of their quote numbers also exist as folders).
+- 3,684 distinct P21 quote numbers, 522 customer codes. Naming: root `.msg` =
+  `_<CUST>__QT#<7 digits>[-rev]__PO#_<PO or ask>.msg`; folders = same subject with
+  `# < > :` → `-` plus `_<GUID>`.
+- **Pre-2026 history is NOT here.** Quotes before 19 Dec 2025 live only in the Outlook
+  "AB Quote" folder (the monthly purge flow moves them to that folder's Archive, deletes
+  nothing). Whether to export them is board item 29.
+
+**Sample review (24 folders across 24 customers + 16 root `.msg`, 63 files hydrated):**
+- 24/24 PDFs are P21 quotations with a clean text layer; `pdftotext -layout` gives the §5
+  table cleanly (customer code top-left, BILL TO / SHIP TO, CUSTOMER P.O., SLSMN / ORDER
+  DATE / TAKER, `***instruction***` notes, lines = qty · item code · U/M · 4-decimal unit
+  price · description lines). One §5 correction: the PDF prints `NNNNNNN-0000` while the
+  file name says `-0001`. 5/24 are two pages.
+- 39/40 emails are outbound sent quotes from staff to the customer with the PDF attached.
+  22/40 carry the customer's original email in the quoted thread (a real `asked`); the rest
+  cite a phone call or samples and restate the ask in one line. Some root `.msg` carry the
+  customer's request as a nested `.msg` or an RFQ PDF (the build-.2 recursion already
+  handles nested `.msg`). The subject's `PO#_` tail is often the ask in shorthand.
+
+**Blocker for bulk work.** The shortcut's files are cloud-only placeholders: the device
+shell sees names/sizes but reads fail until OneDrive downloads them. `device_stage_files`
+hydrates a file as a side effect (good for samples, 50 per call); bulk needs David's
+right-click "Always keep on this device" (computer use on Explorer is click-only — no
+right-click, no clipboard) or ~270 staging calls. Board item 30.
+
+**Tooling verified.** Cloud sandbox: `extract-msg` (no-deps workaround), PyMuPDF, pdftotext.
+Device shell: Python 3.10, stdlib `email`, `olefile` installable, `pdftotext`; slow metadata
+(~50 files/s) — use the resumable walk script in `ClaudeWorkspace\ABQUOTE-inventory`.
+
+**Records.** Manifest (13,440 rows: folder, file, ext, bytes, modified, customer_code,
+quote_no, quote_rev, record_guid, source_type, is_p21_quote_pdf) in Drive Claude/Files
+`2026-09-26 - AI Data Training - ABQUOTE phase 1 inventory manifest.csv`; project doc
+`claude/abquote-phase1-inventory-2026-09-26.md`; Marion Open Items board items 28–33
+(29 pre-2026 history, 30 bulk download, 31 phase-3 extraction on GO, 32 load target a/b/both,
+33 evaluation set). Customer names, addresses and prices never enter this repo.
