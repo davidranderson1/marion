@@ -103,6 +103,9 @@ textarea#req:focus{outline:2px solid var(--yellow);background:#fff;}
 .btn-go:disabled{background:#ddd;color:#999;cursor:not-allowed;}
 .btn-ghost{background:#fff;border:1px solid #cfcfcd;color:#333;}
 .btn-ghost:hover{background:#f4f4f2;}
+.cswitch{display:inline-flex;border:1px solid #cfcfcd;border-radius:6px;overflow:hidden;}
+.cswitch button{border:none;background:#fff;padding:7px 12px;cursor:pointer;font-family:inherit;font-weight:700;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#777;}
+.cswitch button.on{background:var(--black);color:var(--yellow);}
 .samples{margin-left:auto;font-size:12px;color:#777;}
 .samples a{color:var(--red);font-weight:700;cursor:pointer;text-decoration:underline;}
 .status{font-size:13px;font-weight:700;}
@@ -315,6 +318,10 @@ T187117: Plain Bushing | Shop.Deere.com"></textarea>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="window.print()">Print / PDF</button>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="copyJSON()">Copy cart JSON</button>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px" onclick="saveQuote('draft')">Save draft</button>
+      <span class="cswitch" title="Choose the quote document style — both carry the same lines">
+        <button type="button" id="csFS" class="on" onclick="setCardStyle('fluidseal')">Fluidseal</button>
+        <button type="button" id="csP21" onclick="setCardStyle('p21')">P21 / ERP</button>
+      </span>
       <span id="saveStatus" class="status" style="font-size:12px"></span>
       <span style="margin-left:auto;font-size:11px;color:#888">this preview is exactly what Fluidseal receives on submit</span>
     </div>
@@ -589,6 +596,107 @@ function cardHTML(q,lines,custEmail){
     '<tr><td colspan="2"></td><td align="right" style="padding:12px 8px;background:#f7f8fa;font-weight:800;font-size:14px">Total</td><td align="right" style="padding:12px 8px;background:#f7f8fa;font-weight:800;font-size:14px">'+(subtotal?'CAD '+subtotal.toFixed(2):'pending pricing')+'</td></tr>'+
   '</table></div></div>';
 }
+/* ---------- Card style toggle: 'fluidseal' (sealsonline web card) or 'p21' (ERP Quotation copy) ---------- */
+let CARD_STYLE='fluidseal';
+try{CARD_STYLE=localStorage.getItem('marion_card_style')||'fluidseal';}catch(_){ }
+function setCardStyle(st){
+  CARD_STYLE=(st==='p21')?'p21':'fluidseal';
+  try{localStorage.setItem('marion_card_style',CARD_STYLE);}catch(_){ }
+  const f=document.getElementById('csFS'),p=document.getElementById('csP21');
+  if(f)f.classList.toggle('on',CARD_STYLE==='fluidseal');
+  if(p)p.classList.toggle('on',CARD_STYLE==='p21');
+  if(STEP===3)buildQuote();
+}
+function activeCardHTML(q,lines,custEmail){
+  return CARD_STYLE==='p21'?cardP21HTML(q,lines,custEmail):cardHTML(q,lines,custEmail);
+}
+
+/* ---------- P21 / ERP Quotation card — mirrors the "Quote XXXXXXX-0001.pdf" our ERP emails ---------- */
+function cardP21HTML(q,lines,custEmail){
+  let subtotal=0, any=false;
+  const m4=n=>(n==null||n==='')?'':(+n).toFixed(4);
+  const m2=n=>(n==null||n==='')?'':(+n).toFixed(2);
+  const up=s2=>hesc((s2??'').toString().toUpperCase());
+  const cell='padding:5px 8px;vertical-align:top;border-right:1px solid #9a9a9a;font-size:12px;';
+  const rows=lines.map(l=>{
+    if(l.line_total!=null){subtotal+=+l.line_total;any=true;}
+    const extra=[];
+    if(l.oem)extra.push('CUST REF: '+up(l.oem));
+    if(l.reference)extra.push('REF: '+up(l.reference));
+    return '<tr>'+
+      '<td style="'+cell+'text-align:center">'+hesc(l.qty)+'</td>'+
+      '<td style="'+cell+'text-align:center">'+up(l.disp||'')+'</td>'+
+      '<td style="'+cell+'"><b>'+(up(l.pn)||'*UNRESOLVED*')+'</b>'+
+        (l.descr?'<br><span style="color:#333">&nbsp;'+up(l.descr)+'</span>':'')+
+        extra.map(x=>'<br><span style="color:#333">&nbsp;'+x+'</span>').join('')+'</td>'+
+      '<td style="'+cell+'text-align:center">EA</td>'+
+      '<td style="'+cell+'text-align:right">'+m4(l.unit_price)+'</td>'+
+      '<td style="padding:5px 8px;vertical-align:top;font-size:12px;text-align:right">'+m2(l.line_total)+'</td>'+
+    '</tr>';
+  }).join('');
+  const d=new Date(q.created_at||Date.now());
+  const date=('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2)+'/'+(''+d.getFullYear()).slice(-2);
+  const gst=any?subtotal*0.05:0;
+  const tot=(lbl,val,strong)=>'<tr><td style="padding:3px 10px;font-size:11px;'+(strong?'font-weight:700;':'')+'">'+lbl+'</td><td style="padding:3px 10px;text-align:right;font-size:'+(strong?'13px;font-weight:700;':'11px;')+'">'+val+'</td></tr>';
+  const hd='padding:4px 8px;border-bottom:2px solid #333;border-right:1px solid #9a9a9a;font-size:9px;letter-spacing:.5px;font-weight:700;text-align:center;';
+  return '<div style="background:#f4f5f7;padding:24px">'+
+  '<div style="max-width:840px;margin:0 auto;background:#fff;border:1px solid #bbb;padding:26px 30px;font-family:Consolas,\'Courier New\',monospace;color:#111">'+
+    '<table width="100%" cellpadding="0" cellspacing="0"><tr>'+
+      '<td style="font-size:11px">GST: R-87321 2575</td>'+
+      '<td align="right" style="font-family:Georgia,\'Times New Roman\',serif;font-style:italic;font-size:24px;font-weight:700">Quotation</td>'+
+    '</tr></table>'+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px"><tr>'+
+      '<td width="30%" style="border:1px solid #9a9a9a;padding:5px 10px;text-align:center;font-size:12px;font-weight:700">'+ (up(q.acct)||'&mdash;') +'</td>'+
+      '<td width="5%"></td>'+
+      '<td width="30%" style="border:1px solid #9a9a9a;padding:3px 10px;text-align:center"><div style="font-size:8px;letter-spacing:.5px">QUOTATION NUMBER</div><div style="font-size:13px;font-weight:700">'+hesc(q.quote_no)+'</div></td>'+
+      '<td width="5%"></td>'+
+      '<td width="30%" style="border:1px solid #9a9a9a;padding:3px 10px;text-align:center"><div style="font-size:8px;letter-spacing:.5px">QUOTATION NUMBER</div><div style="font-size:13px;font-weight:700">'+hesc(q.quote_no)+'</div></td>'+
+    '</tr></table>'+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px"><tr>'+
+      '<td width="50%" style="font-size:12px;vertical-align:top"><b>BILL TO:</b><br>'+(up(q.acct)||'(ENTER BUSINESS NAME)')+'<br>'+(up(q.contact)||'')+(q.contact?'<br>':'')+(up(q.address)||'&mdash;')+'</td>'+
+      '<td width="50%" style="font-size:12px;vertical-align:top"><b>SHIP TO:</b><br>'+(up(q.acct)||'&mdash;')+'<br>'+(up(q.address)||'&mdash;')+'</td>'+
+    '</tr></table>'+
+    '<div style="font-size:12px;margin-top:8px"><b>CUSTOMER P.O. NO.</b> '+(up(q.po)||'&mdash;')+'</div>'+
+    '<div style="font-size:11px;font-weight:700;margin-top:8px;overflow:hidden;white-space:nowrap">***QUOTATION******QUOTATION******QUOTATION******QUOTATION******QUOTATION***</div>'+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;border:1px solid #9a9a9a"><tr>'+
+      '<td style="'+hd+'">QUOTE NUMBER</td><td style="'+hd+'">STATUS</td><td style="'+hd+'">ORDER DATE</td><td style="'+hd+'">CUSTOMER P.O. NUMBER</td><td style="'+hd+'border-right:none">CUSTOMER</td></tr><tr>'+
+      '<td style="'+cell+'text-align:center">'+hesc(q.quote_no)+'</td>'+
+      '<td style="'+cell+'text-align:center">'+up(q.status)+'</td>'+
+      '<td style="'+cell+'text-align:center">'+date+'</td>'+
+      '<td style="'+cell+'text-align:center">'+(up(q.po)||'&mdash;')+'</td>'+
+      '<td style="padding:5px 8px;font-size:12px;text-align:center">'+hesc(custEmail)+'</td>'+
+    '</tr></table>'+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;border:1px solid #9a9a9a"><tr>'+
+      '<td style="'+hd+'">INSTRUCTIONS</td><td style="'+hd+'">TYPE</td><td style="'+hd+'border-right:none">PAGE NO.</td></tr><tr>'+
+      '<td style="'+cell+'">'+(q.required_by?'***'+up(q.required_by)+'***':'')+'</td>'+
+      '<td style="'+cell+'text-align:center">'+up((q.req_type||'quote'))+'</td>'+
+      '<td style="padding:5px 8px;font-size:12px;text-align:center">1</td>'+
+    '</tr></table>'+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;border:1px solid #9a9a9a;border-collapse:collapse"><tr>'+
+      '<td style="'+hd+'" width="9%">QUANTITY<br>ORDERED</td>'+
+      '<td style="'+hd+'" width="7%">DISP.</td>'+
+      '<td style="'+hd+'text-align:left">ITEM CODE AND DESCRIPTION</td>'+
+      '<td style="'+hd+'" width="6%">U/M</td>'+
+      '<td style="'+hd+'" width="13%">UNIT PRICE</td>'+
+      '<td style="padding:4px 8px;border-bottom:2px solid #333;font-size:9px;letter-spacing:.5px;font-weight:700;text-align:center" width="13%">AMOUNT</td></tr>'+
+      (any?'':'<tr><td></td><td></td><td style="'+cell+'">PRICE SUBJECT TO CHANGE<br>WITHOUT NOTIFICATION</td><td></td><td></td><td></td></tr>')+
+      rows+
+    '</table>'+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px"><tr>'+
+      '<td width="55%" style="vertical-align:top;font-size:9px;color:#333;line-height:1.5">'+
+        '<b>CODE EXPLANATION</b><br>B - BUY &nbsp; S - STOCK &nbsp; T - TRANSFER<br><br>'+
+        'Prices are valid for 30 days from above date and are subject to the quantities quoted. This cost does not reflect any special testing, packaging or other requirements other than those normally supplied with standard stock components.<br><br>'+
+        '<b>WARRANTY: SUBJECT TO MANUFACTURER\'S APPROVAL.</b><br><br>www.sealsonline.com</td>'+
+      '<td width="45%" style="vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #9a9a9a">'+
+        tot('SUB TOTAL',any?m2(subtotal):'&mdash;')+
+        tot('GST / HST',any?m2(gst):'&mdash;')+
+        tot('PST','0.00')+
+        tot('TOTAL AMOUNT DUE',any?m2(subtotal+gst):'PENDING PRICING',true)+
+      '</table></td>'+
+    '</tr></table>'+
+  '</div></div>';
+}
+
 async function notifySubmit(id){
   try{
     const {data:q}=await sb.from('quotes').select('*,quote_lines(*)').eq('id',id).single();
@@ -600,7 +708,7 @@ async function notifySubmit(id){
       await loadHtml2Pdf();
       const host=document.createElement('div');
       host.style.cssText='position:fixed;left:-10000px;top:0;width:840px;background:#fff';
-      host.innerHTML=cardHTML(q,q.quote_lines||[],SESSION.user.email);
+      host.innerHTML=activeCardHTML(q,q.quote_lines||[],SESSION.user.email);
       document.body.appendChild(host);
       const uri=await window.html2pdf().set({margin:6,image:{type:'jpeg',quality:.95},
         html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4'}}).from(host).outputPdf('datauristring');
@@ -1621,7 +1729,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-07-16.7'; // + FluidSeal brand theme per FLUIDSEAL-THEME.md (tokens/fonts/black header; Marion keeps its own mark)
+const MARION_BUILD='2026-09-26.1'; // + P21/ERP quotation card style with Fluidseal/P21 toggle on the Quote step
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
@@ -1679,13 +1787,13 @@ function buildQuote(){
   const lines=CART.map(l=>{
     const priced=(l.price!=null&&l.price!=='');
     const child=!!(l.kitGroup&&l.type!=='kit'), isKit=l.type==='kit';
-    return {pn:l.pn,descr:(isKit?'KIT: ':child?'↳ ':'')+(l.desc||''),oem:l.oem,reference:l.ref,qty:l.qty,
+    return {pn:l.pn,descr:(isKit?'KIT: ':child?'↳ ':'')+(l.desc||''),oem:l.oem,reference:l.ref,qty:l.qty,disp:l.disp,
       unit_price:priced?+l.price:null,
       line_total:priced?+(l.price*l.qty).toFixed(2):null,
       thumb:l.img||null,img_url:l.imgUrl||null};
   });
   const anyPriced=lines.some(l=>l.unit_price!=null);
-  out.innerHTML=cardHTML(q,lines,(SESSION&&SESSION.user.email)||CUST.email||'—')+
+  out.innerHTML=activeCardHTML(q,lines,(SESSION&&SESSION.user.email)||CUST.email||'—')+
     (anyPriced?'':'<div style="margin:0 0 14px;font-size:11px;color:#888;text-align:center">Net prices are added by Fluidseal staff after you submit — submit this quote and we’ll price it and get back to you.</div>');
 }
 
@@ -1707,6 +1815,7 @@ function clearAll(){
   document.getElementById('intentBanner').className='intent-banner hidden';
   setStatus('','');
 }
+setCardStyle(CARD_STYLE);
 initDnD();
 goStep(1);
 </script>
