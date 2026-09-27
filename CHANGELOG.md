@@ -10,6 +10,38 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · ABQUOTE training corpus LOADED — training_quotes / training_quote_lines + 8,495 p21_ground_truth rows (public schema, additive)
+- Logged by the AI Data Training chat per the shared-DB protocol (`list_migrations` + this file
+  checked first; parallel sessions today: hr_*, flabed_*, cart_rules_engine_support — no overlap).
+- DB migration `abquote_training_tables_v1`: two NEW tables in `public` — `training_quotes`
+  (one row per P21 quotation parsed from the SharePoint CRM/Quote library: quote_no + revision,
+  customer_code, bill-to / ship-to, customer PO, salesman, taker, order_date, ***instructions***,
+  subtotal / GST / PST / total, source record, and the customer's original request in
+  `asked_text` with `asked_source` = quoted_thread / nested_msg / rfq_pdf / other_pdf for the
+  customer's own words or restated for Fluidseal's one-line restatement) and
+  `training_quote_lines` (line_no, item_code = confirmed Fluidseal part number, qty, U/M,
+  customer-net unit_price, amount, description, line notes, is_charge for AB/* lines; FK to
+  training_quotes). RLS on, SELECT for authenticated gated by `public.is_staff()`; writes are
+  postgres-only. Loaded through the dashboard CSV import: 3,395 quotes (2023-07-05 → 2026-09-25,
+  $3.25 M quoted), 11,753 lines; every quote's lines sum to its subtotal and total = subtotal +
+  GST + PST (0 mismatches).
+- BUG FOUND AND FIXED — migration `xref_feedback_allow_p21_ground_truth`: the
+  `xref_feedback_action_check` constraint allowed only picked_option / manual_edit /
+  confirmed_auto / created_part, so every `p21_ground_truth` row that quote.html (build .2)
+  tried to log since this morning was rejected — the table held 0 such rows. The constraint now
+  also allows `p21_ground_truth`; nothing else changed on the table.
+- Data: 8,495 `p21_ground_truth` rows inserted into `xref_feedback` server-side from the two
+  tables (only quotes whose customer ask is present — 2,167 of 3,395 — × their non-charge lines;
+  user_id = David; `asked` = the customer's request (≤1,500 chars), `descr` = the P21 line
+  description, `chosen_pn` = the item code, `candidates` = ["abquote:<quote>-<rev>:<line>"] as
+  the provenance key, created_at = the quote date). 5,112 distinct part numbers. match_parts'
+  chosen-part boost now sees them.
+- Not in the repo (customer names, addresses, net prices): the extractor and CSVs live in
+  ClaudeWorkspace\ABQUOTE-inventory on David's PC and Drive Claude/Files. 179 of 4,383
+  source records were still cloud-only placeholders at load time (OneDrive would not download
+  them) — a rerun of the extractor plus the same CSV import path adds them later.
+- No quote.html change, no build bump.
+
 ## 2026-09-26 · SSG WEBSITE SESSION: flabed equipment graph — OEM brands, models, fitments (public/archive/xpress untouched)
 - Logged by the SSG Website / Updates session per the shared-DB protocol (`list_migrations` +
   this file checked first; no name collisions — all objects are new and in `flabed`).
