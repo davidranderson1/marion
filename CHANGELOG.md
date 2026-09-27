@@ -10,6 +10,33 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · ABQUOTE training — evaluation run 1 (before rules): 39% of lines right, three quote.html defects found (docs only, no code or DB change)
+- 20 held-out historical quotes (customer's ask text only, no P21 PDF) run through the live
+  page's own `callMarion()` + the same cross-reference chain the app runs, in David's Chrome
+  against build 2026-09-26.6, scored against the P21 line codes: 15 quotes evaluable from
+  text (5 asks live in inline images / work-order attachments), 14 of 36 expected lines
+  exact (39%), 0 of 4 cylinder-kit lines, 34 wrong lines produced, 4 of 20 AI calls answered
+  in prose instead of JSON. Per-quote table + reasons in the private project doc
+  `claude/abquote-learnings-and-candidate-rules-2026-09-26.md` §7 (customer names, so not here).
+- DEFECT 1 (quote-app-2.js `callMarion`): the extraction body has no `use_tools:false`, so
+  marion-chat attaches its catalogue tools (its default) and the model sometimes replies as a
+  chat assistant — one run found the RIGHT kit with stock in prose ("Here's what I found for
+  you …") and the page threw it away as "no JSON in response". The edge function already
+  supports `use_tools:false` (its comment names the extraction path as the reason). One-line fix.
+- DEFECT 2 (`crossRefCart` + `match_parts`): a line with a kind but no dimensions still calls
+  `match_parts`, which returns an arbitrary Active part when id/od/h are all null ("63551 Seal
+  Kit" → a RATCO kit; "64x4218 Garlock oil seal" → an RCAT part). Guard: skip the dimensional
+  search without id or od, and/or make `match_parts` return no rows when all dims are null.
+- DEFECT 3 (`applyParsed` echo guard): a pn equal to the customer's number is cleared even
+  when the customer wrote a real Fluidseal code (PSP-326A, D-01250/4615, AN-13/4615,
+  18701250-312B/4615, D-04500), and the dimensional search then replaces it with an RHAL-…
+  OEM-cross part. Check `part_info(pn)` first: a code that exists in the catalogue stays.
+- Also seen: a list that appears twice in a thread is extracted twice (14 lines for 7); the
+  model invents Fluidseal-grammar codes for dimension asks (J08751125156, RSS-00875/2 …) that
+  `part_info` would flag — keep that check in the pipeline.
+- Board: item 33 answered (run 1 scored), 38 (the three fixes, needs GO), 39 (David's reasons
+  for ten ask-vs-given differences). Nothing changed in code, DB or ai_rules.
+
 ## 2026-09-26 · Cart rules engine (build 2026-09-26.6) — quote.html split into shell + 3 scripts
 - Methodology from Azure DevOps: #6477 GET METHOD (corrected priority Transfer →
   Assembly → Machining [BOM component with Profile Group = Material] → Purchase),
