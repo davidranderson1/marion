@@ -10,6 +10,34 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · SSG WEBSITE SESSION (evening): flabed graph — Ball Stud Kits rename, description-found kits, +3 models, +19 fitments (public/archive/xpress untouched)
+- Logged by the SSG Website / Updates session per the shared-DB protocol. DML only, in
+  `flabed` rows only — no DDL, no migration.
+- `flabed.market_equipment.part_categories`: "Stud Ball Kits" → "Ball Stud Kits" on all 9
+  rows (David's correction; the Dynamics products are `RCAT-<model>/BALL STUD KIT`).
+- `flabed.equipment_models` +3 (sources = description): RKOM 980E (Mining card 3), RHIT EH4550
+  and REUC "190 TON" (card 7) — 1,486 rows now.
+- `flabed.equipment_fitments` +19 (source = description, kit_match exact, matched by the model
+  named in the Dynamics description): Komatsu 960/980E front / hoist / steering / 980E-5
+  steering / rear kits (RKOM-58B/FS/AK010, 58B/HC/AK010, 58B/SC/AK020, 58B/SC/AK030,
+  58F/RS/AK031), Hitachi EH4550 hoist (RHIT-E12614451), Euclid-Hitachi 190-ton truck
+  suspension (REUC-4087775), and the 14 Caterpillar ball stud kits (797, 793, 789, 785,
+  777 / 777C / 777D, 773, 769C, 24M / 18M / 16M / 14M / 12M) — 265 rows now. Every part
+  number and list price used was checked against `public.products` (109 of 109 found, prices equal).
+- DECISION on the remaining ~11,900 catalog fitments: NOT bulk-loaded through the chat
+  connector (a 1,000-row chunk test showed about 700k tokens of retyping for the whole set).
+  Fitments are loaded per market as its page is built; the full load runs from David's PC in
+  a minute once `flabed` is exposed in the Data API (SSG board item 21). Source TSV in the
+  Website folder `kit-catalog/graph/graph_fitments.tsv`.
+- Mockup `fluidseal-mockup/markets/mining.html`: one grouped "Products For Mining Equipment"
+  band (Kits & Parts / Hard Parts / Seals, as on the home page), Ball Stud Kits rows with Add
+  to cart on the Caterpillar cards, the 980E and Hitachi-truck kits above, PC280LC-3 / PC300 /
+  PC360LC-3 as related models for the PC290LC-11 card. `data/mining-equipment.gz.js` re-pushed
+  as short base64 lines after a single corrupted character in the first push (caught by the
+  raw-file SHA check); `data/mining-equipment.json` removed from the repo (current copy in the
+  Website folder `kit-catalog/` and the Claude project).
+- Nothing in `public`, `archive`, or `xpress` touched. Dynamics NOT written.
+
 ## 2026-09-26 · ABQUOTE training — corpus analysed, two live-code findings, candidate rules awaiting GO (docs only, no code or DB change)
 - Analysis of the loaded corpus (3,395 quotes / 11,467 part lines) is written up in the
   project doc `claude/abquote-learnings-and-candidate-rules-2026-09-26.md` (private —
