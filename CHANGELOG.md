@@ -34,7 +34,7 @@ DB migrations / edge-function deploys that went with it.
   `invoice_lines` ← invoicedetails; createdon-windowed, page 1000, typed columns, no raw jsonb); every existing
   config untouched (products, inventory, accounts, contacts, account_products, vendor_products, customer_code,
   vendor_code, net_discount, volume_discount, percentage_discount, employee, systemuser, team, team_member);
-  clean() now spells its non-breaking-space regex as  . Deployed source read back and diffed against v10
+  clean() now spells its non-breaking-space regex as an explicit U+00A0 escape. Deployed source read back and diffed against v10
   (only the additions).
 - LOAD: 7 + 20 createdon windows fired through pg_net (`net.http_get` on the function URL with since / until,
   170 s timeout); all 27 succeeded (sync_log ids 2167–2193, longest window 55 s). NOT scheduled nightly yet —
