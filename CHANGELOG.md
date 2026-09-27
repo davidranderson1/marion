@@ -10,6 +10,49 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-27 · ABQUOTE training APPLIED — match_parts ranking fix + customer-rule policy (DB), 24 ai_rules, quote.html build 2026-09-27.1; evaluation 39% → 78%
+- David's GO on board items 36 / 37 / 38 (2026-09-27). Logged per the shared-DB protocol
+  (`list_migrations` + this file checked first; today's other migration
+  `invoices_and_invoice_lines_sync_v1` does not overlap).
+- DB migration `abquote_match_parts_ranking_fix_and_customer_rules_staff_only`:
+  `public.match_parts` (same signature) now (1) counts `xref_feedback.action =
+  'p21_ground_truth'` in `fb_picks`, so the 8,495 historical quote lines rank compounds
+  (2-248/N70 first, not 2-248/19657 alphabetically); (2) FIXES the height term — with
+  `p_units='in'` the old code compared `height_mm`/`cs_mm` to the inch value, so the
+  variant with the numerically closest millimetre value won (2-248/V1163 over /N70; PSP-326A
+  not in the top 6 for its own size) — inch asks now use `height_in` or `cs_mm` converted;
+  (3) penalises a part with no height data (`p_tol_mm*2`) instead of rewarding it with 0;
+  (4) accepts `cs_mm` in the inch dims filter; (5) returns NO rows when id, od and h are
+  all null (callers used to get an arbitrary Active part). `ai_rules` policy "authenticated
+  read rules" is now `category not like 'customer:%' or is_staff()` — per-customer rules are
+  staff-only; marion-chat needs no change (caller's JWT).
+- ai_rules: 24 rows inserted (13 global — house compound defaults for bare dash numbers,
+  verbatim Fluidseal codes + normalisations, default inch suffixes /4615 /CL, OEM o-ring →
+  house o-ring, brand prefixes (Garlock G-, V-ring, Char-Lynn RCLY-, Parker RPH- padding,
+  Cat S→5), `*` specials, CYLINDER KIT MODE (one `<rod> ROD X <bore> BORE` line per
+  cylinder), OEM kit instead of components (Parker accumulator RPH-RK<bore×100>K000),
+  v-packing set + packing, staff-forward detection, one-list-once, image-only asks →
+  empty JSON, lead-time wording; 11 `customer:<ACCT>` rows). Editable in the Staff Desk.
+- quote.html build 2026-09-27.1 (quote-app-2.js blob 791fd836, quote-app-3.js cc56b349,
+  quote.html aa5a1090 — all hash-verified): `callMarion` sends `use_tools:false` (JSON
+  every time; the prose replies are gone); `applyParsed` no longer clears a pn that equals
+  the customer's number — `crossRefCart` step 0 checks `part_info` and keeps a real
+  Fluidseal code (conf high, oem cleared) or clears it and falls through; no dimensional
+  search without id or od; a rule-built pn not in the catalog (and not a kit / `*` line)
+  is flagged "NOT in catalog — staff confirm" with conf med; `p_prefer:'oem'` only when
+  the model named a brand.
+- EVALUATION (20 held-out quotes, ask text only, David's Chrome, real page functions):
+  15 text-evaluable quotes / 36 lines — exact 14 → 28 (39% → 78%), wrong lines 34 → 13
+  (9 are a two-kit list extracted twice), prose-instead-of-JSON 4 → 0, one cylinder-kit
+  line now exact. Remaining misses need customer history (board item 40: history-first
+  decision tree — RPC `history_lookup` + crossRefCart step 0, awaiting GO) or David's
+  reasons (item 39). Per-quote detail in the private project doc §7–§8.
+- Not changed: marion-chat, marion-notify, any other table or schema.
+- BOARD NUMBERING NOTE for the invoice-sync session below: the Marion Open Items board (artifact
+  VmxUh2isKacUXSGqB79bnk) holds items 1–40 as of this push and its item 40 is the history-first
+  decision tree; the "board item 40 / 41 / 42" in the invoice entry are not on that board yet —
+  add them as 41–43 (or on the Dynamics board) to avoid a collision.
+
 ## 2026-09-27 · Dynamics invoice history synced: invoices (35,878) + invoice_lines (178,099) — dynamics-sync v11, two migrations
 - WHY: Marion needs "same as PO# …" matching from invoice history (David, 2026-09-27). Dynamics Invoice Lines
   are the P21 component lines as invoiced — kits are NOT combined (ab_sellasakit / ab_parentinvoiceline /
