@@ -660,3 +660,4 @@ function loadSample(){
   document.getElementById('mContact').value="Serge";
   document.getElementById('mPhone').value="403-333-6741";
 }
+
