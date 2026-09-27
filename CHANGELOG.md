@@ -10,6 +10,34 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · ABQUOTE training — corpus analysed, two live-code findings, candidate rules awaiting GO (docs only, no code or DB change)
+- Analysis of the loaded corpus (3,395 quotes / 11,467 part lines) is written up in the
+  project doc `claude/abquote-learnings-and-candidate-rules-2026-09-26.md` (private —
+  customer names and net-price ratios, so NOT in this repo). 7 global + 10 per-customer
+  `ai_rules` candidates are drafted there; nothing inserted until David answers board
+  item 37.
+- FINDING 1 (ranking): `public.match_parts` counts only `xref_feedback.action in
+  ('picked_option','confirmed_auto')` for its `fb_picks` tie-breaker, so the 8,495
+  `p21_ground_truth` rows loaded today have NO effect on ranking yet. Fix = add the value
+  to that one predicate (board item 36, needs GO). The function is SECURITY DEFINER, so
+  RLS on xref_feedback does not hide the rows once counted.
+- FINDING 2 (exposure): `ai_rules` policy "authenticated read rules" is `using (true)`,
+  and both quote.html (`getRules()`) and marion-chat (`buildSystemPrompt`) load every
+  active row with no category filter. A `customer:NAME` rule would therefore be
+  readable by any signed-in customer and injected into every customer's chat prompt.
+  Fix = one policy so `customer:%` rows are staff-only (board item 36) BEFORE any
+  per-customer rule is inserted; marion-chat needs no code change (caller's JWT).
+- Corpus facts worth knowing for the intake prompt: 575 quoted lines (72 customers) are
+  cylinder KIT lines whose item code is the geometry itself (`<rod>MM ROD X <bore>MM
+  BORE` or `<r.rrr>"ROD X <b.bbb>"BORE`, desc = the customer's W/O or "AS PER …");
+  1,142 further lines are `*`-prefixed P21 specials or other non-catalog codes; bare
+  dash o-rings are quoted `2-xxx/N70`, `8-xxx/N90`, `3-xxx/N90`, `4-xxx/QN70` unless a
+  compound is named; 232 of the captured "asks" are our own staff forwards
+  (`From: …@sealsonline.com … Subject: <ACCT> QT#: … PO#: …`), not customer wording.
+- Board: items 29 (pre-2026 Outlook batch) and 34 (179 undownloaded folders) closed —
+  David: no more training data needed. Items 36 (two migrations) and 37 (rules) added,
+  item 33 (evaluation route) still open.
+
 ## 2026-09-26 · P21 card true-to-form + real brand wordmark (build 2026-09-26.5) — ⚠ BUILD-NUMBER COLLISION, read before merging find-tab
 - ⚠ **TO THE TRAINING-WEBSITE / DESKTOP GIT SESSION merging branch `find-tab`:** main has
   moved — quote.html is now blob `bf3d4d87` (THIS entry's push), no longer the `be3ea5d7`
