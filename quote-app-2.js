@@ -127,7 +127,7 @@ Return ONLY valid JSON, no markdown, no prose:
   const res=await fetch(SB_URL+"/functions/v1/marion-chat",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+SESSION.access_token},
-    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:3900,temperature:0,
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:3900,temperature:0,use_tools:false, // extraction wants JSON, not a chat answer (2026-09-27.1)
       system:sys,
       messages:[{role:"user",content:userContent}]})
   });
@@ -217,14 +217,15 @@ function applyParsed(p){
   // and an empty pn can never be high confidence.
   const norm=s=>(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   CART = p.lines.map(l=>{
-    let pn=l.pn||"", conf=l.conf||"low", notes=l.notes||"";
+    let pn=l.pn||"", conf=l.conf||"low", notes=l.notes||"", echo=false;
     if(pn && norm(pn)===norm(l.oem)){
-      pn="";
-      notes=(notes?notes+' · ':'')+'AI echoed the customer part # — staff cross-reference needed';
+      // the customer may have written a real Fluidseal code (PSP-326A, D-01250/4615 …):
+      // crossRefCart checks part_info before this pn is cleared (2026-09-27.1)
+      echo=true; conf='med';
     }
     if(!pn) conf='low'; // no Fluidseal cross-reference = low, whatever the AI claims
     return {
-      conf,oem:l.oem||"",brand:l.brand||"",pn,desc:l.desc||"",
+      conf,oem:l.oem||"",brand:l.brand||"",pn,desc:l.desc||"",_echo:echo,
       ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes,type:"item",kitGroup:null,
       price:(l.price!=null&&l.price!==''&&!isNaN(parseFloat(l.price)))?parseFloat(l.price):null,
       kind:l.kind||"",style:l.style||"",dims:l.dims||null,asked:l.asked||""
@@ -255,6 +256,20 @@ async function crossRefCart(){
   await Promise.all(todo.map(async l=>{
     const d=l.dims||{};
     try{
+      // 0) pn equals the customer's own number: keep it only if it is a real Fluidseal part (2026-09-27.1)
+      if(l._echo&&l.pn){
+        const {data:pi}=await sb.rpc('part_info',{p_pn:l.pn});
+        const info=pi&&pi[0];
+        l._echo=false;
+        if(info&&info.found){
+          l.url=info.url||null;l.conf='high';l.oem='';
+          l.notes=(l.notes?l.notes+' · ':'')+'Fluidseal part number as written — verified in catalog';
+          hits++;return;
+        }
+        l.pn='';l.conf='low';
+        l.notes=(l.notes?l.notes+' · ':'')+'AI echoed the customer part # — staff cross-reference needed';
+        // fall through: OEM lookup, then the dimensional search
+      }
       // 1) OEM number? The catalog decides the brand: search the R<VENDOR>- namespace directly.
       if(l.oem){
         const {data:xr}=await sb.rpc('find_cross_refs',{p_oem:l.oem});
@@ -277,18 +292,27 @@ async function crossRefCart(){
         }
         // no pn yet: fall through to the dimensional search below
       }
-      if(l.pn){ // pn set some other way (saved quote, manual) — just resolve its link
+      if(l.pn){ // pn set some other way (saved quote, manual, rule-built) — resolve its link, flag invented codes
         const {data:pi}=await sb.rpc('part_info',{p_pn:l.pn});
         const info=pi&&pi[0];
         if(info&&info.found)l.url=info.url||null;
+        else if(!/ROD\s*X.*BORE|STAGE\s+CYLINDER\s+KIT|^\*/i.test(l.pn)){ // kit lines and *specials are not catalog items by design
+          if(l.conf==='high')l.conf='med';
+          l.notes=(l.notes?l.notes+' · ':'')+'⚠ '+l.pn+' NOT in catalog — staff confirm';
+        }
         return;
       }
-      // 2) dimensional search (unchanged)
+      // 2) dimensional search — only with a diameter to search on (2026-09-27.1)
+      if(d.id==null&&d.od==null){
+        l.conf='low';
+        l.notes=(l.notes?l.notes+' · ':'')+'No dimensions and no cross-reference — staff to identify';
+        return;
+      }
       const {data,error}=await sb.rpc('match_parts',{
         p_type:l.kind||'',p_style:l.style||'',
         p_id:d.id!=null?d.id:null,p_od:d.od!=null?d.od:null,p_h:d.h!=null?d.h:null,
         p_units:d.units||'unknown',p_tol_mm:0.8,p_limit:6,
-        p_prefer:(l.oem?'oem':'house')}); // customer asked for an OEM # -> OEM cross parts first; otherwise house parts lead (availability & price)
+        p_prefer:(l.oem&&l.brand?'oem':'house')}); // a recognised OEM number -> OEM cross parts first; a bare number or none -> house parts lead (availability & price)
       if(error){console.warn('match_parts',error);return;}
       l.options=data||[];               // kept for the Review modal
       if(!data||!data.length)return;
