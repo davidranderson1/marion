@@ -284,19 +284,28 @@ async function openQuote(id){
   const {data,error}=await sb.from('quotes').select('*,quote_lines(*)').eq('id',id).single();
   if(error||!data){alert('Could not open quote');return;}
   CURRENT=data;
+  /* kit components render right under their parent (line_type/kit_group) */
+  (data.quote_lines||[]).sort((a,b)=>{
+    const ga=a.kit_group||0, gb=b.kit_group||0;
+    if(ga!==gb) return (ga||1e9)-(gb||1e9)||(a.id-b.id);
+    if(ga&&ga===gb){const pa=a.line_type==='kit'?0:1, pb=b.line_type==='kit'?0:1; if(pa!==pb)return pa-pb;}
+    return a.id-b.id;});
   document.getElementById('detailPanel').classList.remove('hidden');
   document.getElementById('dMeta').textContent=new Date(data.created_at).toLocaleString('en-CA')+' · '+data.status+(data.po?' · PO# '+data.po:'');
   document.getElementById('dCust').textContent=[(data.acct||'—'),(data.contact||''),(data.phone||''),(data.email||''),(data.address||''),((PROFILES[data.user_id]||{}).email||'')].filter(Boolean).join(' · ');
   const tb=document.getElementById('detailBody');
   tb.innerHTML=(data.quote_lines||[]).map((l,i)=>'<tr>'+
     '<td><span class="conf '+(l.conf==='high'?'priced':l.conf==='med'?'submitted':'lost')+'">'+esc(l.conf||'')+'</span></td>'+
-    '<td class="mono">'+esc(l.oem||'')+'</td><td class="mono" style="font-weight:700">'+esc(l.pn||'')+'</td>'+
+    '<td class="mono">'+esc(l.oem||'')+'</td><td class="mono" style="font-weight:700">'+
+      (l.line_type==='kit'?'<span class="conf sent">KIT</span> ':'')+
+      ((l.kit_group&&l.line_type!=='kit')?'<span style="color:#9ec9e8;font-weight:700">&nbsp;&#8627; </span>':'')+
+      esc(l.pn||'')+'</td>'+
     '<td>'+esc(l.descr||'')+'</td>'+
     '<td class="mono" style="color:var(--amber);font-weight:700">'+esc(l.reference||'')+'</td>'+
     '<td style="text-align:center">'+l.qty+'</td>'+
     '<td>'+esc(l.wh||'')+'</td><td style="text-align:center">'+esc(l.disp||'')+'</td>'+
-    '<td>'+esc(l.notes||'')+'</td>'+
-    '<td><input class="price" data-line="'+l.id+'" data-qty="'+l.qty+'" value="'+(l.unit_price!=null?(+l.unit_price).toFixed(2):'')+'" placeholder="0.00" oninput="recalc()"></td>'+
+    '<td>'+esc(l.notes||'')+((l.get_method||l.prod_method||l.eta)?' <span style="color:#8b90a0;font-size:11px">['+[l.prod_method,l.get_method,l.eta?('ETA '+l.eta):''].filter(Boolean).map(esc).join(' · ')+']</span>':'')+'</td>'+
+    '<td><input class="price" data-line="'+l.id+'" data-qty="'+l.qty+'" value="'+(l.unit_price!=null?(+l.unit_price).toFixed(2):'')+'" placeholder="0.00" oninput="recalc()">'+(l.discount_type?'<div style="font-size:9px;color:#888;text-align:right">'+esc(l.discount_type)+'</div>':'')+'</td>'+
     '<td class="mono" id="lt-'+l.id+'" style="text-align:right">'+(l.line_total!=null?'$'+(+l.line_total).toFixed(2):'—')+'</td>'+
     '</tr>').join('');
   recalc();

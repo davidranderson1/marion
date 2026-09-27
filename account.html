@@ -333,7 +333,12 @@ function showList(){
 function openDetail(id){
   const q=(window.__QUOTES||{})[id];if(!q)return;
   const custEmail=(PROFILES[q.user_id]||{}).email||(SESSION&&q.user_id===SESSION.user.id?SESSION.user.email:'');
-  document.getElementById('detailCard').innerHTML=cardHTML(q,q.quote_lines||[],custEmail);
+  const sortedLines=(q.quote_lines||[]).slice().sort((a,b)=>{
+    const ga=a.kit_group||0, gb=b.kit_group||0;
+    if(ga!==gb) return (ga||1e9)-(gb||1e9)||(a.id-b.id);
+    if(ga&&ga===gb){const pa=a.line_type==='kit'?0:1, pb=b.line_type==='kit'?0:1; if(pa!==pb)return pa-pb;}
+    return a.id-b.id;});
+  document.getElementById('detailCard').innerHTML=cardHTML(q,sortedLines,custEmail);
   document.getElementById('list').style.display='none';
   document.getElementById('detail').style.display='block';
 }
@@ -349,7 +354,7 @@ function cardHTML(q,lines,custEmail){
   const rows=lines.map(l=>{
     if(l.line_total!=null)subtotal+=+l.line_total;
     return '<tr>'+
-      '<td style="padding:12px 8px;border-bottom:1px solid #eef0f3;color:#4a5568;font-size:13px">'+lineThumbHTML(l)+'<span style="vertical-align:middle">'+(hesc(l.pn)||'<i>unresolved</i>')+(l.descr?' — '+hesc(l.descr):'')+(l.oem?' <span style="color:#8b90a0">(OEM '+hesc(l.oem)+')</span>':'')+(l.reference?' <span style="color:#b8860b;font-weight:700">Ref: '+hesc(l.reference)+'</span>':'')+'</span></td>'+
+      '<td style="padding:12px 8px;'+((l.kit_group&&l.line_type!=='kit')?'padding-left:36px;':'')+'border-bottom:1px solid #eef0f3;color:#4a5568;font-size:13px">'+lineThumbHTML(l)+'<span style="vertical-align:middle">'+(l.line_type==='kit'?'<b style="color:#1a6bb5">KIT:</b> ':((l.kit_group&&l.line_type!=='kit')?'<span style="color:#9ec9e8">&#8627;</span> ':''))+(hesc(l.pn)||'<i>unresolved</i>')+(l.descr?' — '+hesc(l.descr):'')+(l.oem?' <span style="color:#8b90a0">(OEM '+hesc(l.oem)+')</span>':'')+(l.reference?' <span style="color:#b8860b;font-weight:700">Ref: '+hesc(l.reference)+'</span>':'')+'</span></td>'+
       '<td align="center" style="padding:12px 8px;border-bottom:1px solid #eef0f3;color:#2b6cb0;font-size:13px">'+hesc(l.qty)+'</td>'+
       '<td align="right" style="padding:12px 8px;border-bottom:1px solid #eef0f3;font-size:13px">'+cmoney(l.unit_price)+'</td>'+
       '<td align="right" style="padding:12px 8px;border-bottom:1px solid #eef0f3;font-weight:700;font-size:13px">'+cmoney(l.line_total)+'</td></tr>';
@@ -358,7 +363,7 @@ function cardHTML(q,lines,custEmail){
   return '<div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:28px 32px">'+
   '<table width="100%" cellpadding="0" cellspacing="0"><tr><td>'+
     '<div style="font-size:11px;color:#8b90a0;letter-spacing:1.5px;font-weight:700">QUOTE</div>'+
-    '<div style="font-size:28px;font-weight:800;color:#111827">#'+hesc(q.quote_no)+'</div>'+
+    '<div style="font-size:28px;font-weight:800;color:#111827">#'+hesc(q.quote_no)+((q.revision&&q.revision>0)?' <span style="font-size:14px;color:#d0021b;font-weight:800">rev '+hesc(q.revision)+'</span>':'')+'</div>'+
     '<div style="margin-top:10px;font-size:12px;color:#555"><span class="chip '+hesc(q.status)+'">'+hesc(q.status)+'</span>&nbsp;&nbsp;'+date+(q.po?' &nbsp;·&nbsp; PO Number: <b>'+hesc(q.po)+'</b>':'')+'</div>'+
   '</td><td align="right" valign="top">'+
     '<span style="display:inline-block;width:18px;height:18px;background:#FFD400;border-radius:50%;border:5px solid #000;vertical-align:middle"></span>'+
