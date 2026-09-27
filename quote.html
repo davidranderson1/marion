@@ -551,6 +551,8 @@ function lineThumbHTML(l){ // catalog product image — thumb (data URL) first, 
   const src=l.thumb||l.img_url;if(!src)return '';
   return '<img src="'+(src+'').replace(/"/g,'&quot;')+'" width="44" height="44" style="width:44px;height:44px;object-fit:contain;border:1px solid #e5e7eb;border-radius:6px;background:#fff;vertical-align:middle;margin-right:10px" alt="">';
 }
+/* Official 'No Tag Line' wordmark (FLUIDSEAL-THEME.md §4) — real asset, inline as SVG data URI */
+const FS_LOGO='fluidseal-logo.svg'; // official wordmark, same-origin file in this repo
 function cardHTML(q,lines,custEmail){
   let subtotal=0;
   const dPad=lines.some(l=>l.thumb||l.img_url)?'padding:10px 8px 10px 62px':'padding:10px 8px'; // align the Description header with the text, not the 44px thumb
@@ -570,9 +572,7 @@ function cardHTML(q,lines,custEmail){
     '<div style="font-size:28px;font-weight:800;color:#111827">#'+hesc(q.quote_no)+'</div>'+
     '<div style="margin-top:10px;font-size:12px;color:#555"><span style="background:#fdf0d0;color:#b8860b;padding:4px 12px;border-radius:12px;font-weight:700">'+hesc(q.status)+'</span>&nbsp;&nbsp;'+date+(q.po?' &nbsp;·&nbsp; PO Number: <b>'+hesc(q.po)+'</b>':'')+'</div>'+
   '</td><td align="right" valign="top">'+
-    '<span style="display:inline-block;width:18px;height:18px;background:#FFD400;border-radius:50%;border:5px solid #000;vertical-align:middle"></span>'+
-    '<span style="font-size:24px;font-weight:800;font-style:italic;color:#111;vertical-align:middle">&nbsp;fluidseal</span>'+
-    '<span style="font-size:9px;color:#555;vertical-align:middle"> AB Inc.</span>'+
+    '<img src="'+FS_LOGO+'" alt="fluidseal AB Inc." style="height:36px;vertical-align:middle">'+
   '</td></tr></table>'+
   '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:26px"><tr>'+
   '<td width="49%" valign="top" style="border:1px solid #e5e7eb;border-radius:8px;padding:16px 18px">'+
@@ -622,7 +622,10 @@ function cardP21HTML(q,lines,custEmail){
   const m4=n=>(n==null||n==='')?'':(+n).toFixed(4);
   const m2=n=>(n==null||n==='')?'':(+n).toFixed(2);
   const up=s2=>hesc((s2??'').toString().toUpperCase());
-  const cell='padding:5px 8px;vertical-align:top;border-right:1px solid #9a9a9a;font-size:12px;';
+  const B='1px solid #9a9a9a';
+  const lbl='font-size:8px;letter-spacing:.6px;font-weight:700;color:#111;';
+  const cell='padding:4px 8px;vertical-align:top;font-size:12px;line-height:1.45;';
+  const hd='padding:3px 6px;'+lbl+'text-align:center;border-bottom:'+B+';border-right:'+B+';background:#fff;';
   const rows=lines.map(l=>{
     if(l.line_total!=null){subtotal+=+l.line_total;any=true;}
     const extra=[];
@@ -630,72 +633,83 @@ function cardP21HTML(q,lines,custEmail){
     if(l.reference)extra.push('REF: '+up(l.reference));
     return '<tr>'+
       '<td style="'+cell+'text-align:center">'+hesc(l.qty)+'</td>'+
+      '<td style="'+cell+'"></td><td style="'+cell+'"></td>'+
       '<td style="'+cell+'text-align:center">'+up(l.disp||'')+'</td>'+
       '<td style="'+cell+'"><b>'+(up(l.pn)||'*UNRESOLVED*')+'</b>'+
         (l.descr?'<br><span style="color:#333">&nbsp;'+up(l.descr)+'</span>':'')+
         extra.map(x=>'<br><span style="color:#333">&nbsp;'+x+'</span>').join('')+'</td>'+
       '<td style="'+cell+'text-align:center">EA</td>'+
-      '<td style="'+cell+'text-align:right">'+m4(l.unit_price)+'</td>'+
-      '<td style="padding:5px 8px;vertical-align:top;font-size:12px;text-align:right">'+m2(l.line_total)+'</td>'+
+      '<td style="'+cell+'"></td>'+
+      '<td style="'+cell+'text-align:right;white-space:nowrap">'+m4(l.unit_price)+'</td>'+
+      '<td style="'+cell+'text-align:right;white-space:nowrap">'+m2(l.line_total)+'</td>'+
     '</tr>';
   }).join('');
   const d=new Date(q.created_at||Date.now());
   const date=('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2)+'/'+(''+d.getFullYear()).slice(-2);
   const gst=any?subtotal*0.05:0;
-  const tot=(lbl,val,strong)=>'<tr><td style="padding:3px 10px;font-size:11px;'+(strong?'font-weight:700;':'')+'">'+lbl+'</td><td style="padding:3px 10px;text-align:right;font-size:'+(strong?'13px;font-weight:700;':'11px;')+'">'+val+'</td></tr>';
-  const hd='padding:4px 8px;border-bottom:2px solid #333;border-right:1px solid #9a9a9a;font-size:9px;letter-spacing:.5px;font-weight:700;text-align:center;';
+  const tot=(la,val,strong)=>'<tr><td style="padding:2.5px 10px;font-size:'+(strong?'11px;font-weight:700;':'10px;')+'">'+la+'</td><td style="padding:2.5px 10px;text-align:right;white-space:nowrap;font-size:'+(strong?'13px;font-weight:700;':'11px;')+'">'+val+'</td></tr>';
+  const numbox='<td width="30%" style="border:'+B+';padding:3px 10px;text-align:center;vertical-align:middle"><div style="'+lbl+'">QUOTATION NUMBER</div><div style="font-size:13px;font-weight:700">'+hesc(q.quote_no)+'</div></td>';
   return '<div style="background:#f4f5f7;padding:24px">'+
   '<div style="max-width:840px;margin:0 auto;background:#fff;border:1px solid #bbb;padding:26px 30px;font-family:Consolas,\'Courier New\',monospace;color:#111">'+
     '<table width="100%" cellpadding="0" cellspacing="0"><tr>'+
-      '<td style="font-size:11px">GST: R-87321 2575</td>'+
-      '<td align="right" style="font-family:Georgia,\'Times New Roman\',serif;font-style:italic;font-size:24px;font-weight:700">Quotation</td>'+
+      '<td style="font-size:11px;vertical-align:bottom">GST: R-87321 2575</td>'+
+      '<td align="right" style="font-family:Georgia,\'Times New Roman\',serif;font-style:italic;font-size:26px;font-weight:700">Quotation</td>'+
     '</tr></table>'+
-    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px"><tr>'+
-      '<td width="30%" style="border:1px solid #9a9a9a;padding:5px 10px;text-align:center;font-size:12px;font-weight:700">'+ (up(q.acct)||'&mdash;') +'</td>'+
-      '<td width="5%"></td>'+
-      '<td width="30%" style="border:1px solid #9a9a9a;padding:3px 10px;text-align:center"><div style="font-size:8px;letter-spacing:.5px">QUOTATION NUMBER</div><div style="font-size:13px;font-weight:700">'+hesc(q.quote_no)+'</div></td>'+
-      '<td width="5%"></td>'+
-      '<td width="30%" style="border:1px solid #9a9a9a;padding:3px 10px;text-align:center"><div style="font-size:8px;letter-spacing:.5px">QUOTATION NUMBER</div><div style="font-size:13px;font-weight:700">'+hesc(q.quote_no)+'</div></td>'+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px"><tr>'+
+      '<td width="30%" style="border:'+B+';padding:8px 10px;text-align:center;font-size:12px;font-weight:700;vertical-align:middle">'+(up(q.acct)||'&mdash;')+'</td>'+
+      '<td width="5%"></td>'+numbox+'<td width="5%"></td>'+numbox+
     '</tr></table>'+
     '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px"><tr>'+
-      '<td width="50%" style="font-size:12px;vertical-align:top"><b>BILL TO:</b><br>'+(up(q.acct)||'(ENTER BUSINESS NAME)')+'<br>'+(up(q.contact)||'')+(q.contact?'<br>':'')+(up(q.address)||'&mdash;')+'</td>'+
-      '<td width="50%" style="font-size:12px;vertical-align:top"><b>SHIP TO:</b><br>'+(up(q.acct)||'&mdash;')+'<br>'+(up(q.address)||'&mdash;')+'</td>'+
+      '<td width="50%" style="font-size:12px;vertical-align:top;line-height:1.55;padding-right:16px"><b>BILL TO:</b><br>'+(up(q.acct)||'(ENTER BUSINESS NAME)')+(q.contact?'<br>'+up(q.contact):'')+'<br>'+(up(q.address)||'&mdash;')+'</td>'+
+      '<td width="50%" style="font-size:12px;vertical-align:top;line-height:1.55"><b>SHIP TO:</b><br>'+(up(q.acct)||'&mdash;')+'<br>'+(up(q.address)||'&mdash;')+'</td>'+
+    '</tr><tr>'+
+      '<td style="font-size:12px;padding-top:7px"><b>CUSTOMER P.O. NO.</b>&nbsp; '+(up(q.po)||'&mdash;')+'</td>'+
+      '<td style="font-size:12px;padding-top:7px"><b>CUSTOMER P.O. NO.</b>&nbsp; '+(up(q.po)||'&mdash;')+'</td>'+
     '</tr></table>'+
-    '<div style="font-size:12px;margin-top:8px"><b>CUSTOMER P.O. NO.</b> '+(up(q.po)||'&mdash;')+'</div>'+
-    '<div style="font-size:11px;font-weight:700;margin-top:8px;overflow:hidden;white-space:nowrap">***QUOTATION******QUOTATION******QUOTATION******QUOTATION******QUOTATION***</div>'+
-    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;border:1px solid #9a9a9a"><tr>'+
+    '<div style="font-size:11px;font-weight:700;margin-top:10px;overflow:hidden;white-space:nowrap">***QUOTATION******QUOTATION******QUOTATION******QUOTATION******QUOTATION***</div>'+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;border:'+B+';border-collapse:collapse"><tr>'+
       '<td style="'+hd+'">QUOTE NUMBER</td><td style="'+hd+'">STATUS</td><td style="'+hd+'">ORDER DATE</td><td style="'+hd+'">CUSTOMER P.O. NUMBER</td><td style="'+hd+'border-right:none">CUSTOMER</td></tr><tr>'+
-      '<td style="'+cell+'text-align:center">'+hesc(q.quote_no)+'</td>'+
-      '<td style="'+cell+'text-align:center">'+up(q.status)+'</td>'+
-      '<td style="'+cell+'text-align:center">'+date+'</td>'+
-      '<td style="'+cell+'text-align:center">'+(up(q.po)||'&mdash;')+'</td>'+
-      '<td style="padding:5px 8px;font-size:12px;text-align:center">'+hesc(custEmail)+'</td>'+
+      '<td style="'+cell+'text-align:center;border-right:'+B+'">'+hesc(q.quote_no)+'</td>'+
+      '<td style="'+cell+'text-align:center;border-right:'+B+'">'+up(q.status)+'</td>'+
+      '<td style="'+cell+'text-align:center;border-right:'+B+'">'+date+'</td>'+
+      '<td style="'+cell+'text-align:center;border-right:'+B+'">'+(up(q.po)||'&mdash;')+'</td>'+
+      '<td style="'+cell+'text-align:center">'+hesc(custEmail)+'</td>'+
     '</tr></table>'+
-    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;border:1px solid #9a9a9a"><tr>'+
-      '<td style="'+hd+'">INSTRUCTIONS</td><td style="'+hd+'">TYPE</td><td style="'+hd+'border-right:none">PAGE NO.</td></tr><tr>'+
-      '<td style="'+cell+'">'+(q.required_by?'***'+up(q.required_by)+'***':'')+'</td>'+
-      '<td style="'+cell+'text-align:center">'+up((q.req_type||'quote'))+'</td>'+
-      '<td style="padding:5px 8px;font-size:12px;text-align:center">1</td>'+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;border:'+B+';border-collapse:collapse"><tr>'+
+      '<td style="'+hd+'text-align:left;padding-left:8px">INSTRUCTIONS</td><td style="'+hd+'" width="12%">TYPE</td><td style="'+hd+'border-right:none" width="12%">PAGE NO.</td></tr><tr>'+
+      '<td style="'+cell+'border-right:'+B+'">'+(q.required_by?'***'+up(q.required_by)+'***':'')+'</td>'+
+      '<td style="'+cell+'text-align:center;border-right:'+B+'">'+up((q.req_type||'quote'))+'</td>'+
+      '<td style="'+cell+'text-align:center">1</td>'+
     '</tr></table>'+
-    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;border:1px solid #9a9a9a;border-collapse:collapse"><tr>'+
-      '<td style="'+hd+'" width="9%">QUANTITY<br>ORDERED</td>'+
-      '<td style="'+hd+'" width="7%">DISP.</td>'+
-      '<td style="'+hd+'text-align:left">ITEM CODE AND DESCRIPTION</td>'+
-      '<td style="'+hd+'" width="6%">U/M</td>'+
-      '<td style="'+hd+'" width="13%">UNIT PRICE</td>'+
-      '<td style="padding:4px 8px;border-bottom:2px solid #333;font-size:9px;letter-spacing:.5px;font-weight:700;text-align:center" width="13%">AMOUNT</td></tr>'+
-      (any?'':'<tr><td></td><td></td><td style="'+cell+'">PRICE SUBJECT TO CHANGE<br>WITHOUT NOTIFICATION</td><td></td><td></td><td></td></tr>')+
+    '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;border:'+B+';border-collapse:collapse">'+
+      '<tr><td colspan="3" style="padding:3px 6px 0;'+lbl+'text-align:center;border-right:'+B+'">QUANTITY</td>'+
+      '<td rowspan="2" style="'+hd+'vertical-align:bottom" width="6%">DISP.</td>'+
+      '<td rowspan="2" style="'+hd+'text-align:left;vertical-align:bottom;padding-left:8px">ITEM CODE AND DESCRIPTION</td>'+
+      '<td rowspan="2" style="'+hd+'vertical-align:bottom" width="5%">U/M</td>'+
+      '<td rowspan="2" style="'+hd+'vertical-align:bottom" width="6%">MULT.</td>'+
+      '<td rowspan="2" style="'+hd+'vertical-align:bottom" width="12%">UNIT PRICE</td>'+
+      '<td rowspan="2" style="'+hd+'border-right:none;vertical-align:bottom" width="11%">AMOUNT</td></tr>'+
+      '<tr><td style="'+hd+'border-right:none" width="8%">ORDERED</td><td style="'+hd+'border-right:none" width="8%">B.O./RET.</td><td style="'+hd+'" width="8%">SHIPPED</td></tr>'+
+      '<tr><td colspan="4" style="'+cell+'"></td><td style="'+cell+'color:#333">PRICE SUBJECT TO CHANGE<br>WITHOUT NOTIFICATION (TARIFFS)</td><td colspan="4" style="'+cell+'"></td></tr>'+
       rows+
     '</table>'+
     '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px"><tr>'+
-      '<td width="55%" style="vertical-align:top;font-size:9px;color:#333;line-height:1.5">'+
-        '<b>CODE EXPLANATION</b><br>B - BUY &nbsp; S - STOCK &nbsp; T - TRANSFER<br><br>'+
-        'Prices are valid for 30 days from above date and are subject to the quantities quoted. This cost does not reflect any special testing, packaging or other requirements other than those normally supplied with standard stock components.<br><br>'+
-        '<b>WARRANTY: SUBJECT TO MANUFACTURER\'S APPROVAL.</b><br><br>www.sealsonline.com</td>'+
-      '<td width="45%" style="vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #9a9a9a">'+
+      '<td width="58%" style="vertical-align:top;font-size:9px;color:#333;line-height:1.7;padding-right:16px">'+
+        '<b>CODE EXPLANATION</b><br>'+
+        '* - PST APPLICABLE &nbsp;&nbsp; # - GST APPLICABLE &nbsp;&nbsp; + - PST &amp; GST APPLICABLE<br>'+
+        'B - BALANCE BACK ORDERED &nbsp;&nbsp; C - CONSIDER COMPLETE<br>'+
+        'D - DIRECT SHIPMENT &nbsp;&nbsp; F - FACTORY MINIMUM &nbsp;&nbsp; RT - RETURNED<br><br>'+
+        'Prices are valid for 30 days from above date and are subject to the quantities quoted. This cost does not reflect any special testing, packaging or other requirements other than those normally supplied with standard stock components.<br>'+
+        '<span style="display:block;text-align:center;font-size:10px;font-weight:700;margin:8px 0">www.sealsonline.com</span>'+
+        '<b>WARRANTY: SUBJECT TO MANUFACTURER\'S APPROVAL.</b></td>'+
+      '<td width="42%" style="vertical-align:top"><table width="100%" cellpadding="0" cellspacing="0" style="border:'+B+'">'+
         tot('SUB TOTAL',any?m2(subtotal):'&mdash;')+
+        tot('MISC. I','')+
+        tot('MISC. II','')+
+        tot('TOTAL TRANSPORT','')+
         tot('GST / HST',any?m2(gst):'&mdash;')+
         tot('PST','0.00')+
+        tot('RECEIVED','0.00')+
         tot('TOTAL AMOUNT DUE',any?m2(subtotal+gst):'PENDING PRICING',true)+
       '</table></td>'+
     '</tr></table>'+
@@ -1808,7 +1822,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-09-26.4'; // + BOM auto-expands only when the kit is not in stock for the qty (v_stock_staff); red Kit badge + availability tooltip
+const MARION_BUILD='2026-09-26.5'; // P21 card reformatted to match the real ERP form; real brand wordmark (FS_LOGO) on the Fluidseal card
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
