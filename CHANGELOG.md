@@ -10,6 +10,37 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · P21 card true-to-form + real brand wordmark (build 2026-09-26.5) — ⚠ BUILD-NUMBER COLLISION, read before merging find-tab
+- ⚠ **TO THE TRAINING-WEBSITE / DESKTOP GIT SESSION merging branch `find-tab`:** main has
+  moved — quote.html is now blob `bf3d4d87` (THIS entry's push), no longer the `be3ea5d7`
+  (.4) your branch was cut from, and your unpushed file also calls itself build
+  2026-09-26.5. DO NOT overwrite: `git merge` (or rebase) find-tab onto current main —
+  the only overlap should be the MARION_BUILD line (both sessions changed it) plus
+  nearby step-1 markup; resolve by keeping BOTH feature sets and stamping the merged
+  file **2026-09-26.6** with a combined comment. This entry's changes live in cardHTML /
+  cardP21HTML / FS_LOGO (step-3 card renderers) — they should not touch your step-1
+  tab strip. Hash-verify the merged push per protocol.
+- cardP21HTML rebuilt against the real ERP PDF (re-read all 5 samples with pdftotext):
+  3-part QUANTITY header (ORDERED / B.O./RET. / SHIPPED) + MULT. column; the
+  "PRICE SUBJECT TO CHANGE WITHOUT NOTIFICATION (TARIFFS)" note now always shows (the
+  real form prints it even when priced); CUSTOMER P.O. NO. under BOTH the BILL TO and
+  SHIP TO blocks; duplicated QUOTATION NUMBER boxes kept (that's how P21 prints it);
+  CODE EXPLANATION legend corrected to the real one (* PST / # GST / + both /
+  B BALANCE BACK ORDERED / C CONSIDER COMPLETE / D DIRECT SHIPMENT / F FACTORY MINIMUM /
+  RT RETURNED — the old B-BUY/S-STOCK/T-TRANSFER legend was invented and wrong); totals
+  panel now carries MISC. I / MISC. II / TOTAL TRANSPORT / RECEIVED rows like the form;
+  lighter 1px rules + consistent padding throughout.
+- BRAND FIX: the Fluidseal card (cardHTML) header logo was a hand-typed rebuild
+  (#FFD400 dot + italic text) — violates FLUIDSEAL-THEME.md §4 ("use the REAL asset").
+  New repo file `fluidseal-logo.svg` (official No Tag Line wordmark, generated from
+  Brand Guidelines/Logos PDF via PyMuPDF per the theme spec — 5.4KB, exactly #231f20 +
+  #ffdd00); cardHTML renders it via <img src=FS_LOGO> (same-origin relative URL, so the
+  html2pdf PDF attachment renders it too).
+- NOT synced yet: account.html cardHTML and marion-notify's email cardHtml still use the
+  old hand-typed mark — same fix available on request (the email needs a hosted https
+  URL, e.g. https://marion.fluidsealab.com/fluidseal-logo.svg).
+- Both pushes hash-verified (quote.html bf3d4d87, fluidseal-logo.svg 7dfd8b87).
+
 ## 2026-09-26 · ABQUOTE training corpus LOADED — training_quotes / training_quote_lines + 8,495 p21_ground_truth rows (public schema, additive)
 - Logged by the AI Data Training chat per the shared-DB protocol (`list_migrations` + this file
   checked first; parallel sessions today: hr_*, flabed_*, cart_rules_engine_support — no overlap).
