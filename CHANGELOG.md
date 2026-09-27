@@ -10,6 +10,44 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-26 · Cart rules engine (build 2026-09-26.6) — quote.html split into shell + 3 scripts
+- Methodology from Azure DevOps: #6477 GET METHOD (corrected priority Transfer →
+  Assembly → Machining [BOM component with Profile Group = Material] → Purchase),
+  #8353 Discount (Pricing) Configurator (Exclusions → Volume → Net Price →
+  Percentage → List price, first match wins; lowest price on conflict — the July
+  snapshot engine get_net_price / get_cart_prices / get_my_cart_prices is now
+  wired into the cart), #8355 CART_CODE_REVIEW (BR-02/03/05/06/07/08).
+- quote.html is now a 26KB shell loading quote-app-1/2/3.js (plain scripts, shared
+  global scope, load order matters) — a 142KB single file can no longer be pushed
+  from a chat session. This build MERGES the desktop 2026-09-26.5 (P21 card
+  reformat + FS_LOGO wordmark) via git 3-way merge, and re-implements the
+  Find-parts tab / import banner / header link inside the new engine.
+- Cart (step 2): computed Disposition chips per line AND per BOM component (BR-02
+  required-qty recursion; dropdown = manual override), Production method chip
+  (BR-03), GET method chip per line + component, On Hand column (staff exact /
+  customer availability bands per the 2026-07-28 decision), warehouse ▾ / On-Hand
+  click → all-warehouse inventory popup via get_stock (pick a row to set the
+  line's warehouse; no hardcoded warehouse list — ERP BUG-14 avoided), account
+  pricing via the discount engine with discount-type tag under Net Price (manual
+  price wins; qty/account edits re-price for volume tiers), staff margin colouring
+  ≤26% (BR-05/06, cost basis for parts AND kits — ERP BUG-03 fixed by design),
+  per-line ETA date with BR-07 colour, totals bar + GREEN/YELLOW/RED cart light
+  (BR-08 adapted), submit gate (whole-number qty; PO confirm for orders).
+- Submit revisions: quotes.revision increments on re-submit; rev pill on card,
+  rev in the notify email subject/header/PDF name.
+- DB migration cart_rules_engine_support: get_cart_facts(pns) RPC (profile_group /
+  vendor / list_price / cost staff-gated), execute grants for get_stock +
+  get_cart_prices + get_my_cart_prices, quote_lines.discount_type / rule_id / eta /
+  get_method / prod_method, quotes.revision.
+- marion-notify v13 deployed: kit structure on the email card (KIT: parents, ↳
+  components sorted under parents), per-line fulfilment context, revision markers.
+  Recipient lock unchanged.
+- quotes.html: staff desk shows KIT/↳ nesting, fulfilment context, discount type.
+  account.html: same kit view + rev marker. Closes the CLAUDE-CART §10 Marion
+  carry-forwards.
+- Verified: 40/40 jsdom rule tests on the merged build; every pushed file blob
+  SHA-verified. Marion Supabase objects only; xpress/flabed/archive untouched.
+
 ## 2026-09-26 · SSG WEBSITE SESSION (evening): flabed graph — Ball Stud Kits rename, description-found kits, +3 models, +19 fitments (public/archive/xpress untouched)
 - Logged by the SSG Website / Updates session per the shared-DB protocol. DML only, in
   `flabed` rows only — no DDL, no migration.
