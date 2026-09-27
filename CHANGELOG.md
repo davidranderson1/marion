@@ -10,6 +10,37 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-27 · Dynamics invoice history synced: invoices (35,878) + invoice_lines (178,099) — dynamics-sync v11, two migrations
+- WHY: Marion needs "same as PO# …" matching from invoice history (David, 2026-09-27). Dynamics Invoice Lines
+  are the P21 component lines as invoiced — kits are NOT combined (ab_sellasakit / ab_parentinvoiceline /
+  parentbundleid are empty on every row), so a PO match returns the components; kit recombination is a
+  follow-up (board item 42).
+- DATA STOPS AT 2026-01-20: the newest P21 invoice date in Dynamics is 2026-01-20 (order-ship 7164090-1), last
+  imported into Dynamics 2026-01-21 17:21 UTC; earliest lines 2025-03-03 (headers reach back to 2024-11-01 for
+  309 invoices that have no lines). 178,099 lines / 35,878 headers — Dataverse and Supabase reconcile exactly in
+  six invoice-date buckets. Nothing newer exists in Dynamics until David re-imports Invoice Lines from P21
+  (board item 40).
+- MIGRATIONS (public schema, Marion objects only): `invoices_and_invoice_lines_sync_v1` — tables
+  `public.invoices` (header: customer_po = new_po, p21_order_no = new_orderp21, customer_code, account, taker,
+  totals, status) and `public.invoice_lines` (invoice_id, p21_invoice_no = cr5da_invoicep21 "7163441-1",
+  invoice_date = cr5da_invoicedatep21, part_number = product name, product_number = P21 item id, quantity,
+  price_per_unit, net_price, extended_amount, discount_type, cost / profit STAFF ONLY, disposition,
+  inventory_name, sequence_number …); indexes on the P21 numbers, upper(customer_po), customer_code,
+  invoice_date, upper(part_number), product_id; RLS enabled with `is_staff()` select policies (service_role
+  writes); sync_state rows. `invoice_lines_column_comments` — findings recorded as column comments:
+  ab_linenumber = the invoice's TOTAL line count (not the P21 line), sequence_number is the line order, the
+  header's new_invoicep21 is empty (use p21_order_no / name "INVOICE  - <customer code> - <order no>").
+- EDGE FUNCTION: `dynamics-sync` v10 → v11 — two TABLES entries added (`invoices` ← invoices,
+  `invoice_lines` ← invoicedetails; createdon-windowed, page 1000, typed columns, no raw jsonb); every existing
+  config untouched (products, inventory, accounts, contacts, account_products, vendor_products, customer_code,
+  vendor_code, net_discount, volume_discount, percentage_discount, employee, systemuser, team, team_member);
+  clean() now spells its non-breaking-space regex as  . Deployed source read back and diffed against v10
+  (only the additions).
+- LOAD: 7 + 20 createdon windows fired through pg_net (`net.http_get` on the function URL with since / until,
+  170 s timeout); all 27 succeeded (sync_log ids 2167–2193, longest window 55 s). NOT scheduled nightly yet —
+  the two cron jobs are a guardrail item (board item 41). Access: staff only; customer-scoped access (own
+  invoices, no cost columns) is board item 43.
+
 ## 2026-09-26 · ABQUOTE training — evaluation run 1 (before rules): 39% of lines right, three quote.html defects found (docs only, no code or DB change)
 - 20 held-out historical quotes (customer's ask text only, no P21 PDF) run through the live
   page's own `callMarion()` + the same cross-reference chain the app runs, in David's Chrome
