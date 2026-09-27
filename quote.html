@@ -194,6 +194,7 @@ td.margin-red input{color:var(--red)!important;font-weight:700;}
 #whOv tr.pick:hover td{background:#fffdf0;cursor:pointer;}
 .rtab{border:1px solid #cfcfcd;border-bottom:none;background:#f1f1ef;padding:8px 18px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border-radius:6px 6px 0 0;}
 .rtab.active{background:#fff;border-color:#000;}
+#reqTabs:not(.hidden){display:flex;}
 .findbar{display:flex;gap:10px;align-items:center;background:#e8f3ff;border:1px solid #bcd9f2;border-radius:6px;padding:8px 12px;margin:10px 16px 0;font-size:12.5px;}
 .conf{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
 .conf.high{background:#d6f5e0;color:var(--green);}
@@ -277,7 +278,7 @@ table.est td.pn{font-family:Consolas,'Courier New',monospace;font-weight:700;}
   <!-- STEP 1: INPUT -->
   <div class="panel active" id="reqPanel">
     <div class="panel-h"><span class="step">1</span>Customer Request<span class="sub">paste, or drag &amp; drop an email / screenshot / text file</span></div>
-    <div id="reqTabs" class="hidden" style="display:flex;gap:6px;padding:10px 16px 0;border-bottom:2px solid #000">
+    <div id="reqTabs" class="hidden" style="gap:6px;padding:10px 16px 0;border-bottom:2px solid #000">
       <button class="rtab active" id="rtabAsk" onclick="reqTab('ask')">Customer request</button>
       <button class="rtab" id="rtabFind" onclick="reqTab('find')">Find parts</button>
     </div>
