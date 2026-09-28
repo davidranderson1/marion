@@ -10,13 +10,30 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
-## 2026-09-28 · SOURCE IT (FLAB - Xpress Machining phase 1) — "do we have this, can we make it, when and how much" per cart line; new `sourcing` schema + public.sourcing_* wrappers; sourcing-panel.js
-- New file `sourcing-panel.js` (build 2026-09-28.1) loaded by `quote.html` after quote-app-3.js (one script tag; no other Marion file changed). Staff only: a **Source** button in every cart line's Fulfilment cell (and **Source all lines** next to Save draft, Alt+S on a focused row) opens a ranked option panel — STOCK here, TRANSFER per branch, ASSEMBLE from the bill of materials, MACHINE_NEW from material rod/tube stock (Xpress list price from `xpress.machining_prices`), MACHINE_TRIM a stocked donor, VENDOR_STOCK from the Dynamics Vendor-Product ladder, VENDOR_RFQ placeholder. **Use** sets the line's GET chip (#6477) + ETA (BR-07) and marks disposition S/T; **$** puts the option's list price (Xpress list after quantity break, tag "Xpress list") in Net Price; 👍/👎 rate an option (👎 asks one line for the rules backlog). The chosen option is kept in memory (`_src`) and logged; `quote_lines` has no new column (public schema untouched).
-- Wraps `fulfilCell`, `renderCart` and `calcLine` (a chosen option survives calcAll). Reads the required-by date from CUST.reqby, warehouse and qty from the line, quote ref = CURRENT_QUOTE_ID.
-- DB (Supabase hnmbjqhxvxakhdzgetxw): new project-owned schema **`sourcing`** — migrations `sourcing_schema_v1` (setting / machine / material_family / material_map / leadtime_bucket / check_log / option_feedback, RLS staff_all via public.is_staff(), provisional seeds), `sourcing_vendor_product_copy_v1` + `sourcing_refresh_vendor_products_v2_composite_watermark` (typed copy `sourcing.vendor_product` of public.vendor_products jsonb, 207,777 rows, `sourcing.refresh_vendor_products()` — nightly cron NOT scheduled yet), `sourcing_helpers_material_view_xpress_price_v1` (add_business_days, parse_material_dims, view `sourcing.v_material_stock` security_invoker, `sourcing.xpress_price()`), `sourcing_source_options_v1` → `_v2` → `_v3_expired_vendor_quotes` (`sourcing.source_options(p_pn, p_qty, p_wh, p_required_by, p_quote_ref)` → jsonb, SECURITY DEFINER, staff only, logs every check to sourcing.check_log; v3 flags expired vendor quotes as low confidence).
-- **public schema: four thin wrapper functions only** (same pattern as hr_* / imports_*, because `sourcing` is not on the Data API): `public.sourcing_options`, `public.sourcing_choose`, `public.sourcing_rate`, `public.sourcing_settings` — execute granted to authenticated + service_role, revoked from anon. No table, view or policy in public/archive changed.
-- Rules are provisional defaults (Xpress Machining Open Items board items 7–15) stored in `sourcing.setting` / `material_family` / `machine`, editable without a deploy: transfer days per branch, machining 5 bd, assembly 1 bd, material allowance 0.125", trim max +25 % OD, labour adds $10 / $40, Xpress qty breaks, internal vendor codes (own ABMANU/ABXPRS/ABFLUI, partner FLMANU/RBMANU/RBXPRS/SEAMAN).
-- Known gaps (phase 2/3): material yield not costed (MACHINE_NEW unit cost = product current cost), machinist queue not synced (board item 16), vendor RFQ email + reply page not built (button disabled), Dynamics write-back not built, chosen option not persisted on quote_lines. Verified locally in Chromium against the real page with the RPC stubbed (0 console errors) and on the live function for BU0475006000-200ST/DX, 2-201/N70, G140128120GC-45D, P125104081P2B/U, BU0562506000-050SD/N (< 2 s each).
+## 2026-09-28 · bom_lines sync restored — root cause: delta_nightly statement timeout
+- Marion Open Items #4 root-caused: cron `delta-nightly` (09:00 UTC) died at
+  09:02 every night — the session's 2-minute statement_timeout killed
+  delta_nightly() at pg_sleep(20) (7 tables × 20s = 140s). It broke on
+  2026-07-29, the day bom_lines was added as the 7th table; bom_lines, last in
+  the loop, was never reached again (cron.job_run_details jobid 9).
+- DB migration `delta_nightly_statement_timeout_fix`: function-level
+  statement_timeout 6min; loop ordered by last_run_at (most-starved first).
+- Second fault: the idle delta token EXPIRED (Dataverse 0x80044352 "perform a
+  full sync"). DB migration `bom_lines_reinit_after_expired_delta`: temp cron
+  `bom-reinit-temp` (*/2 min) ticks dynamics-bom?mode=init until the delta
+  link re-establishes, then purges rows deleted in Dynamics since July, runs
+  bom_fill_part_numbers(), logs "REINIT COMPLETE" to sync_log and unschedules
+  itself (4-hour safety valve). First init page verified (5,000 rows).
+- Verify tomorrow: the 2026-09-29 09:00 UTC delta run should show all 7 tables
+  in sync_log, bom_lines included — then close Open Items #4.
+- BR-11 invoice-history price check stays ON HOLD (David 2026-09-28): invoice
+  lines are being uploaded over the next days; wire the check once they land
+  (proposed Open Items #34).
+- ERP-side GET method persistence (D365-AB #6477 Pending Approval / #8355
+  BUG-01) logged with references in today's LifeOS deposit (proposed Open
+  Items #35) — AlphaBOLD's 8h estimate awaits David's approval.
+- Also observed, not Marion's: the `team` delta job (08:56 UTC) errors nightly
+  (Dataverse 0x80040239, a 1752-dated since-timestamp) — for its owning session.
 
 ## 2026-09-28 · dynamics-import PILOT LOADED — three invoices written to Dynamics as Sales Bot (function v5, migrations v2–v4); Marion must read `quantity_kit` for kit components
 - David's go (chat, evening): "q14 - whatever math makes sense / q15 - go pilot". Run `dd138f59-2c96-4f9f-84cd-d66a218ce0ca`, 21:05–21:29 UTC: 6129734-1 created (write-in kit header + 9 linked components, 72.47); 6504721-1 created (credit: −97.80 + 24.45 restocking = −73.35); 6124719-1 updated (20 lines patched, 14 lines the January IMPORT-tool run dropped created, total 0 → 4,291.93; 34 duplicate rows skipped). Final counts created 12 / updated 31 / unchanged 3 / skipped 34. 0 phantom inventories, 0 notes, all nine automation records read back ON. Detail: project doc `claude/import-tool-analysis-2026-09-28.md` §13.10.
