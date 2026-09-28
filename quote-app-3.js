@@ -513,7 +513,7 @@ function initKitDragOut(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initKitDragOut);else initKitDragOut();
 
 /* build stamp — bump on every push; hover the PHASE 3 badge or check the console */
-const MARION_BUILD='2026-09-27.1'; // extraction use_tools:false; echo guard verifies Fluidseal codes via part_info; no dimensional search without a diameter; invented codes flagged; OEM-first only for recognised brands (ABQUOTE evaluation run 1 fixes) — .6: // cart rules engine: computed disposition/production/GET (#6477), warehouse inventory popup, pricing configurator engine (#8353) + margin colours (BR-05/06), totals + traffic light (BR-08), ETA (BR-07), Find-parts tab, submit revisions; merges .5 (P21 card reformat + FS_LOGO wordmark)
+const MARION_BUILD='2026-09-28.1'; // HISTORY FIRST: crossRefCart step 0 calls history_lookup (this customer's quotes / invoices for the ask, then other customers), Review modal shows history rows (board item 40) — .1: // extraction use_tools:false; echo guard verifies Fluidseal codes via part_info; no dimensional search without a diameter; invented codes flagged; OEM-first only for recognised brands (ABQUOTE evaluation run 1 fixes) — .6: // cart rules engine: computed disposition/production/GET (#6477), warehouse inventory popup, pricing configurator engine (#8353) + margin colours (BR-05/06), totals + traffic light (BR-08), ETA (BR-07), Find-parts tab, submit revisions; merges .5 (P21 card reformat + FS_LOGO wordmark)
 console.log('Marion quote.html build',MARION_BUILD);
 (function(){const b=document.getElementById('buildStamp');if(b)b.title='build '+MARION_BUILD;})();
 
