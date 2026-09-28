@@ -10,6 +10,14 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-28 · SSG Website — Markets / Construction rows in `flabed` (DML only, no DDL; `public` / `archive` / `xpress` / `hr` untouched)
+- `flabed.markets` id 8 (`construction`): `is_built` = true, `hero_image` and `intro` set from the live market page.
+- `flabed.market_oems`: 9 rows for market 8 — Caterpillar, John Deere, Case (J.I. Case kits), Komatsu, Hitachi, Kobelco, Bobcat, JCB, Volvo (Volvo-Michigan-Euclid) — each pointing at its live `.../mobile-equipment-seal-kits/<oem>/<oem>-kits` category (all verified 200).
+- `flabed.market_equipment`: 12 rows for market 8 — Caterpillar D7R (Dozer), D8R (Dozer), 140H (Motor Grader), 436C (Backhoe Loader), 966F (Wheel Loader), 320B (Excavator), 953C (Track Loader); John Deere 650G (Crawler Dozer), 710D (Backhoe Loader); Case 580K (Backhoe Loader); Hitachi ZX200 (Excavator); Komatsu PC200LC-3 (Excavator). `order_form_url` null (no PDF forms for this market), `part_categories` = Seal Kit · Hardened Bearings · Spherical Bearings · Ball Stud Kits · High-Performance Replacements.
+- `flabed.market_groups`: 17 rows for market 8, copied from the Mining set (same group ids) with construction notes.
+- `flabed.equipment_models.market_equipment_id` set on the 12 main models (ids 465, 470, 277, 127, 538, 180, 422, 825, 874, 759, 622, 1132) → the new market_equipment rows. No other rows touched.
+- Page data was READ from `flabed.equipment_fitments` (79 models, 1,410 fitments), `flabed.v_kit_components` (2,614 rows for 317 kits), `flabed.v_oem_part_sales` (rank only reaches the page) and `public.products` (kit list prices) — no writes outside `flabed`.
+
 ## 2026-09-28 · bom_lines sync restored — root cause: delta_nightly statement timeout
 - Marion Open Items #4 root-caused: cron `delta-nightly` (09:00 UTC) died at
   09:02 every night — the session's 2-minute statement_timeout killed
