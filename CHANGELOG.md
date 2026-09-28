@@ -10,6 +10,36 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-28 · SSG WEBSITE SESSION: flabed full catalog load + kit-sales views + Data API exposure (public/archive/xpress untouched)
+- Protocol followed: `list_migrations` + this file checked before DDL; only schema `flabed`
+  touched. `public`, `archive`, `xpress`, `hr` untouched (`public.invoice_lines` /
+  `public.products` read only). Does not overlap today's `imports` schema work.
+- DB migration `flabed_kit_sales_views_v1`: views `flabed.v_oem_part_sales` (per R<OEM>-
+  part: lines, invoices, distinct customers, qty shipped, first/last sold, product
+  description / group / price / status, oem_name) and `flabed.v_model_kit_sales` (the same
+  per equipment model through equipment_fitments). Security invoker; select granted to
+  authenticated + service_role. Read public.invoice_lines + public.products + flabed tables.
+- DML in flabed only: equipment_fitments — 12,187 catalog rows imported through the
+  dashboard Table Editor CSV importer (Insert → Import data from CSV, ~30 s, from David's
+  Chrome; file equipment_fitments_2026-09-28.csv), then 245 pre-load mining rows deleted as
+  duplicates (matched on the catalog key without raw/flags), 6 equipment_models inserted
+  (RCAT 824C / 824G, RKOB SK200 / SK200LC, RVME A25 / EC380EL), model_id set on every
+  fitment, fitment_count / kit_count refreshed. Result: equipment_fitments 12,207 rows (all
+  linked), equipment_models 1,492.
+- Dashboard setting (not a migration): `flabed` added to the Data API exposed schemas
+  (Settings → API). `hr` / `archive` NOT exposed. REST is still unreachable from the Claude
+  sandbox and from the device shell (HTTP 000) — the CSV importer in David's Chrome is the
+  working bulk path.
+- Website side (no DB change): Markets/Mining got a Most Ordered Parts band + Best seller /
+  Popular badges (rank only, never customer counts); Markets/Oil & Gas built and live
+  (mockup.fluidsealab.com/markets/oil-gas.html) from the oilfield catalog lists +
+  public.products prices + invoice ranking. Records: fluidseal-knowledge CHANGELOG /
+  projects.md / infrastructure.md, mockup NEXT-SESSION-HANDOFF.md, SSG board v8.
+- Push path note for every session: GitHub's browser "Upload files" page takes a file from
+  the Claude session's outputs folder (Chrome extension `file_upload`) and a same-name upload
+  replaces the file — a full-file update with no retyping through the connector; verify the
+  blob SHA afterwards.
+
 ## 2026-09-28 · dynamics-import (P21 → Dynamics invoice-line load), Supabase side only — nothing written to Dynamics yet
 - Migration `imports_schema_dynamics_import_staging_v1`: NEW schema `imports` (outside `public`; not exposed by PostgREST; nothing Marion reads) with tables `import_run`, `invoice_line_import`, `account_cache`, `inventory_cache`, `code_remap` (seeded 6HIWAY→6HAMEQ, 7HY72→7AIT74), `batch_log`, and functions `imports.classify(run)` (duplicate rule: identical rows collapse, earliest INV_DATE, latest customer PO; product/customer-code lookups against `public.products` / `public.customer_code`; account + preferred warehouse from `public.invoices` history then `public.accounts.raw`; kit structure = first row of a multi-item P21 line group is the header; skip reasons), `imports.plan(run)`, `imports.call_import(action, body)` (pg_net POST to the edge function, same pattern as `public.sync_nightly`).
 - Migration `imports_public_rpc_surface_v1`: `public.imp_*` SECURITY DEFINER functions (stage_rows, classify, fetch_batch, write_results, inventory_pairs, inventory_upsert, log_batch, run_status, set_run, check_key) — the only way the edge function reaches the `imports` schema; EXECUTE revoked from public/anon/authenticated (service_role only). `public` otherwise untouched.
