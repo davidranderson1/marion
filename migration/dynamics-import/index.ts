@@ -17,7 +17,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { decodeP21, parseLiInvoice, EXPECTED_COLUMNS } from "./parse.ts";
 import { TENANT, CLIENT, ORG, API, SALES_BOT, TIME_BUDGET_MS, buildBatchBody, parseBatchEntries, alignBatch, esc,
          newInvoiceChangeset, existingInvoiceChangeset } from "./core.ts";
-import type { BatchReq, BatchResult, BatchPart, Inv, PlanEntry, ExistingLine } from "./core.ts";
+import type { BatchReq, BatchResult, BatchPart, Inv, PlanEntry, ExistingLine, NavMap } from "./core.ts";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
@@ -47,8 +47,26 @@ async function dvBatch(tok: string, sets: BatchReq[][], gets: BatchReq[] = []): 
   const bnd = `batch_${crypto.randomUUID()}`;
   const r = await fetch(`${API}/$batch`, { method: "POST", headers: { ...dvHeaders(tok), "Content-Type": `multipart/mixed; boundary=${bnd}` }, body: buildBatchBody(API, bnd, sets, gets) });
   const text = await r.text();
-  if (!r.ok) throw new Error(`dataverse $batch ${r.status}: ${text.slice(0, 600)}`);
-  return alignBatch(parseBatchEntries(text, r.headers.get("content-type") || ""), gets.length, sets.length);
+  const ct = r.headers.get("content-type") || "";
+  if (!r.ok && !/multipart\/mixed/i.test(ct)) throw new Error(`dataverse $batch ${r.status}: ${text.slice(0, 600)}`);
+  return alignBatch(parseBatchEntries(text, ct), gets.length, sets.length);
+}
+
+/** attribute -> navigation property names for the lookups we bind (custom lookups use their schema name, e.g. ab_ParentInvoiceLine) */
+async function navMap(tok: string): Promise<NavMap> {
+  const nav: NavMap = {};
+  for (const ent of ["invoicedetail", "invoice"]) {
+    const r = await fetch(`${API}/EntityDefinitions(LogicalName='${ent}')/ManyToOneRelationships?$select=ReferencingAttribute,ReferencingEntityNavigationPropertyName,ReferencedEntity`, { headers: dvHeaders(tok) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(`metadata ${ent} ${r.status}: ${JSON.stringify(j).slice(0, 300)}`);
+    for (const rel of j.value || []) {
+      const attr = rel.ReferencingAttribute, name = rel.ReferencingEntityNavigationPropertyName;
+      if (!attr || !name) continue;
+      if (attr === "new_customer") { if (rel.ReferencedEntity === "account") nav["new_customer:account"] = name; continue; }
+      if (!(attr in nav)) nav[attr] = name;
+    }
+  }
+  return nav;
 }
 
 // ---------- main ----------
@@ -112,6 +130,8 @@ Deno.serve(async (req: Request) => {
         return json({ ok: true, remaining: 0, invoices: 0, lines: 0, status: await status() });
       }
       const tok = await token();
+      const nav = await navMap(tok);
+      if (action === "plan" && body.show_nav) return json({ ok: true, nav });
 
       // 1 inventory for (product, warehouse) pairs not cached yet — the plugin's FindSalesLineInventory, never creating one
       const pairs: { product_id: string; warehouse_id: string }[] = await rpc("imp_inventory_pairs", { p_run: runId, p_key: runKey, p_limit: 600 });
@@ -144,10 +164,10 @@ Deno.serve(async (req: Request) => {
       for (const inv of invoices) {
         const ex = existing[inv.invoice_key];
         if (ex) {
-          const { reqs, plan } = existingInvoiceChangeset(inv, ex.invoiceId, ex.lines);
+          const { reqs, plan } = existingInvoiceChangeset(inv, ex.invoiceId, ex.lines, nav);
           sets.push({ inv, reqs, plan, existingId: ex.invoiceId });
         } else {
-          const { reqs, lineIds } = newInvoiceChangeset(inv);
+          const { reqs, lineIds } = newInvoiceChangeset(inv, nav);
           sets.push({ inv, reqs, plan: lineIds.map((id, k) => ({ id, kind: "create", cid: k + 2 })) });
         }
       }
@@ -170,7 +190,8 @@ Deno.serve(async (req: Request) => {
           const cs = res.changesets[gi];
           const byCid: Record<number, BatchPart> = {};
           (cs?.parts || []).forEach((p) => { if (p.contentId != null) byCid[p.contentId] = p; });
-          if (!cs || !cs.ok) {
+          if (!cs || cs.error === "no response part") return; // not processed by Dataverse (an earlier changeset failed) — stays ready
+          if (!cs.ok) {
             const err = (cs?.parts || []).find((p) => p.status >= 300 || p.status === 0);
             const msg = err ? `${err.status} ${JSON.stringify(err.body?.error?.message || err.body || err.raw || "").slice(0, 700)}` : "changeset failed";
             g.plan.forEach((pl) => results.push({ id: pl.id, status: "error", error: msg, batch_no: batchNo }));
