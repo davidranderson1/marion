@@ -255,8 +255,49 @@ async function crossRefCart(){
   setStatus('<span class="spin"></span>Cross-referencing '+todo.length+' line(s) against the catalog…','work');
   await Promise.all(todo.map(async l=>{
     const d=l.dims||{};
+    const nrm=s=>(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
     try{
-      // 0) pn equals the customer's own number: keep it only if it is a real Fluidseal part (2026-09-27.1)
+      // 0) HISTORY FIRST (decision tree steps 1-2, build 2026-09-28.1): what this customer was quoted or
+      //    invoiced for this ask, then what other customers were quoted — history_lookup RPC (staff only)
+      const histQ=((l.asked||'')+' '+(l.oem||'')).trim();
+      if(histQ&&/\d/.test(histQ)){
+        try{
+          const {data:h}=await sb.rpc('history_lookup',{p_customer:(CUST.acct||''),p_ask:histQ,p_limit:12,p_exclude:window.__HIST_EXCLUDE||null});
+          if(h&&h.length){
+            l.history=h;
+            const mine=h.filter(r=>r.scope==='customer'), top=mine[0];
+            const hopts=h.slice(0,12).map(r=>({part_number:r.item_code,description:r.description||'',url:null,hist:r}));
+            const fmt=r=>(r.source==='invoice'?'invoiced':'quoted')+(r.match_kind==='po'?' on PO ':r.match_kind==='wo'?' on W/O ':r.match_kind==='ref'?' as ref ':r.match_kind==='ask'?' for the same ask ':' as ')+(r.matched_on||'')+' — '+(r.ref_no||'')+(r.ref_date?' '+r.ref_date:'')+(r.times>1?' ('+r.times+'×)':'');
+            if(top&&['po','wo','ref','ask'].includes(top.match_kind)&&top.ref_lines===1){
+              // a one-line reference this customer used before: that IS the answer
+              if(!l.pn||l._echo||l.conf!=='high'){l.pn=top.item_code;l.conf=(top.match_kind==='ask')?'med':'high';l._echo=false;}
+              l.autoPn=l.autoPn||top.item_code;
+              l.notes=(l.notes?l.notes+' · ':'')+'History: '+fmt(top);
+              l.options=hopts;
+              if(l.pn===top.item_code){
+                const {data:pi}=await sb.rpc('part_info',{p_pn:l.pn});const info=pi&&pi[0];if(info&&info.found)l.url=info.url||null;
+                hits++;return;
+              }
+            }else if(top&&['po','wo'].includes(top.match_kind)&&top.ref_lines>1){
+              // a whole order / work order: list its lines for staff; a bom fingerprint gives the kit code
+              const same=mine.filter(r=>r.ref_no===top.ref_no);
+              l.notes=(l.notes?l.notes+' · ':'')+'History: '+fmt(top)+' had '+top.ref_lines+' lines: '+same.slice(0,8).map(r=>r.item_code+(r.qty?' ×'+(+r.qty):'')).join(', ')+(same.length>8?' …':'')+(top.kit_code?' = kit '+top.kit_code:'')+' — Review to pick';
+              l.options=hopts;
+              if(top.kit_code&&!l.pn){l.pn=top.kit_code;l.conf='med';}
+              if(!l.pn){l.conf='low';return;}
+            }else if(top&&top.match_kind==='code'){
+              if(!l.pn){l.pn=top.item_code;l.conf='med';l.notes=(l.notes?l.notes+' · ':'')+'History: '+fmt(top);l.options=hopts;}
+              else if(nrm(l.pn)===nrm(top.item_code)){l.conf='high';l.notes=(l.notes?l.notes+' · ':'')+'History confirms: '+fmt(top);}
+              else{l.notes=(l.notes?l.notes+' · ':'')+'History says '+top.item_code+' ('+fmt(top)+') — confirm';l.options=hopts;}
+            }else if(!l.pn){
+              const other=h.find(r=>r.scope==='all'&&r.match_kind==='code'&&r.times>=2);
+              if(other){l.pn=other.item_code;l.conf='med';l.notes=(l.notes?l.notes+' · ':'')+'History (other customers): '+other.item_code+' quoted '+other.times+'× for '+(other.matched_on||'');l.options=hopts;}
+            }
+            if(!l.options||!l.options.length)l.options=hopts;
+          }
+        }catch(e){console.warn('history_lookup',e);}
+      }
+      // 0b) pn equals the customer's own number: keep it only if it is a real Fluidseal part (2026-09-27.1)
       if(l._echo&&l.pn){
         const {data:pi}=await sb.rpc('part_info',{p_pn:l.pn});
         const info=pi&&pi[0];
@@ -364,7 +405,8 @@ function openReview(i){
     const profChip=l.style
       ? `<span class="mchip ${o.style_match?'ok':'bad'}">Profile ${hesc(o.profile||'?')} ${o.style_match?'✓':'✗ asked '+hesc(l.style)}</span>`
       : (o.profile?`<span class="mchip na">Profile ${hesc(o.profile)}</span>`:'');
-    const chips=(o.id_mm!=null||o.od_mm!=null||o.id_in!=null)?(chip('ID',d0.id!=null?+d0.id:null,mmOf(o.id_mm,o.id_in))
+    const chips=o.hist?`<span class="mchip ok">History · ${o.hist.scope==='customer'?'this customer':'other customers'} · ${hesc(o.hist.source)} ${hesc(o.hist.ref_no||'')}${o.hist.ref_date?' '+hesc(o.hist.ref_date):''}${o.hist.times>1?' · '+o.hist.times+'×':''}${o.hist.kit_code?' · kit '+hesc(o.hist.kit_code):''}</span>`
+      :(o.id_mm!=null||o.od_mm!=null||o.id_in!=null)?(chip('ID',d0.id!=null?+d0.id:null,mmOf(o.id_mm,o.id_in))
       +chip('OD',d0.od!=null?+d0.od:null,mmOf(o.od_mm,o.od_in))
       +chip('Height',wantH,oh)
       +profChip
