@@ -131,7 +131,11 @@ Return ONLY valid JSON, no markdown, no prose:
       system:sys,
       messages:[{role:"user",content:userContent}]})
   });
-  if(!res.ok) throw new Error("HTTP "+res.status);
+  if(!res.ok){ // surface the upstream reason (e.g. Anthropic "credit balance is too low") instead of a bare status (2026-09-28.2)
+    let msg="HTTP "+res.status;
+    try{const t=await res.text();const je=JSON.parse(t);if(je&&je.error&&je.error.message)msg+=" — "+je.error.message;}catch(_){}
+    throw new Error(msg);
+  }
   const data=await res.json();
   let raw=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();
   raw=raw.replace(/```json|```/g,"").trim();
@@ -144,8 +148,13 @@ Return ONLY valid JSON, no markdown, no prose:
   let j;
   try{ j=JSON.parse(raw.slice(s,e+1)); }
   catch(pe){
-    console.warn("Marion AI: JSON parse failed. stop_reason="+data.stop_reason+" tail:",raw.slice(-500));
-    throw pe;
+    // the model sometimes annotates its JSON with // comment lines or trailing commas (Northstar two-kit list, eval run 3) — strip and retry (2026-09-28.2)
+    const cleaned=raw.slice(s,e+1).replace(/^\s*\/\/[^\n]*$/gm,"").replace(/,(\s*[}\]])/g,"$1");
+    try{ j=JSON.parse(cleaned); console.warn("Marion AI: JSON recovered after stripping comment lines / trailing commas"); }
+    catch(pe2){
+      console.warn("Marion AI: JSON parse failed. stop_reason="+data.stop_reason+" tail:",raw.slice(-500));
+      throw pe;
+    }
   }
   if(!j.lines) throw new Error("no lines");
   return j;
