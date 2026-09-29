@@ -10,7 +10,9 @@ export const PRICE_LEVEL = "24c4a348-4ebe-e411-80e7-c4346bac4ae8";   // D365Ids.
 export const UOM = "e84ce847-cfab-e411-80dc-fc15b4288c40";           // LI-INVOICE template: fixed unit
 export const DISPOSITION = "Stock";                                  // David, Q11
 export const DISCOUNT_NO_DISCOUNT = 5;                               // ab_discounttype as on the January lines
-export const TIME_BUDGET_MS = 110_000;                               // stay under the edge runtime wall clock
+export const TIME_BUDGET_MS = 250_000;                               // the edge runtime wall clock is 400 s on this plan (a 186 s invocation survived); leave room for the last flush
+export const BATCH_REQUESTS = 250;                                   // requests per Dataverse $batch (limit 1000); one invoice = one changeset
+export const PARALLEL_BATCHES = 3;                                   // $batch requests in flight at once (service protection: 52 concurrent, 6000 per 5 min)
 
 export interface BatchReq { method: "GET" | "POST" | "PATCH"; url: string; body?: unknown; contentId?: number }
 export interface BatchPart { status: number; contentId?: number; entityId?: string; body: any; raw?: string }
@@ -226,4 +228,3 @@ export function existingInvoiceChangeset(inv: Inv, invoiceId: string, existing: 
   if (reqs.length) reqs.push({ method: "PATCH", url: `invoices(${invoiceId})`, body: { ab_totalnetprice: round(Number(inv.total_net) || 0, 2) }, contentId: cid + 1 }); // the async rollup plugin is off
   return { reqs, plan };
 }
-
