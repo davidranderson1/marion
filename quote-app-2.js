@@ -127,7 +127,7 @@ Return ONLY valid JSON, no markdown, no prose:
   const res=await fetch(SB_URL+"/functions/v1/marion-chat",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+SESSION.access_token},
-    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:3900,temperature:0,use_tools:false, // extraction wants JSON, not a chat answer (2026-09-27.1)
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:8000,temperature:0,use_tools:false, // extraction wants JSON, not a chat answer (2026-09-27.1); 8000: a two-kit list with long notes hit the 3900 cap (run 3, 2026-09-28.3)
       system:sys,
       messages:[{role:"user",content:userContent}]})
   });
@@ -274,14 +274,25 @@ async function crossRefCart(){
           const {data:h}=await sb.rpc('history_lookup',{p_customer:(CUST.acct||''),p_ask:histQ,p_limit:12,p_exclude:window.__HIST_EXCLUDE||null});
           if(h&&h.length){
             l.history=h;
-            const mine=h.filter(r=>r.scope==='customer'), top=mine[0];
+            const mine=h.filter(r=>r.scope==='customer');
+            // 2026-09-28.3: a customer row that names the part the rules already produced is a CONFIRMATION, whatever its kind
+            const same=l.pn?mine.find(r=>nrm(r.item_code)===nrm(l.pn)):null; // an echoed customer number counts too: if we quoted them that exact code before, it is a real Fluidseal code
+            const top=same||mine[0];
             const hopts=h.slice(0,12).map(r=>({part_number:r.item_code,description:r.description||'',url:null,hist:r}));
             const fmt=r=>(r.source==='invoice'?'invoiced':'quoted')+(r.match_kind==='po'?' on PO ':r.match_kind==='wo'?' on W/O ':r.match_kind==='ref'?' as ref ':r.match_kind==='ask'?' for the same ask ':' as ')+(r.matched_on||'')+' — '+(r.ref_no||'')+(r.ref_date?' '+r.ref_date:'')+(r.times>1?' ('+r.times+'×)':'');
+            if(same){
+              l.conf='high';l.notes=(l.notes?l.notes+' · ':'')+'History confirms: '+fmt(same);l.options=hopts;
+              if(l._echo){l._echo=false;if(l.oem&&nrm(l.oem)===nrm(l.pn))l.oem='';}
+              const {data:pi}=await sb.rpc('part_info',{p_pn:l.pn});const info=pi&&pi[0];if(info&&info.found)l.url=info.url||null;
+              hits++;return;
+            }
             if(top&&['po','wo','ref','ask'].includes(top.match_kind)&&top.ref_lines===1){
-              // a one-line reference this customer used before: that IS the answer
-              if(!l.pn||l._echo||l.conf!=='high'){l.pn=top.item_code;l.conf=(top.match_kind==='ask')?'med':'high';l._echo=false;}
+              // a one-line reference this customer used before: that IS the answer — a whole PO / W/O may replace a
+              // rule-built guess (unless it is already high); a ref / ask token hit only fills an EMPTY part number (2026-09-28.3)
+              const strong=['po','wo'].includes(top.match_kind);
+              if(!l.pn||l._echo||(strong&&l.conf!=='high')){l.pn=top.item_code;l.conf=(top.match_kind==='ask')?'med':'high';l._echo=false;}
               l.autoPn=l.autoPn||top.item_code;
-              l.notes=(l.notes?l.notes+' · ':'')+'History: '+fmt(top);
+              l.notes=(l.notes?l.notes+' · ':'')+(l.pn===top.item_code?'History: ':'History suggests '+top.item_code+' — ')+fmt(top)+(l.pn===top.item_code?'':' — Review');
               l.options=hopts;
               if(l.pn===top.item_code){
                 const {data:pi}=await sb.rpc('part_info',{p_pn:l.pn});const info=pi&&pi[0];if(info&&info.found)l.url=info.url||null;
