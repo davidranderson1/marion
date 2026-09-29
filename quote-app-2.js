@@ -139,22 +139,28 @@ Return ONLY valid JSON, no markdown, no prose:
   const data=await res.json();
   let raw=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();
   raw=raw.replace(/```json|```/g,"").trim();
-  // be forgiving: take the outermost {...} in case the model wrapped the JSON in prose
-  const s=raw.indexOf("{"), e=raw.lastIndexOf("}");
-  if(s===-1||e===-1||e<=s){
+  // be forgiving: the model sometimes reasons in prose BEFORE the JSON (and that prose can carry braces), so try the
+  // last {"intent" … first, then the outermost {...} (2026-09-28.4); comment lines / trailing commas are stripped on retry (.2)
+  const e=raw.lastIndexOf("}");
+  const starts=[raw.lastIndexOf('{"intent"'),raw.lastIndexOf('{ "intent"'),raw.indexOf("{")].filter((v,i,a)=>v>=0&&a.indexOf(v)===i);
+  if(e===-1||!starts.some(s=>s<e)){
     console.warn("Marion AI: no JSON in response. stop_reason="+data.stop_reason+" raw:",raw.slice(0,600));
     throw new Error(data.stop_reason==="max_tokens"?"response truncated":"no JSON in response");
   }
-  let j;
-  try{ j=JSON.parse(raw.slice(s,e+1)); }
-  catch(pe){
-    // the model sometimes annotates its JSON with // comment lines or trailing commas (Northstar two-kit list, eval run 3) — strip and retry (2026-09-28.2)
-    const cleaned=raw.slice(s,e+1).replace(/^\s*\/\/[^\n]*$/gm,"").replace(/,(\s*[}\]])/g,"$1");
-    try{ j=JSON.parse(cleaned); console.warn("Marion AI: JSON recovered after stripping comment lines / trailing commas"); }
-    catch(pe2){
-      console.warn("Marion AI: JSON parse failed. stop_reason="+data.stop_reason+" tail:",raw.slice(-500));
-      throw pe;
+  let j=null, pe=null;
+  for(const s of starts){
+    if(e<=s)continue;
+    const body=raw.slice(s,e+1);
+    try{ j=JSON.parse(body); break; }
+    catch(e1){ pe=pe||e1;
+      const cleaned=body.replace(/^\s*\/\/[^\n]*$/gm,"").replace(/,(\s*[}\]])/g,"$1");
+      try{ j=JSON.parse(cleaned); console.warn("Marion AI: JSON recovered after stripping comment lines / trailing commas"); break; }
+      catch(e2){}
     }
+  }
+  if(!j){
+    console.warn("Marion AI: JSON parse failed. stop_reason="+data.stop_reason+" tail:",raw.slice(-500));
+    throw pe||new Error("no JSON in response");
   }
   if(!j.lines) throw new Error("no lines");
   return j;
