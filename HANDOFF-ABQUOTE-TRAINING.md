@@ -191,3 +191,77 @@ quote_no, quote_rev, record_guid, source_type, is_p21_quote_pdf) in Drive Claude
 `claude/abquote-phase1-inventory-2026-09-26.md`; Marion Open Items board items 28–33
 (29 pre-2026 history, 30 bulk download, 31 phase-3 extraction on GO, 32 load target a/b/both,
 33 evaluation set). Customer names, addresses and prices never enter this repo.
+
+---
+
+## 10. Handoff of 2026-09-30 — history first is live (92%); what the next chat does
+
+Written 2026-09-30 by the AI Data Training chat. Full handoff with the customer-level detail:
+Drive Claude/Files "2026-09-30 - FLAB - Agent - Quote / Marion - HANDOFF - ABQUOTE training
+continuation" and project doc `claude/handoff-abquote-training-marion-agent-2026-09-30.md`.
+No customer names, codes or prices in this file.
+
+**State.** David's decision tree — 1 this customer's history (heaviest), 2 other customers'
+history, 3 catalog, 4 stock, 5 price — is live on build **2026-09-28.4** with
+`public.history_lookup` v2 (migration `abquote_history_lookup_v2_reference_tokens_only`):
+reference-like tokens only (letter+digit codes of 4+ characters, numbers of 5+ digits, dash
+o-ring numbers), whole-token matches, item-code equality or prefix, qty =
+`coalesce(quantity_kit, quantity)`, kit code by exact `bom_lines` component-set fingerprint.
+`crossRefCart` step 0 (quote-app-2.js): a customer row naming the rule-built part CONFIRMS it
+(conf high); a reference / ask hit only fills an EMPTY part number; a PO / W/O hit may replace a
+non-high guess. `callMarion`: max_tokens 8000, upstream API error text shown in the status line,
+JSON extraction takes the last `{"intent"` object and recovers `//` comments / trailing commas.
+Rules 30 (cylinder kit mode narrowed), 48 (compact one-line JSON, nothing but the JSON) and one
+customer rule were added in run 3 — do not undo them.
+
+**Score on the fixed held-out set** (20 quotes: 7025926, 6138559, 6138357, 6137838, 6137964,
+6136296, 6140591, 6137626, 6139767, 6135928, 6139891, 6139095, 6137457, 6135927, 6142444,
+6139779, 6136652, 6136155, 6138269, 6136167; 15 text-evaluable, 36 lines; the five image-only
+asks are 6136296, 6136652, 6137457, 6139095, 6142444), always with the 20 excluded from history
+via `window.__HIST_EXCLUDE`:
+
+| Measure | Run 1 (before rules) | Run 2 (rules + fixes) | Run 3 (history first) |
+|---|---|---|---|
+| Exact part number | 14 (39%) | 28 (78%) | 33 (92%) |
+| Wrong lines produced | 34 | 13 | 2 |
+| Prose / unparseable answers | 4 | 0 | 0 |
+
+Every run goes through the REAL page (`callMarion` → `applyParsed` → `crossRefCart`) in the
+signed-in quote.html tab, never a re-implementation (CLAUDE-PREFERENCES item 50: AI-quality
+changes ship with a before-and-after score). The evaluation script (rewritten from the run-3
+pattern) is in the Drive / project handoff, section (b).
+
+**What landed on 2026-09-30 and is not yet read by Marion:** the import chat's invoice gap fill —
+`public.invoice_lines` 329,565 rows (was 178,099) to invoice date 2026-09-25, 12,505 kit headers
+(`sell_as_kit`), 82,081 components linked by `parent_invoice_line_id`, 9,937 write-in headers
+with no part number whose `product_description` is the P21 kit-by-size text
+(`N.NNN"ROD X N.NNN"BORE`). history_lookup v2 returns them on a PO / W/O match as ordinary
+lines. Board item 66 (David's GO): v3 turns such a header into the kit-by-size answer and lists
+its components in the note — the history the two remaining held-out kit misses lacked.
+
+**Next pieces, in order (Marion Open Items board https://claude.ai/artifact/VmxUh2isKacUXSGqB79bnk):**
+
+1. Item 33 — run 4: the five image-only asks through the page's own file drop in David's Chrome
+   (the customer's `.eml` / `.msg` with its image; the P21 quote PDF is the answer and is left
+   out; `window.__HIST_EXCLUDE` set first). Score into the project doc section 9.2.
+2. Item 39 — David's two remaining WHY answers (a polypak suffix on quote 6135928; a back-up
+   ring left off quote 6137964) → one `ai_rules` row each, both quotes re-run.
+3. Item 66 — history_lookup v3 for kit-by-size invoice headers (above), on GO; before-and-after
+   table on the 20 quotes.
+4. Item 21 — the thumbs up / thumbs down feedback tool (`marion_feedback`), on GO.
+5. Items 64 and 65 — ABQUOTE document management (Dynamics side, not Marion code): repoint 1,116
+   quote document locations of 2026 to the folder the EmailToQuote flow actually filed into, and
+   change the flow so an existing quote files into its own location, gets its note and the email
+   on its timeline. Both on David's GO.
+
+**Protocols that bit this week (added to CLAUDE-PREFERENCES v63 as items 49 and 50):** shared
+files (this CHANGELOG, the hub CHANGELOG, the board) are re-fetched immediately before every
+write — two CHANGELOG entries were lost to stale pushes from concurrent sessions on 2026-09-28
+and restored; every prompt / rule / lookup change is scored on the held-out set through the real
+page. Also: an AI feature failing with HTTP 400 / 401 and no code change is checked against the
+provider's credit balance first (2026-09-28 outage = spent prepaid balance on the Anthropic
+console account behind `ANTHROPIC_API_KEY`; auto-reload prevents a repeat).
+
+**Records this session wrote:** marion CHANGELOG (HISTORY FIRST LIVE entry), hub CHANGELOG and
+projects.md, project doc sections 9 / 9.1, board items 33, 39, 40, 42, 56, 64, 65, 66, the
+Drive / project handoff, a Learnings HANDOFF note.
