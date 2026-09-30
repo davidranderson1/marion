@@ -265,3 +265,56 @@ console account behind `ANTHROPIC_API_KEY`; auto-reload prevents a repeat).
 **Records this session wrote:** marion CHANGELOG (HISTORY FIRST LIVE entry), hub CHANGELOG and
 projects.md, project doc sections 9 / 9.1, board items 33, 39, 40, 42, 56, 64, 65, 66, the
 Drive / project handoff, a Learnings HANDOFF note.
+
+---
+
+## 11. Session of 2026-09-30 (evening) — history_lookup v3, run 4, the two WHY rules; what the next chat does
+
+Written 2026-09-30 by the ABQUOTE training continuation chat. Full handoff with the customer-level
+detail: Drive Claude/Files "2026-09-30 - FLAB - Agent - Quote / Marion - HANDOFF - ABQUOTE training
+(kit collapse, shaft-seal rule, feedback tool, document repair)" and project doc
+`claude/handoff-abquote-training-kit-collapse-2026-09-30.md`. No customer names, codes or prices here.
+
+**Shipped.** Migration `abquote_history_lookup_v3_kit_headers` (invoice PO / W/O hits return top-level
+lines, a kit header carries `is_kit` + `components`; strong PO / W/O tokens only; the held-out quotes'
+outcome invoices excluded; EXECUTE authenticated + service_role). quote.html build **2026-09-30.1**
+(a kit header answers a kit ask) and **2026-09-30.2** (JSON retry repairs a dropped empty
+`p21_quote_no` value — 4 of 40 calls). ai_rules **50** (-AER = anti-extrusion ring version, same size
+and application, high-pressure upgrade) and **51** (a requested back-up ring is never dropped:
+8-NNN/N90, substitute 8-NNNSD/T).
+
+**Score on the fixed held-out set** (20 quotes, 19 evaluable — one ask was a phone call; 47 lines;
+real page; held-out quotes excluded from history):
+
+| Measure | Before (build 2026-09-28.4, v2) | After (builds 2026-09-30.1 / .2, v3, rules 50–51) |
+|---|---|---|
+| Exact part number, all 47 lines | 35 (74 %) | 36 (77 %) |
+| Text-only 15 quotes (36 lines) | 33 | 33 (34 of 37 counting the back-up ring the ground truth left off) |
+| Image-only 4 quotes (11 lines, run 4) | 2 | 3 (one quote varies 2–3 of 7 on the same build) |
+| Wrong lines | 10 | 9 |
+| Unparseable answers | 0 | 3 on .30.1 → 0 on .30.2 (regression found and fixed) |
+| Probe set, 5 non-held-out quotes with kit-header history (8 lines) | 1 | 1, no kit misfire |
+
+**Why v3 did not move the score:** one held-out kit miss has no invoice for its reference; the other's
+invoice predates kit headers (component lines only); and a customer who lists a previously ordered kit's
+contents gets the components back because the extraction splits the kit before history runs.
+
+**Next pieces, in order (Marion Open Items board https://claude.ai/artifact/VmxUh2isKacUXSGqB79bnk):**
+
+1. Item 68 (on GO) — kit collapse: a request-level PO / W/O reference whose invoice has one kit header
+   and whose extracted lines are that kit's components collapses into the kit line; a components-only
+   invoice gives rod (wiper / rod-seal inside diameter) × bore (piston-seal outside diameter).
+2. Item 69 (on yes) — metric shaft seal rule: S + ID(3) + OD(3) + width×10(3) + type, default TC
+   (258 TC lines vs 29 of the other family in the corpus).
+3. Item 39 — one question left: does an RE prefix on one distributor's polypak number mean the -AER version.
+4. Item 21 (on second GO) — feedback tool as designed on the board; the weekly digest gets its own
+   sender (the existing notify function stays locked to its one recipient).
+5. Items 64 / 65 / 67 — ABQUOTE document management (Dynamics side): the Documents tab of 1,116 quotes
+   points at an empty sibling folder in the same library; the nightly "Quote Content #" counter counts
+   that empty folder. Repoint on GO, then a one-time recount.
+
+**Evaluation route that worked for image-only asks:** decode the sent quote `.eml` in the device shell
+(Python `email`): body text including the quoted / nested customer message → `<quote>_ask.txt`; ask images
+only (skip the P21 PDF — it is the answer — and signature / logo images); upload `.txt` + images through
+quote.html's own file input (Claude-in-Chrome file_upload), then `callMarion` on the textbox + staged
+images → `applyParsed` → `crossRefCart`. Inputs sit in `ClaudeWorkspace\ABQUOTE-inventory\eval-images\`.
