@@ -10,6 +10,10 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-09-30 · Dynamics 365 / SharePoint — `svc_v6_production_totals` and `ws-inbound` v3 (`public` tables / `archive` / `xpress` / `hr` untouched)
+- Migration `svc_v6_production_totals`: `svc.sr_compute` gains an `add:` formula; Ship Register lines `total_machining`, `total_assemblies`, new `production_total` ("Production Totals"); every open Ship Register day recomputed. Schema `svc` only.
+- Edge function `ws-inbound` v1 → v3 (this project's intake landing, verify_jwt off): a repeat POST for an existing `message_id` merges attachments into a row that has none (a failed row goes back to `received`); `attachments` as a JSON string is parsed; new rows set `has_attachments`. Writes only `public.ws_inbox` as before.
+
 ## 2026-09-30 · Dynamics 365 / SharePoint — Service Score and the digital Ship Register: new schema `svc`, gated `public.svc_*` functions, edge function `svc-nightly` (`public` tables / `archive` / `xpress` / `hr` untouched)
 - Migrations (project hnmbjqhxvxakhdzgetxw): `svc_service_score_and_ship_register_v1` (schema `svc`, 12 tables, default-deny RLS, helpers `svc.card` etc., seeds), `svc_v2_gated_functions` (`public.svc_whoami`, `svc_board`, `svc_card_detail`, `svc_why`, `svc_excuse`, `svc_access_list`, `svc_access_set`, `svc_rating_set`, `svc_setting_set`, `svc_sr_catalog`, `svc_sr_get`, `svc_sr_save`, `svc_sr_set_status`, `svc_sr_month`, `svc_sr_people` for authenticated; `svc_put`, `svc_ingest`, `svc_sr_put_suggest` service_role only), `svc_v3_nightly_helpers` (`svc_people_internal`, `svc_log`, `svc_nightly_run` — service_role only), `svc_v4_whoami_rules`, `svc_v5_fixed_search_path`. The only new objects in `public` are those `svc_*` functions; `public.ws_inbox` is read, never written; no existing object changed.
 - Edge function `svc-nightly` v1 (verify_jwt off, `x-inbound-token`). pg_cron `svc-nightly` (`40 5 * * 2-6`) and `svc-ingest-morning` (`5 14 * * 1-5`) — the 17 existing jobs unchanged.
