@@ -10,9 +10,11 @@ export const PRICE_LEVEL = "24c4a348-4ebe-e411-80e7-c4346bac4ae8";   // D365Ids.
 export const UOM = "e84ce847-cfab-e411-80dc-fc15b4288c40";           // LI-INVOICE template: fixed unit
 export const DISPOSITION = "Stock";                                  // David, Q11
 export const DISCOUNT_NO_DISCOUNT = 5;                               // ab_discounttype as on the January lines
-export const TIME_BUDGET_MS = 250_000;                               // the edge runtime wall clock is 400 s on this plan (a 186 s invocation survived); leave room for the last flush
-export const BATCH_REQUESTS = 250;                                   // requests per Dataverse $batch (limit 1000); one invoice = one changeset
-export const PARALLEL_BATCHES = 3;                                   // $batch requests in flight at once (service protection: 52 concurrent, 6000 per 5 min)
+export const TIME_BUDGET_MS = 200_000;                               // wall clock is 400 s, but the isolate dies after roughly 2 s of CPU — building and parsing multipart $batch bodies
+                                                                     // is CPU work, so ONE wave per invocation (see WAVES_PER_CALL) and the chain / watchdog do the rest
+export const BATCH_REQUESTS = 75;                                    // requests per Dataverse $batch; one invoice = one changeset (100 hit the 170 s timeout in ~30 % of waves at night)
+export const PARALLEL_BATCHES = 4;                                   // $batch requests in flight at once — 4 x 100 x ~95 s per ~130 s cycle stays under the 20-min-per-5-min execution-time limit
+export const WAVES_PER_CALL = 1;                                     // waves of PARALLEL_BATCHES per invocation
 
 export interface BatchReq { method: "GET" | "POST" | "PATCH"; url: string; body?: unknown; contentId?: number }
 export interface BatchPart { status: number; contentId?: number; entityId?: string; body: any; raw?: string }
@@ -100,7 +102,7 @@ export const clip = (s: string, n: number) => (s || "").slice(0, n);
 export type NavMap = Record<string, string>;
 export const bind = (nav: NavMap, attr: string) => `${nav[attr] || attr}@odata.bind`;
 
-export interface Line { id: number; line_no: string; item: string; desc1: string; desc2: string; qty: string; qty_per_kit?: number | string | null; ut_price: string; ut_cost: string; multiplier: string; net_price: number | null; inv_date: string; product_id: string | null; product_description: string | null; is_writein: boolean; kit_role: string | null; kit_group: string | null; inventory_id: string | null; cust_po: string }
+export interface Line { id: number; line_no: string; item: string; desc1: string; desc2: string; qty: string; qty_per_kit?: number | string | null; needs_uom?: boolean; uom?: string | null; ut_price: string; ut_cost: string; multiplier: string; net_price: number | null; inv_date: string; product_id: string | null; product_description: string | null; is_writein: boolean; kit_role: string | null; kit_group: string | null; inventory_id: string | null; cust_po: string }
 export interface Inv { invoice_key: string; ord: string; ship: string; inv_date: string; cust_code: string; customer_code_id: string; account_id: string | null; warehouse_id: string | null; cust_po: string; total_net: number; lines: Line[] }
 
 export function headerPayload(inv: Inv, nav: NavMap = {}) {
@@ -152,7 +154,7 @@ export function linePayload(inv: Inv, l: Line, invoiceRef: string, parentRef: st
     // no ownerid on a line: invoicedetail is a child of invoice and inherits the invoice's owner (Dataverse rejects ownerid here)
   };
   if (l.is_writein) { p.isproductoverridden = true; p.productdescription = clip(l.item, 500); } // a write-in line may not carry a unit ("cannot set both uomid and productdescription")
-  else { p["productid@odata.bind"] = `/products(${l.product_id})`; p["uomid@odata.bind"] = `/uoms(${UOM})`; }
+  else { p["productid@odata.bind"] = `/products(${l.product_id})`; p["uomid@odata.bind"] = `/uoms(${l.uom || UOM})`; } // l.uom: the product's own default unit when the fixed unit was refused
   if (inv.account_id) p[`${nav["new_customer:account"] || "new_customer_account"}@odata.bind`] = `/accounts(${inv.account_id})`;
   if (l.inventory_id) p[bind(nav, "new_inventory")] = `/new_inventories(${l.inventory_id})`;
   if (parentRef) p[bind(nav, "ab_parentinvoiceline")] = parentRef;

@@ -17,7 +17,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { decodeP21, parseLiInvoice, EXPECTED_COLUMNS } from "./parse.ts";
-import { TENANT, CLIENT, ORG, API, SALES_BOT, TIME_BUDGET_MS, BATCH_REQUESTS, PARALLEL_BATCHES, buildBatchBody, parseBatchEntries, alignBatch, esc,
+import { TENANT, CLIENT, ORG, API, SALES_BOT, TIME_BUDGET_MS, BATCH_REQUESTS, PARALLEL_BATCHES, WAVES_PER_CALL, buildBatchBody, parseBatchEntries, alignBatch, esc,
          newInvoiceChangeset, existingInvoiceChangeset } from "./core.ts";
 import type { BatchReq, BatchResult, BatchPart, Inv, PlanEntry, ExistingLine, NavMap } from "./core.ts";
 
@@ -47,9 +47,10 @@ async function dvGet(tok: string, path: string) {
 /** One $batch against Dataverse. */
 async function dvBatch(tok: string, sets: BatchReq[][], gets: BatchReq[] = []): Promise<BatchResult> {
   const bnd = `batch_${crypto.randomUUID()}`;
-  const r = await fetch(`${API}/$batch`, { method: "POST", headers: { ...dvHeaders(tok), "Content-Type": `multipart/mixed; boundary=${bnd}` }, body: buildBatchBody(API, bnd, sets, gets) });
+  const r = await fetch(`${API}/$batch`, { method: "POST", headers: { ...dvHeaders(tok), "Content-Type": `multipart/mixed; boundary=${bnd}` }, body: buildBatchBody(API, bnd, sets, gets), signal: AbortSignal.timeout(170_000) });
   const text = await r.text();
   const ct = r.headers.get("content-type") || "";
+  if (r.status === 429) throw new Error(`throttled 429 retry-after=${r.headers.get("Retry-After") || "?"}: ${text.slice(0, 300)}`);
   if (!r.ok && !/multipart\/mixed/i.test(ct)) throw new Error(`dataverse $batch ${r.status}: ${text.slice(0, 600)}`);
   return alignBatch(parseBatchEntries(text, ct), gets.length, sets.length);
 }
@@ -161,9 +162,10 @@ Deno.serve(async (req: Request) => {
 
     if (action === "plan" || action === "run") {
       const confirm = body.confirm === true && action === "run";
-      const maxLines = Math.max(1, Math.min(3000, Number(body.max_lines) || 400));
       const st = await status();
       const runStatus = st?.run?.status;
+      // lines per invocation: the run row (import_run.max_lines) wins so it can be tuned while the chain runs; body.max_lines is the fallback
+      const maxLines = Math.max(1, Math.min(3000, Number(st?.run?.max_lines) || Number(body.max_lines) || 340));
       if (confirm && !["approved", "running"].includes(runStatus)) return json({ error: `run is '${runStatus}', needs approved|running` }, 409);
       // the first fetch of a confirmed run takes the run lock (7 min, cleared by imp_log_batch / imp_set_run) so two
       // invocations can never write the same invoices; a busy run answers 409 and does not chain
@@ -205,6 +207,16 @@ Deno.serve(async (req: Request) => {
           const hit = res.parts[k]?.body?.value?.[0];
           existing[invoices[i + k].invoice_key] = hit ? { invoiceId: hit.invoiceid, lines: hit.invoice_details || [] } : null;
         });
+      }
+
+      // 2b lines whose product refused the fixed unit ("specified unit is not valid") carry the product's default unit instead
+      const needUom = invoices.flatMap((inv) => inv.lines.filter((l) => l.needs_uom && l.product_id));
+      if (needUom.length) {
+        const pids = [...new Set(needUom.map((l) => l.product_id as string))];
+        const res = await dvBatch(tok, [], pids.map((id) => ({ method: "GET" as const, url: `products(${id})?$select=_defaultuomid_value` })));
+        const uomOf: Record<string, string | null> = {};
+        pids.forEach((id, k) => { uomOf[id] = res.parts[k]?.body?._defaultuomid_value ?? null; });
+        needUom.forEach((l) => { l.uom = uomOf[l.product_id as string]; });
       }
 
       // 3 changesets
@@ -267,13 +279,26 @@ Deno.serve(async (req: Request) => {
       if (cur.length) groups.push(cur);
       let processedSets = sets.filter((s) => !s.reqs.length).length; // existing invoices with nothing to change
       sets.filter((s) => !s.reqs.length).forEach((s) => s.plan.forEach((pl) => { results.push({ id: pl.id, status: "unchanged", dynamics_invoice_id: s.existingId, dynamics_line_id: pl.lineId, batch_no: batchNo }); unchanged++; }));
+      let written = 0;
+      const persist = async () => { // results are written after every wave: a killed isolate loses at most the wave in flight
+        if (results.length > written) { await rpc("imp_write_results", { p_run: runId, p_key: runKey, p_results: results.slice(written) }); written = results.length; }
+      };
+      await persist();
+      let waveError = "", waves = 0;
       for (let i = 0; i < groups.length; i += PARALLEL_BATCHES) {
-        if (Date.now() - t0 > TIME_BUDGET_MS) break;
+        if (Date.now() - t0 > TIME_BUDGET_MS || waves >= WAVES_PER_CALL) break;
+        waves++;
         const wave = groups.slice(i, i + PARALLEL_BATCHES);
-        await Promise.all(wave.map((g) => flush(g)));
+        const settled = await Promise.allSettled(wave.map((g) => flush(g)));
         processedSets += wave.reduce((a, g) => a + g.length, 0);
+        await persist(); // the batches that completed are written even when a sibling batch failed
+        // a rejected or timed-out $batch may still be committing on the Dataverse side: its invoices are deferred for
+        // 15 minutes so no invocation re-creates them before the existing-invoice check can see them (6 duplicates on 2026-09-29)
+        const deferKeys: string[] = [];
+        settled.forEach((s, k) => { if (s.status === "rejected") { waveError = waveError || String(s.reason).slice(0, 400); wave[k].forEach((g) => deferKeys.push(g.inv.invoice_key)); } });
+        if (deferKeys.length) { await rpc("imp_defer", { p_run: runId, p_key: runKey, p_keys: deferKeys, p_minutes: 15 }); break; }
       }
-      await rpc("imp_write_results", { p_run: runId, p_key: runKey, p_results: results });
+      if (waveError) await rpc("imp_set_run", { p_run: runId, p_key: runKey, p_status: null, p_notes: `batch ${batchNo} wave error at ${Math.round((Date.now() - t0) / 1000)} s: ${waveError}` });
       const detail = { invoices: processedSets, lines: results.length, created, updated, unchanged, failed, requests: sent, inventory_lookups: invLookups, ms: Date.now() - t0 };
       await rpc("imp_log_batch", { p_run: runId, p_key: runKey, p_batch: batchNo, p_detail: detail });
       await db.from("sync_log").insert({ table_name: "invoice_lines", status: failed ? "partial" : "success", finished_at: new Date().toISOString(), rows_read: results.length, rows_upserted: created + updated, message: `dynamics-import batch ${batchNo}: ${JSON.stringify(detail)}` }).then(() => {}, () => {});
@@ -284,7 +309,7 @@ Deno.serve(async (req: Request) => {
       // exhausted; stops by itself when a batch mostly fails (run paused with a note) or the run leaves 'running'
       let chained = false;
       const mostlyFailed = results.length > 0 && failed * 2 > results.length;
-      if (body.chain === true && remaining && processedSets > 0) {
+      if (body.chain === true && remaining && processedSets > 0 && !waveError) {
         if (mostlyFailed) await rpc("imp_set_run", { p_run: runId, p_key: runKey, p_status: "paused", p_notes: `chain stopped after batch ${batchNo}: ${failed} of ${results.length} lines failed` });
         else if (after?.run?.status === "running") { await rpc("imp_chain", { p_run: runId, p_key: runKey, p_body: body }); chained = true; }
       }
@@ -293,6 +318,7 @@ Deno.serve(async (req: Request) => {
 
     return json({ error: `unknown action '${action}'` }, 400);
   } catch (e) {
+    try { await rpc("imp_set_run", { p_run: runId, p_key: runKey, p_status: null, p_notes: `${action} failed at ${Math.round((Date.now() - t0) / 1000)} s: ${String(e).slice(0, 400)}` }); } catch { /* best effort */ }
     return json({ error: String(e), ms: Date.now() - t0 }, 500);
   }
 });
