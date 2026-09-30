@@ -1,4 +1,4 @@
-/* Marion quote.html script (split for pushability, build 2026-09-26.6) — part 2/3.
+/* Marion quote.html script (split for pushability, build 2026-09-26.6; history step 0 v3 kit headers 2026-09-30.1) — part 2/3.
    Load order matters: quote-app-1.js -> 2 -> 3 (plain scripts, shared global scope). */
 /* ---------- Analyze: call Marion via server proxy, fall back to local parser ---------- */
 async function analyze(){
@@ -286,6 +286,10 @@ async function crossRefCart(){
             const top=same||mine[0];
             const hopts=h.slice(0,12).map(r=>({part_number:r.item_code,description:r.description||'',url:null,hist:r}));
             const fmt=r=>(r.source==='invoice'?'invoiced':'quoted')+(r.match_kind==='po'?' on PO ':r.match_kind==='wo'?' on W/O ':r.match_kind==='ref'?' as ref ':r.match_kind==='ask'?' for the same ask ':' as ')+(r.matched_on||'')+' — '+(r.ref_no||'')+(r.ref_date?' '+r.ref_date:'')+(r.times>1?' ('+r.times+'×)':'');
+            // v3 (build 2026-09-30.1, board item 66): an invoice kit header (is_kit) stands for its components; a write-in
+            // header's item_code is the P21 kit-by-size text (1.375"ROD X 2.000"BORE). It answers a KIT ask only.
+            const kitAsk=/\bkits?\b|rod\s*x|\bbore\b|cylinder/i.test([l.asked,l.desc,l.kind,l.oem,l.ref].join(' '));
+            const kitNote=r=>r&&r.is_kit?' · kit contents: '+(r.components||'(no component lines)'):'';
             if(same){
               l.conf='high';l.notes=(l.notes?l.notes+' · ':'')+'History confirms: '+fmt(same);l.options=hopts;
               if(l._echo){l._echo=false;if(l.oem&&nrm(l.oem)===nrm(l.pn))l.oem='';}
@@ -295,10 +299,12 @@ async function crossRefCart(){
             if(top&&['po','wo','ref','ask'].includes(top.match_kind)&&top.ref_lines===1){
               // a one-line reference this customer used before: that IS the answer — a whole PO / W/O may replace a
               // rule-built guess (unless it is already high); a ref / ask token hit only fills an EMPTY part number (2026-09-28.3)
+              // v3: a kit header replaces a guess only on a kit ask; on any other line it fills an empty pn at conf med
               const strong=['po','wo'].includes(top.match_kind);
-              if(!l.pn||l._echo||(strong&&l.conf!=='high')){l.pn=top.item_code;l.conf=(top.match_kind==='ask')?'med':'high';l._echo=false;}
+              const kitOk=!top.is_kit||kitAsk;
+              if(!l.pn||l._echo||(strong&&kitOk&&l.conf!=='high')){l.pn=top.item_code;l.conf=(top.match_kind==='ask'||!kitOk)?'med':'high';l._echo=false;}
               l.autoPn=l.autoPn||top.item_code;
-              l.notes=(l.notes?l.notes+' · ':'')+(l.pn===top.item_code?'History: ':'History suggests '+top.item_code+' — ')+fmt(top)+(l.pn===top.item_code?'':' — Review');
+              l.notes=(l.notes?l.notes+' · ':'')+(l.pn===top.item_code?'History: ':'History suggests '+top.item_code+' — ')+(top.is_kit?'kit ':'')+fmt(top)+kitNote(top)+(l.pn===top.item_code?'':' — Review');
               l.options=hopts;
               if(l.pn===top.item_code){
                 const {data:pi}=await sb.rpc('part_info',{p_pn:l.pn});const info=pi&&pi[0];if(info&&info.found)l.url=info.url||null;
@@ -307,8 +313,10 @@ async function crossRefCart(){
             }else if(top&&['po','wo'].includes(top.match_kind)&&top.ref_lines>1){
               // a whole order / work order: list its lines for staff; a bom fingerprint gives the kit code
               const same=mine.filter(r=>r.ref_no===top.ref_no);
-              l.notes=(l.notes?l.notes+' · ':'')+'History: '+fmt(top)+' had '+top.ref_lines+' lines: '+same.slice(0,8).map(r=>r.item_code+(r.qty?' ×'+(+r.qty):'')).join(', ')+(same.length>8?' …':'')+(top.kit_code?' = kit '+top.kit_code:'')+' — Review to pick';
+              const kits=same.filter(r=>r.is_kit); // v3: kit headers on that order
+              l.notes=(l.notes?l.notes+' · ':'')+'History: '+fmt(top)+' had '+top.ref_lines+' lines: '+same.slice(0,8).map(r=>(r.is_kit?'kit ':'')+r.item_code+(r.qty?' ×'+(+r.qty):'')).join(', ')+(same.length>8?' …':'')+(top.kit_code?' = kit '+top.kit_code:'')+(kits.length===1?kitNote(kits[0]):'')+' — Review to pick';
               l.options=hopts;
+              if(kits.length===1&&kitAsk&&!l.pn){l.pn=kits[0].item_code;l.conf='med';}
               if(top.kit_code&&!l.pn){l.pn=top.kit_code;l.conf='med';}
               if(!l.pn){l.conf='low';return;}
             }else if(top&&top.match_kind==='code'){
