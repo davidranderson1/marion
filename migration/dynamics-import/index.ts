@@ -6,6 +6,7 @@
 //   ingest     { source_url }            fetch the tab-separated file (single-use Dropbox link), parse, stage rows
 //   stage_text { text }                  stage rows from inline text (header line + rows) — used for the pilot
 //   queue      { source_url, parked_codes? }  build imports.run_queue from the file (one row per invoice; no table scan)
+//   delete_invoices { ids: [...] }  delete listed invoices (duplicate copies the load created) - David's go only
 //   classify                             duplicates, lookups, kit structure, skip reasons (imports.classify)
 //   plan                                 dry run: the exact Dataverse payloads for the next batch, nothing written
 //   run        { confirm: true, max_lines?, batch_no?, chain? }   write one batch to Dataverse; call again until remaining = 0
@@ -153,6 +154,24 @@ Deno.serve(async (req: Request) => {
         inserted += Number(await rpc("imp_queue_rows", { p_run: runId, p_key: runKey, p_rows: rowsQ.slice(i, i + 4000) }));
       }
       return json({ ok: true, rows: parsed.rows.length, kept: first.size, ready, invoices: rowsQ.length, inserted, ms: Date.now() - t0 });
+    }
+
+    if (action === "delete_invoices") {
+      // remove duplicate invoice copies the load itself created (David's "delete", 2026-09-30, board item 63); one DELETE
+      // per invoice, lines go with the parental relationship; only ids listed in the body, only with the run key
+      const ids = ((body.ids as string[] | undefined) || []).filter((id) => /^[0-9a-f-]{36}$/i.test(id));
+      const tok = await token();
+      const out: { id: string; status: number; body?: string }[] = [];
+      for (const id of ids) {
+        let status = 0, text = "";
+        try {
+          const r = await fetch(`${API}/invoices(${id})`, { method: "DELETE", headers: dvHeaders(tok), signal: AbortSignal.timeout(120_000) });
+          status = r.status; text = await r.text();
+        } catch (e) { text = String(e); }
+        out.push({ id, status, body: text.slice(0, 200) });
+      }
+      await rpc("imp_set_run", { p_run: runId, p_key: runKey, p_status: null, p_notes: `delete_invoices: ${JSON.stringify(out)}`.slice(0, 1500) });
+      return json({ ok: out.every((o) => o.status === 204), deleted: out.filter((o) => o.status === 204).length, results: out, ms: Date.now() - t0 });
     }
 
     if (action === "classify") {
