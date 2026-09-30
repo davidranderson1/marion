@@ -153,7 +153,8 @@ Return ONLY valid JSON, no markdown, no prose:
     const body=raw.slice(s,e+1);
     try{ j=JSON.parse(body); break; }
     catch(e1){ pe=pe||e1;
-      const cleaned=body.replace(/^\s*\/\/[^\n]*$/gm,"").replace(/,(\s*[}\]])/g,"$1");
+      const cleaned=body.replace(/^\s*\/\/[^\n]*$/gm,"").replace(/,(\s*[}\]])/g,"$1")
+        .replace(/"(p21_quote_no|intent_note)"\s*,/g,'"$1":"",'); // 2026-09-30.2: the model sometimes drops the empty value ("p21_quote_no","customer":…) — 4 of 40 evaluation calls
       try{ j=JSON.parse(cleaned); console.warn("Marion AI: JSON recovered after stripping comment lines / trailing commas"); break; }
       catch(e2){}
     }
