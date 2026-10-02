@@ -10,6 +10,23 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-10-01 · ABQUOTE training — run B scored on build 2026-10-01.1 (item 68 kit collapse); HANDOFF-ABQUOTE-TRAINING.md section 12 (docs only, no code change)
+- **Score, run B — build 2026-10-01.1** (same fixed held-out set: 20 quotes, 19 evaluable, 47 lines, held-out quotes excluded from history; real page in David's Chrome), against run A (rules 52 + 25 on build 2026-09-30.2) and the 2026-09-30 after-run:
+
+| Measure | 2026-09-30 after-run | Run A (rules 52 + 25) | Run B (kit collapse) |
+|---|---|---|---|
+| Exact part number, all 47 lines | 36 (77 %) | 38 (81 %) | **39 (83 %)** |
+| Text-only quotes (36 lines) | 33 | 33 | 34 |
+| Image-only quotes (11 lines) | 3 | 5 | 5 |
+| Wrong lines | 9 | 9 | 9 |
+| Unparseable answers | 0 | 0 | 0 |
+| Probe set, 5 non-held-out quotes (8 lines) | 1 | 3 | **4** (wrong lines 12 → 4) |
+
+- Item 68 targets: the probe quote that lists a previously ordered kit's contents now comes out as the one kit line (was 8 component lines); the held-out quote that asks for "the kit we bought before" on an old PO now gets the kit by size from that invoice's wiper and piston seal; the two probe quotes with PO / W/O context and no kit did not change.
+- Feedback tool checked end to end on the live build (one test row inserted and dismissed); `marion-digest` dry run 200; first digest Monday 2026-10-05 7 AM America/Edmonton.
+- Still open: ai_rules id 49 update (held by the database tool's approval step); the Quote Content # comparison after the 2026-10-02 nightly run (Dynamics side, board item 67).
+- Files: CHANGELOG.md, HANDOFF-ABQUOTE-TRAINING.md (section 12). Records: project doc `claude/abquote-9.3-kit-collapse-shaft-seal-feedback-2026-10-01.md`, board items 21, 33, 39, 64, 65, 67, 68, 69.
+
 ## 2026-10-01 · ABQUOTE training — quote.html build 2026-10-01.1 (request-level kit collapse, board item 68), feedback tool (board item 21: table `marion_feedback`, thumbs, review panel, `marion-digest`), rules 52 / 25 (items 69 / 39) — `public` DDL: one new table + one caller function; `archive` / `xpress` / `hr` / `flabed` untouched
 - **Why**: David's answers carried over from the 2026-09-30 chats (item 68 GO, item 69 yes, item 21 "yes" + digest to d.anderson@sealsonline.com) and the ground truth for item 39 (RE + digits is a Fluidseal RS rod-seal code: 4 of 5 RE asks from the one distributor that writes them were quoted verbatim). David 2026-10-01: "most of these are answered already, stop asking same questions".
 - **ai_rules**: id **52** inserted (cross_reference, sort 918) — metric shaft seals given as ID x OD x W are S + ID(3) + OD(3) + W×10(3) + type, TC by default, SC only for single lip, BABSL only for NOK numbers. id **25** (verbatim Fluidseal codes) gains the inch rod seal grammar "RENNNNNNNN-NNN" (RE kept). id **49** (one customer's rule) still says "drop the RE" — its update is held by the database tool's approval step (4 timeouts); queued.
