@@ -465,6 +465,16 @@ async function crossRefCart(){
         }
         if(xr&&xr.length){
           const prev=l.pn;
+          // 2026-10-02.2: a house code the rules chose on purpose (a customer who takes the house o-ring, a G- / V- brand code)
+          // is kept when it is a catalog part — the OEM cross becomes a Review option instead of replacing it
+          if(prev&&!/^R[A-Z]{2,5}-/i.test(prev)&&!xr.some(o=>nrm(o.part_number)===nrm(prev))){
+            const {data:pk}=await sb.rpc('part_info',{p_pn:prev});const pinfo=pk&&pk[0];
+            if(pinfo&&pinfo.found){
+              l.url=pinfo.url||null;l.options=xr;l.autoPn=l.autoPn||xr[0].part_number;l._echo=false;
+              l.notes=(l.notes?l.notes+' · ':'')+'OEM cross '+xr[0].part_number+' also in catalog — kept '+prev+' per the rules, Review';
+              hits++;return;
+            }
+          }
           l.options=xr;l.autoPn=xr[0].part_number;l.url=xr[0].url||null;
           l.pn=xr[0].part_number;l.conf=xr.length===1?'high':'med';
           let n='OEM cross-reference verified in catalog';
