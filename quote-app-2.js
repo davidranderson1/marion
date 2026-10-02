@@ -99,7 +99,8 @@ YOUR JOB (for quote_request):
    - "med": pn is an informed inference (rounded dimensions, near-match, assumed brand).
    - "low": no applicable rule — pn is "" and staff must cross-reference. Any line with empty pn is automatically "low".
 5. Fill desc / ref / notes strictly per the field-discipline rules below.
-6. OUR OWN P21/ERP QUOTATION PDF: an attached PDF titled "Quotation" with QUOTATION NUMBER boxes, "GST: R-87321 2575" and a sealsonline.com footer is OUR OWN ERP quote — a CONFIRMED answer, not a customer request.
+6. OPTION LINES (staff rule "OPTIONS"): the part the customer asked for is always its own line. When a staff rule names a substitute, an upsell or a quality upgrade for it, add the alternative as an EXTRA line directly after that line, with option_for = the 1-based number of the line it is an alternative to and notes starting "OPTION — ". Every other line has option_for null. Never put an alternative in place of the asked part.
+7. OUR OWN P21/ERP QUOTATION PDF: an attached PDF titled "Quotation" with QUOTATION NUMBER boxes, "GST: R-87321 2575" and a sealsonline.com footer is OUR OWN ERP quote — a CONFIRMED answer, not a customer request.
    - Its ITEM CODE column contains Fluidseal part numbers: copy each VERBATIM into pn with conf "high". qty = the ORDERED column. Extract UNIT PRICE into the line's price (plain number). price may ONLY come from our own P21 PDF — leave it null in every other case.
    - Set the top-level p21_quote_no to the QUOTATION NUMBER (e.g. "6142663-0000").
    - SKIP note-only lines (no quantity) and AB/* charge lines (AB/FREIGHT-IN, AB/CSP, ...) — summarize freight/delivery remarks in notes instead of making part lines for them.
@@ -114,7 +115,7 @@ ${rules}
 Return ONLY valid JSON, no markdown, no prose:
 {"intent":"quote_request|info_update|not_a_request|suspicious","intent_note":"","p21_quote_no":"",
  "customer":{"acct":"","contact":"","phone":"","po":"","email":"","address":"","required_by":"","req_type":"quote"},
- "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","ref":"","qty":1,"price":null,"wh":"6 - Edmonton","disp":"B","notes":"","asked":"","kind":"","style":"","dims":{"id":null,"od":null,"h":null,"stated_h":null,"units":"mm|in|unknown"}}]}`;
+ "lines":[{"conf":"high|med|low","oem":"","brand":"","pn":"","desc":"","ref":"","qty":1,"price":null,"wh":"6 - Edmonton","disp":"B","notes":"","asked":"","kind":"","style":"","option_for":null,"dims":{"id":null,"od":null,"h":null,"stated_h":null,"units":"mm|in|unknown"}}]}`;
 
   const userContent=[];
   PDFS.forEach(p=>userContent.push({type:"document",
@@ -245,8 +246,17 @@ function applyParsed(p){
       conf,oem:l.oem||"",brand:l.brand||"",pn,desc:l.desc||"",_echo:echo,
       ref:l.ref||"",qty:l.qty||1,wh:l.wh||"6 - Edmonton",disp:l.disp||"B",notes,type:"item",kitGroup:null,
       price:(l.price!=null&&l.price!==''&&!isNaN(parseFloat(l.price)))?parseFloat(l.price):null,
-      kind:l.kind||"",style:l.style||"",dims:l.dims||null,asked:l.asked||""
+      kind:l.kind||"",style:l.style||"",dims:l.dims||null,asked:l.asked||"",_lid:'L'+(++LINE_SEQ)
     };
+  });
+  // OPTION LINES (build 2026-10-02.1, board items 39 / 71): an alternative the rules name (substitute, upsell, quality
+  // upgrade) is its own line after the asked part, linked by option_for; the customer decides
+  p.lines.forEach((l,k)=>{
+    const f=parseInt(l.option_for,10);
+    if(f>=1&&f<=CART.length&&f-1!==k){
+      const par=CART[f-1], me=CART[k];
+      if(par&&!par._opt){me._opt=true;me._optOf=par._lid;}
+    }
   });
   LAST_P21_NO=(p.p21_quote_no||'').toString().trim();
   if(LAST_P21_NO){ // our ERP quote is the confirmed answer: log every asked->pn pairing as training data
@@ -266,10 +276,31 @@ function applyParsed(p){
         its components (at least half of them, compound suffix ignored) -> those lines collapse into the kit line;
         (b) the invoice has components only (pre-2026, no header) and the ask is a kit ask -> the kit by size:
         rod = wiper / rod-seal inside diameter, bore = piston-seal outside diameter (conf med, Review). ---- */
+let LINE_SEQ=0; // stable line ids for option links (2026-10-02.1)
+const optParentIdx=l=>l&&l._opt?CART.findIndex(x=>x._lid===l._optOf):-1;
+/* ---- OPTION LINES (2026-10-02.1): keep an option only when its parent line is still in the cart and the option's part
+        number is a real catalog part; it is never re-crossed, searched or replaced. A duplicate of its parent is dropped. ---- */
+async function verifyOptions(){
+  for(const o of CART.filter(l=>l._opt)){
+    const par=CART[optParentIdx(o)];
+    let keep=!!(par&&o.pn);
+    if(keep){
+      try{const {data:pi}=await sb.rpc('part_info',{p_pn:o.pn});const info=pi&&pi[0];
+        if(info&&info.found){o.url=info.url||null;o._echo=false;if(o.conf==='low')o.conf='med';}
+        else{keep=false;par.notes=(par.notes?par.notes+' · ':'')+'option '+o.pn+' not in catalog — dropped';}
+      }catch(e){console.warn('verifyOptions',e);}
+    }
+    if(!keep)CART=CART.filter(x=>x!==o);
+  }
+}
+function dedupeOptions(){
+  const nrm=s=>(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  CART=CART.filter(o=>{if(!o._opt)return true;const par=CART[optParentIdx(o)];return !!par&&nrm(par.pn)!==nrm(o.pn);});
+}
 async function kitCollapse(){
   try{
     const ask=(window.__LAST_ASK||'').toString();
-    const items=CART.filter(l=>l.type==='item'&&!l._kitDone);
+    const items=CART.filter(l=>l.type==='item'&&!l._kitDone&&!l._opt); // option lines are never kit components (2026-10-02.1)
     const q=((CUST.po||'')+' '+ask).trim();
     if(!q||!/\d{4,}/.test(q))return;
     const kitAsk=/\bkits?\b|rod\s*x|\bbore\b|cylinder|bought\s+(it\s+)?before|same\s+as\s+(before|last)|ordered\s+on/i.test(ask);
@@ -338,9 +369,10 @@ async function kitCollapse(){
 
 async function crossRefCart(){
   await kitCollapse(); // -1) request-level PO / W/O kit (board item 68)
-  const todo=CART.filter(l=>!l._kitDone&&(l.oem||(!l.pn&&(l.kind||(l.dims&&(l.dims.id||l.dims.od))))||(l.pn&&!l.url)));
+  await verifyOptions(); // option lines: parent present + catalog part, else dropped (2026-10-02.1)
+  const todo=CART.filter(l=>!l._kitDone&&!l._opt&&(l.oem||(!l.pn&&(l.kind||(l.dims&&(l.dims.id||l.dims.od))))||(l.pn&&!l.url)));
   if(CART.some(l=>l._kitDone))renderCart();
-  if(!todo.length)return;
+  if(!todo.length){dedupeOptions();renderCart();return;}
   // visible progress: spinner per pending line + live counter in the cart toolbar
   todo.forEach(l=>l._xref=true);
   renderCart();
@@ -427,7 +459,10 @@ async function crossRefCart(){
       }
       // 1) OEM number? The catalog decides the brand: search the R<VENDOR>- namespace directly.
       if(l.oem){
-        const {data:xr}=await sb.rpc('find_cross_refs',{p_oem:l.oem});
+        let {data:xr}=await sb.rpc('find_cross_refs',{p_oem:l.oem});
+        if((!xr||!xr.length)&&/[-\s.]/.test(l.oem.trim())){ // 2026-10-02.1: the catalog stores OEM numbers without dashes (RCAT-2701528)
+          ({data:xr}=await sb.rpc('find_cross_refs',{p_oem:l.oem.trim().replace(/[-\s.]/g,'')}));
+        }
         if(xr&&xr.length){
           const prev=l.pn;
           l.options=xr;l.autoPn=xr[0].part_number;l.url=xr[0].url||null;
@@ -484,6 +519,7 @@ async function crossRefCart(){
     }catch(e){console.warn('match_parts failed',e);}
     finally{l._xref=false;done++;prog();renderCart();} // numbers pop in as each line resolves
   }));
+  dedupeOptions(); // an option equal to its (possibly corrected) parent is dropped (2026-10-02.1)
   renderCart();
   setSaveStatus(hits
     ?'✓ '+hits+' of '+todo.length+' line(s) cross-referenced from the catalog.'
@@ -795,6 +831,7 @@ function renderCart(){
       ? '<span class="drag-h" style="opacity:.35;cursor:default" title="Kits can\'t be nested inside another kit">⋮⋮</span>'+bomBtn+'<span class="typetag kit">Kit</span>'
       : '<span class="drag-h" draggable="true" ondragstart="dragLine(event,'+i+')" title="'+(child?'Drag onto another line to move it — or drop off the rows to remove from kit':'Drag onto another line to nest into a kit')+'">⋮⋮</span>'+bomBtn
         +(child?'<button class="unnest" onclick="unnest('+i+')" title="Remove from kit">⤴</button>'
+               :r._opt?'<span class="typetag item" style="background:var(--amber);color:#fff" title="Option — an alternative'+(optParentIdx(r)>=0?' to line '+(optParentIdx(r)+1):'')+' (substitute, upsell or quality upgrade); the customer decides">Option'+(optParentIdx(r)>=0?' ↑'+(optParentIdx(r)+1):'')+'</span>'
                :(r._bomKit?'<span class="typetag kit" style="'+((r._stockAvail!=null&&r._stockAvail>=(+r.qty||1))?'':'background:var(--red);')+'" title="'+esc((r._stockLabel||'Kit in catalog')+(r._stockAvail!=null?' · '+r._stockAvail+' available':''))+'">Kit</span>':'<span class="typetag item">Item</span>'));
     const nOpt=(r.options&&r.options.length)||0;
     const revCell=r._xref?''
