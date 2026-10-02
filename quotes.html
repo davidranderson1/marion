@@ -95,6 +95,22 @@ table.grid input.price{font-family:'JetBrains Mono',monospace;font-weight:700;te
     </tr></thead><tbody id="listBody"><tr><td colspan="9" class="hint">Loading…</td></tr></tbody></table></div>
   </div>
 
+  <div class="panel hidden" id="feedbackPanel">
+    <div class="panel-h" id="feedback">Unreviewed feedback<span class="sub" id="fbCount">thumbs up / down from quote intake and the Marion chat — make a rule, add a cross-reference or dismiss</span></div>
+    <div class="tools">
+      Show:
+      <select id="fbFilter" onchange="loadFeedback()">
+        <option value="new" selected>new</option><option value="">all</option><option>reviewed</option><option>actioned</option><option>dismissed</option>
+      </select>
+      <button class="btn btn-ghost" onclick="loadFeedback()">Refresh</button>
+      <span id="fbMsg" class="status"></span>
+    </div>
+    <div style="overflow-x:auto"><table class="grid"><thead><tr>
+      <th style="width:120px">Date</th><th style="width:90px">Where</th><th style="width:80px">Customer</th><th style="width:44px"></th>
+      <th>Marion gave</th><th>Comment</th><th style="width:150px">Right part #</th><th style="width:300px"></th>
+    </tr></thead><tbody id="fbBody"><tr><td colspan="8" class="hint">Loading…</td></tr></tbody></table></div>
+  </div>
+
   <div class="panel hidden" id="detailPanel">
     <div class="panel-h">Quote Detail<span class="sub" id="dMeta"></span></div>
     <div class="tools">
@@ -181,8 +197,85 @@ sb.auth.onAuthStateChange(async (_ev,session)=>{
     IS_STAFF=!!(data&&data.is_staff);
   }
   renderAuth(); renderGate();
-  if(SESSION&&IS_STAFF){ loadQuotes(); loadRules(); }
+  if(SESSION&&IS_STAFF){ loadQuotes(); loadRules(); loadFeedback(); }
 });
+
+/* ---- Unreviewed feedback (public.marion_feedback, board item 21, 2026-10-01) ---- */
+let FB=[];
+function fbGave(r){
+  const a=r.ai_answer||{};
+  if(r.surface==='chat')return '<b>Q:</b> '+esc(String(a.question||'').slice(0,160))+'<br><b>A:</b> '+esc(String(a.answer||'').slice(0,240))+(String(a.answer||'').length>240?' …':'');
+  if(r.line_ref==='request')return '<b>Whole request</b> · '+esc((a.lines||[]).map(l=>l.pn||'(empty)').join(', '))+'<br><span style="color:#888">'+esc(String(a.request||'').slice(0,200))+'</span>';
+  return '<span class="mono"><b>'+esc(a.pn||'(no part #)')+'</b></span> '+esc(a.conf||'')+(a.asked?'<br><span style="color:#888">asked: '+esc(String(a.asked).slice(0,160))+'</span>':'')+(a.notes?'<br><span style="color:#888;font-size:11px">'+esc(String(a.notes).slice(0,200))+'</span>':'');
+}
+async function loadFeedback(){
+  const st=document.getElementById('fbFilter').value;
+  let q=sb.from('marion_feedback').select('*').order('created_at',{ascending:false}).limit(200);
+  if(st)q=q.eq('status',st);
+  const {data,error}=await q;
+  document.getElementById('feedbackPanel').classList.remove('hidden');
+  const tb=document.getElementById('fbBody');
+  if(error){tb.innerHTML='<tr><td colspan="8" class="hint">'+esc(error.message)+'</td></tr>';return;}
+  FB=data||[];
+  document.getElementById('fbCount').textContent=FB.length+(st?' '+st:'')+' · make a rule, add a cross-reference or dismiss';
+  tb.innerHTML=FB.length?FB.map((r,i)=>{
+    const c=r.correction||{};
+    const open=r.status==='new'||r.status==='reviewed';
+    return '<tr>'+
+      '<td style="white-space:nowrap">'+esc(new Date(r.created_at).toLocaleString('en-CA'))+'</td>'+
+      '<td>'+esc(r.surface==='quote_intake'?'quote intake':r.surface)+'</td>'+
+      '<td>'+esc(r.customer_code||'')+'</td>'+
+      '<td style="text-align:center;font-size:16px">'+(r.rating>0?'👍':'👎')+'</td>'+
+      '<td>'+fbGave(r)+'</td>'+
+      '<td>'+esc(r.comment||'')+(r.status!=='new'?'<br><span style="color:#888;font-size:11px">'+esc(r.status)+(r.action_ref?' · '+esc(r.action_ref):'')+'</span>':'')+'</td>'+
+      '<td><input class="fbpn mono" data-i="'+i+'" value="'+esc(c.pn||'')+'" placeholder="part #"></td>'+
+      '<td style="white-space:nowrap">'+(open?
+        '<button class="btn btn-ghost" style="padding:5px 8px;font-size:11px" onclick="fbMakeRule('+i+')">Make a rule</button> '+
+        '<button class="btn btn-ghost" style="padding:5px 8px;font-size:11px" onclick="fbAddXref('+i+')">Add cross-reference</button> '+
+        '<button class="btn btn-ghost" style="padding:5px 8px;font-size:11px;color:#888" onclick="fbSet('+i+',\'dismissed\')">Dismiss</button>'
+        :'')+'</td>'+
+      '</tr>';}).join('')
+    :'<tr><td colspan="8" class="hint">Nothing here — thumbs from quote intake and the Marion chat land in this list.</td></tr>';
+}
+async function fbSetById(id,status,actionRef){
+  const patch={status,reviewed_by:SESSION.user.id,reviewed_at:new Date().toISOString()};
+  if(actionRef)patch.action_ref=actionRef;
+  const {error}=await sb.from('marion_feedback').update(patch).eq('id',id);
+  const el=document.getElementById('fbMsg');
+  el.textContent=error?('Update failed: '+error.message):('✓ Feedback #'+id+' → '+status+(actionRef?' ('+actionRef+')':''));
+  el.className='status'+(error?' err':'');
+  loadFeedback();
+  return error;
+}
+function fbSet(i,status){const r=FB[i];if(r)fbSetById(r.id,status,null);}
+function fbPn(i){const el=document.querySelector('.fbpn[data-i="'+i+'"]');return el?el.value.trim():'';}
+function fbMakeRule(i){
+  const r=FB[i];if(!r)return;
+  const a=r.ai_answer||{};const pn=fbPn(i);
+  const text=(a.asked?'When the customer asks "'+String(a.asked).slice(0,160)+'"':(a.question?'When asked "'+String(a.question).slice(0,160)+'"':''))+
+    (pn?', quote '+pn:'')+(a.pn&&pn&&a.pn!==pn?' (not '+a.pn+')':'')+(r.comment?' — '+r.comment:'')+' (feedback #'+r.id+')';
+  addRule();
+  const tr=document.getElementById('rulesBody').firstElementChild;
+  tr.querySelector('.rcat').value=r.customer_code?('customer:'+r.customer_code):'cross_reference';
+  tr.querySelector('.rtext').value=text.replace(/^,\s*/,'');
+  tr.dataset.fb=r.id;
+  document.getElementById('rulesPanel').classList.remove('hidden');
+  tr.scrollIntoView({behavior:'smooth',block:'center'});
+  const el=document.getElementById('rStatus');
+  el.textContent='Rule prefilled from feedback #'+r.id+' — edit the wording and press Save; the feedback is then marked actioned.';el.className='status work';
+}
+async function fbAddXref(i){
+  const r=FB[i];if(!r)return;
+  const a=r.ai_answer||{};const pn=fbPn(i);
+  const el=document.getElementById('fbMsg');
+  if(!pn){el.textContent='Type the right part number in the row first.';el.className='status err';return;}
+  const {data,error}=await sb.from('xref_feedback').insert({user_id:SESSION.user.id,action:'manual_edit',
+    kind:a.kind||null,units:(a.dims&&a.dims.units)||null,dims:a.dims||null,oem:a.oem||null,descr:a.desc||null,asked:a.asked||a.question||null,
+    suggested_pn:a.pn||null,chosen_pn:pn,prev_pn:a.pn||null,candidates:[]}).select('id').single();
+  if(error){el.textContent='Cross-reference not saved: '+error.message;el.className='status err';return;}
+  await sb.from('marion_feedback').update({correction:Object.assign({},r.correction||{},{pn})}).eq('id',r.id);
+  fbSetById(r.id,'actioned','xref_feedback:'+data.id);
+}
 
 /* ---- Marion extraction rules editor (ai_rules table) ---- */
 async function loadRules(){
@@ -205,8 +298,10 @@ async function saveRule(btn){
     active:tr.querySelector('.ract').checked,updated_at:new Date().toISOString()};
   const el=document.getElementById('rStatus');
   if(!row.rule){el.textContent='Rule text is empty.';el.className='status err';return;}
-  const {error}= id?await sb.from('ai_rules').update(row).eq('id',id)
-                   :await sb.from('ai_rules').insert(row);
+  const res= id?await sb.from('ai_rules').update(row).eq('id',id)
+                 :await sb.from('ai_rules').insert(row).select('id').single();
+  const error=res.error;
+  if(!id&&!error&&tr.dataset.fb&&res.data){ await fbSetById(tr.dataset.fb,'actioned','ai_rules:'+res.data.id); } // board item 21
   el.textContent=error?('Save failed: '+error.message):'✓ Saved — applies on the next Analyze.';
   el.className='status'+(error?' err':'');
   if(!id&&!error)loadRules();
@@ -242,6 +337,7 @@ function renderGate(){
   if(SESSION&&IS_STAFF){gate.classList.add('hidden');list.classList.remove('hidden');return;}
   gate.classList.remove('hidden');list.classList.add('hidden');
   document.getElementById('detailPanel').classList.add('hidden');
+  document.getElementById('feedbackPanel').classList.add('hidden');
   gate.querySelector('.gate').innerHTML = !SESSION
     ? 'Fluidseal staff only — sign in (top right) with your @fluidsealab.com email.'
     : 'This page is for Fluidseal staff. Your account ('+esc(SESSION.user.email)+') doesn’t have staff access.';

@@ -1051,7 +1051,7 @@ async function handleSend(text){
       // exact cross-reference hits are answered from the master directly — fast and exact
       if(shouldXref(text)){
         clearTyping();
-        pushMarion(answerXref(text.trim()));
+        chatFeedback(pushMarion(answerXref(text.trim())),text,'(catalog cross-reference answer)'); // board item 21
         setSending(false);
         return;
       }
@@ -1067,7 +1067,7 @@ async function handleSend(text){
         }).join('');
         html+=cards;
       }
-      pushMarion(html);
+      chatFeedback(pushMarion(html),text,clean); // board item 21
     }else{
       await new Promise(r=>setTimeout(r,380)); // brief, feels considered
       clearTyping();
@@ -1082,6 +1082,29 @@ async function handleSend(text){
   }finally{
     setSending(false);
   }
+}
+
+/* ---------------- Feedback thumbs (board item 21, 2026-10-01) ----------------
+   Every signed-in Marion answer gets a thumbs up / down; a thumbs down asks why.
+   Rows go to public.marion_feedback (surface chat) — staff review them in quotes.html. */
+function chatFeedback(msgEl,question,answer){
+  if(!SESSION||!msgEl)return;
+  const bubble=msgEl.querySelector('.bubble');if(!bubble)return;
+  const bar=document.createElement('div');
+  bar.style.cssText='margin-top:8px;padding-top:6px;border-top:1px solid #eee;font-size:12px;color:#777;display:flex;gap:6px;align-items:center;flex-wrap:wrap';
+  bar.innerHTML='Helpful? <button type="button" data-r="1" title="Yes" style="border:none;background:none;cursor:pointer;font-size:15px">👍</button><button type="button" data-r="-1" title="No — tell us why" style="border:none;background:none;cursor:pointer;font-size:15px">👎</button>';
+  bubble.appendChild(bar);
+  const snap={question:String(question||'').slice(0,1500),answer:String(answer||'').slice(0,4000)};
+  const send=async(rating,comment)=>{
+    const {error}=await sb.from('marion_feedback').insert({created_by:SESSION.user.id,surface:'chat',rating,comment:comment||null,ai_answer:snap});
+    bar.textContent=error?('Feedback not saved: '+error.message):(rating>0?'👍 Thanks — noted.':'👎 Thanks — the team will review this answer.');
+  };
+  bar.querySelector('[data-r="1"]').onclick=()=>send(1,null);
+  bar.querySelector('[data-r="-1"]').onclick=()=>{
+    bar.innerHTML='<textarea rows="2" placeholder="What was wrong, or what should Marion have said?" style="flex:1 1 260px;min-width:200px;border:1px solid #ccc;border-radius:6px;padding:6px 8px;font:inherit;font-size:13px"></textarea><button type="button" style="border:1px solid #000;background:#FFD400;border-radius:6px;padding:5px 12px;font-weight:700;cursor:pointer">Send</button>';
+    const ta=bar.querySelector('textarea');ta.focus();
+    bar.querySelector('button').onclick=()=>send(-1,ta.value.trim());
+  };
 }
 
 /* ---------------- UI wiring ---------------- */

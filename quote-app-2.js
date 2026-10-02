@@ -1,4 +1,4 @@
-/* Marion quote.html script (split for pushability, build 2026-09-26.6; history step 0 v3 kit headers 2026-09-30.1) — part 2/3.
+/* Marion quote.html script (split for pushability, build 2026-09-26.6; history step 0 v3 kit headers 2026-09-30.1; request-level kit collapse + feedback thumbs 2026-10-01.1) — part 2/3.
    Load order matters: quote-app-1.js -> 2 -> 3 (plain scripts, shared global scope). */
 /* ---------- Analyze: call Marion via server proxy, fall back to local parser ---------- */
 async function analyze(){
@@ -71,6 +71,7 @@ async function getRules(){
 /* ---- Marion AI call (server-side proxy holds the API key; sign-in required) ---- */
 async function callMarion(text){
   if(!SESSION) throw new Error("signin-required");
+  window.__LAST_ASK=text||""; // the whole ask, for the request-level kit step in crossRefCart (2026-10-01.1)
   const rules=await getRules();
   const sys=`You are Marion, a sealing-products cross-reference agent for Fluidseal AB Inc. (Sealing Solutions Group). You receive a raw customer message (often a forwarded email or phone note).
 
@@ -252,6 +253,7 @@ function applyParsed(p){
     CART.forEach(l=>{if(l.pn)logFeedback(l,'p21_ground_truth',null);});
   }
   CURRENT_QUOTE_ID=null; // fresh analysis = new quote
+  window.__FB_REQ=null; // board item 21: request thumbs start fresh
   SUBMITTED=false;SUBMITTED_NO=null;REVISION=0;EVER_SUBMITTED=false;refreshNav();
   renderCart();
 }
@@ -259,8 +261,85 @@ function applyParsed(p){
 /* ---- Catalog cross-reference: the SAME products dataset Marion chat uses,
         via the match_parts RPC in Supabase. Deterministic — the AI only
         extracts kind/style/dims; the database finds the part number. ---- */
+/* ---- -1) REQUEST-LEVEL KIT (build 2026-10-01.1, board item 68): before the per-line steps, look up the request's own
+        PO / W/O references once. (a) an earlier invoice for that reference has ONE kit header and the extracted lines are
+        its components (at least half of them, compound suffix ignored) -> those lines collapse into the kit line;
+        (b) the invoice has components only (pre-2026, no header) and the ask is a kit ask -> the kit by size:
+        rod = wiper / rod-seal inside diameter, bore = piston-seal outside diameter (conf med, Review). ---- */
+async function kitCollapse(){
+  try{
+    const ask=(window.__LAST_ASK||'').toString();
+    const items=CART.filter(l=>l.type==='item'&&!l._kitDone);
+    const q=((CUST.po||'')+' '+ask).trim();
+    if(!q||!/\d{4,}/.test(q))return;
+    const kitAsk=/\bkits?\b|rod\s*x|\bbore\b|cylinder|bought\s+(it\s+)?before|same\s+as\s+(before|last)|ordered\s+on/i.test(ask);
+    const {data:h,error}=await sb.rpc('history_lookup',{p_customer:(CUST.acct||''),p_ask:q,p_limit:40,p_exclude:window.__HIST_EXCLUDE||null});
+    if(error||!h||!h.length)return;
+    const refRows=h.filter(r=>r.scope==='customer'&&r.source==='invoice'&&['po','wo'].includes(r.match_kind));
+    if(!refRows.length)return;
+    const groups={};
+    refRows.forEach(r=>{(groups[r.ref_no]=groups[r.ref_no]||[]).push(r);});
+    const order=Object.keys(groups).sort((a,b)=>String(groups[b][0].ref_date||'').localeCompare(String(groups[a][0].ref_date||'')));
+    const nrm=s=>(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    const base=s=>nrm(String(s||'').split('/')[0]);
+    const fmtRef=r=>'invoiced on '+(r.match_kind==='po'?'PO ':'W/O ')+(r.matched_on||'')+' — '+(r.ref_no||'')+(r.ref_date?' '+r.ref_date:'');
+    const askQty=(()=>{const m=ask.match(/\b(\d{1,3})\s*(?:of|x|pcs?\s+of)\s+(?:the\s+|that\s+|this\s+)?(?:[a-z]+\s+){0,2}kits?\b/i);return m?+m[1]:null;})();
+    const removeLines=ls=>{CART=CART.filter(l=>!ls.includes(l));};
+    for(const ref of order){
+      const g=groups[ref];
+      const kits=g.filter(r=>r.is_kit);
+      if(kits.length===1){
+        const kit=kits[0];
+        const comps=String(kit.components||'').split(/,\s*/).map(s=>{const m=s.match(/^(.*)\s+x([\d.]+)$/);return m?{pn:m[1].trim(),qty:+m[2]}:{pn:s.trim(),qty:1};}).filter(c=>c.pn);
+        if(!comps.length)continue;
+        const isComp=l=>{const k=base(l.pn)||base(l.oem);return !!k&&comps.some(c=>base(c.pn)===k);};
+        const matched=items.filter(isComp);
+        const lone=items.length<=1&&kitAsk&&!(items[0]&&items[0].pn&&!isComp(items[0]));
+        if(!((matched.length>=2&&matched.length*2>=items.length)||lone))continue;
+        let qty=askQty;
+        if(!qty&&matched.length){
+          const rs=matched.map(l=>{const c=comps.find(c=>base(c.pn)===(base(l.pn)||base(l.oem)));return c&&c.qty>0?(+l.qty||1)/c.qty:null;}).filter(v=>v&&v>=1);
+          qty=rs.length?Math.max(1,Math.round(Math.min(...rs))):1;
+        }
+        qty=qty||1;
+        const kl={conf:'high',oem:'',brand:'',pn:kit.item_code,desc:kit.description||'',_echo:false,ref:(kit.matched_on||''),qty,wh:(matched[0]&&matched[0].wh)||'6 - Edmonton',disp:'B',
+          notes:'History: kit '+kit.item_code+' '+fmtRef(kit)+' · kit contents: '+comps.map(c=>c.pn+' x'+c.qty).join(', ')+(matched.length?' · '+matched.length+' requested line(s) collapsed into the kit':''),
+          type:'item',kitGroup:null,price:null,kind:'kit',style:'',dims:null,asked:matched.map(l=>l.asked).filter(Boolean).join(' / ')||(items[0]&&items[0].asked)||'',
+          history:h,options:g.slice(0,12).map(r=>({part_number:r.item_code,description:r.description||'',url:null,hist:r})),autoPn:kit.item_code,_kitDone:true};
+        const at=CART.indexOf(matched[0]||items[0]);
+        removeLines(matched.length?matched:(items[0]?[items[0]]:[]));
+        CART.splice(at>=0?Math.min(at,CART.length):CART.length,0,kl);
+        try{const {data:pi}=await sb.rpc('part_info',{p_pn:kl.pn});const info=pi&&pi[0];if(info&&info.found)kl.url=info.url||null;}catch(_){}
+        return;
+      }
+      if(!kits.length&&kitAsk&&(items.length<=1||!items.some(l=>l.pn))){
+        const codes=[...new Set(g.map(r=>r.item_code).filter(Boolean))];
+        if(codes.length<2)continue;
+        const {data:pr}=await sb.from('products').select('part_number,profile_group,id_in,od_in').in('part_number',codes);
+        if(!pr||!pr.length)continue;
+        const pick=grp=>pr.find(p=>p.profile_group===grp);
+        const rodP=pick('Rod Wipers')||pick('Rod Seals');
+        const boreP=pick('Piston Seals');
+        const rod=rodP&&+rodP.id_in>0?+rodP.id_in:null, bore=boreP&&+boreP.od_in>0?+boreP.od_in:null;
+        if(!rod||!bore||bore<=rod)continue;
+        const pn=rod.toFixed(3)+'"ROD X '+bore.toFixed(3)+'"BORE';
+        const kl={conf:'med',oem:'',brand:'',pn,desc:'',_echo:false,ref:(g[0].matched_on||''),qty:askQty||1,wh:'6 - Edmonton',disp:'B',
+          notes:'Kit size from the components '+fmtRef(g[0])+': rod '+rod.toFixed(3)+' ('+rodP.part_number+' inside diameter) x bore '+bore.toFixed(3)+' ('+boreP.part_number+' outside diameter) · invoice lines: '+codes.slice(0,10).join(', ')+' — Review',
+          type:'item',kitGroup:null,price:null,kind:'kit',style:'',dims:null,asked:(items[0]&&items[0].asked)||'',
+          history:h,options:g.slice(0,12).map(r=>({part_number:r.item_code,description:r.description||'',url:null,hist:r})),autoPn:pn,_kitDone:true};
+        const at=items[0]?CART.indexOf(items[0]):CART.length;
+        if(items[0])removeLines([items[0]]);
+        CART.splice(at>=0?at:CART.length,0,kl);
+        return;
+      }
+    }
+  }catch(e){console.warn('kitCollapse',e);}
+}
+
 async function crossRefCart(){
-  const todo=CART.filter(l=>l.oem||(!l.pn&&(l.kind||(l.dims&&(l.dims.id||l.dims.od))))||(l.pn&&!l.url));
+  await kitCollapse(); // -1) request-level PO / W/O kit (board item 68)
+  const todo=CART.filter(l=>!l._kitDone&&(l.oem||(!l.pn&&(l.kind||(l.dims&&(l.dims.id||l.dims.od))))||(l.pn&&!l.url)));
+  if(CART.some(l=>l._kitDone))renderCart();
   if(!todo.length)return;
   // visible progress: spinner per pending line + live counter in the cart toolbar
   todo.forEach(l=>l._xref=true);
@@ -608,6 +687,92 @@ async function logFeedback(l,action,prevPn){
   }catch(e){console.warn('feedback log failed',e);}
 }
 
+/* ---- FEEDBACK TOOL (board item 21, build 2026-10-01.1): thumbs up / down on each cart line and on the whole analyzed
+        request -> public.marion_feedback (RLS: own rows; staff review them in quotes.html "Unreviewed feedback"). ---- */
+const FB_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function fbSnapshot(l){
+  return {pn:l.pn||'',conf:l.conf||'',oem:l.oem||'',asked:l.asked||'',desc:l.desc||'',kind:l.kind||'',qty:l.qty||null,dims:l.dims||null,
+    notes:(l.notes||'').slice(0,600),
+    history:(l.history||[]).slice(0,3).map(h=>({scope:h.scope,source:h.source,match_kind:h.match_kind,ref_no:h.ref_no,item_code:h.item_code})),
+    build:(typeof MARION_BUILD!=='undefined'?MARION_BUILD:'')};
+}
+async function fbSend(row){
+  if(!SESSION)return {error:{message:'sign in first'}};
+  return await sb.from('marion_feedback').insert(Object.assign({created_by:SESSION.user.id,surface:'quote_intake',
+    customer_code:(CUST.acct||null),quote_id:(CURRENT_QUOTE_ID&&FB_UUID.test(String(CURRENT_QUOTE_ID))?CURRENT_QUOTE_ID:null)},row));
+}
+function fbOpen(o){
+  if(document.getElementById('fbOv'))return;
+  const ov=document.createElement('div');ov.id='fbOv';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(26,26,26,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML=`<div style="background:#fff;border-radius:10px;max-width:560px;width:100%;padding:22px 26px;box-shadow:0 12px 40px rgba(0,0,0,.35)">
+    <div style="display:flex;align-items:center;margin-bottom:6px"><b style="font-size:15px;letter-spacing:.5px;text-transform:uppercase">${hesc(o.title)}</b>
+      <span onclick="document.getElementById('fbOv').remove()" style="margin-left:auto;cursor:pointer;font-size:20px;color:#888;line-height:1">×</span></div>
+    ${o.context?`<div style="font-size:12px;color:#666;margin-bottom:10px">${hesc(o.context)}</div>`:''}
+    ${o.pn?`<label style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666;display:block;margin:6px 0 2px">The right part number (if you know it)</label>
+      <input id="fbPn" style="width:100%;border:1px solid #cfcfcd;border-radius:4px;padding:8px 10px;font-size:13px;font-family:Consolas,'Courier New',monospace">`:''}
+    <label style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666;display:block;margin:10px 0 2px">What was wrong, or why</label>
+    <textarea id="fbText" rows="3" style="width:100%;border:1px solid #cfcfcd;border-radius:4px;padding:8px 10px;font-size:13px;font-family:inherit"></textarea>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+      <button class="btn btn-go" style="padding:8px 18px;font-size:12px" id="fbSendBtn">Send feedback</button>
+      <span id="fbMsg" style="font-size:12px;color:#666">Goes to the staff review queue and the weekly digest.</span></div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  const t=document.getElementById('fbText');if(t)t.focus();
+  document.getElementById('fbSendBtn').onclick=async()=>{
+    const comment=(document.getElementById('fbText').value||'').trim();
+    const pnEl=document.getElementById('fbPn');const pn=pnEl?(pnEl.value||'').trim():'';
+    const msg=document.getElementById('fbMsg');msg.innerHTML='<span class="spin"></span>Saving…';
+    const err=await o.onSend(comment,pn);
+    if(err){msg.textContent='Not saved: '+(err.message||err);return;}
+    ov.remove();setSaveStatus('✓ Thanks — feedback saved for review.','');
+  };
+}
+async function fbLine(i,rating){
+  const l=CART[i];if(!l)return;
+  const ref=String(i+1)+':'+(l.pn||l.oem||'');
+  if(rating>0){
+    const {error}=await fbSend({rating:1,line_ref:ref,ai_answer:fbSnapshot(l)});
+    if(error){setSaveStatus('Feedback not saved: '+error.message,'err');return;}
+    l._fb=1;renderCart();setSaveStatus('✓ Thanks — feedback saved.','');return;
+  }
+  fbOpen({title:'What did Marion get wrong on this line?',pn:true,
+    context:'Customer asked for: '+(l.asked||l.desc||'—')+' · Marion gave: '+(l.pn||'(no part number)'),
+    onSend:async(comment,pn)=>{
+      const {error}=await fbSend({rating:-1,line_ref:ref,comment:comment||null,correction:pn?{pn}:null,ai_answer:fbSnapshot(l)});
+      if(!error){l._fb=-1;renderCart();}
+      return error;
+    }});
+}
+async function fbRequest(rating){
+  const snap={request:(window.__LAST_ASK||document.getElementById('req').value||'').slice(0,2000),
+    lines:CART.filter(l=>l.type==='item').map(l=>({pn:l.pn||'',conf:l.conf||'',asked:l.asked||'',qty:l.qty||null})),
+    customer:CUST.acct||'',po:CUST.po||'',build:(typeof MARION_BUILD!=='undefined'?MARION_BUILD:'')};
+  if(rating>0){
+    const {error}=await fbSend({rating:1,line_ref:'request',ai_answer:snap});
+    if(error){setSaveStatus('Feedback not saved: '+error.message,'err');return;}
+    window.__FB_REQ=1;renderReqFeedback();setSaveStatus('✓ Thanks — feedback saved.','');return;
+  }
+  fbOpen({title:'What did Marion get wrong on this request?',pn:false,
+    context:'Missing lines, wrong customer or PO, wrong reading of the email — say what Marion should have done.',
+    onSend:async(comment)=>{
+      const {error}=await fbSend({rating:-1,line_ref:'request',comment:comment||null,ai_answer:snap});
+      if(!error){window.__FB_REQ=-1;renderReqFeedback();}
+      return error;
+    }});
+}
+function renderReqFeedback(){
+  const st=document.getElementById('status');if(!st)return;
+  let el=document.getElementById('fbReq');
+  const show=!!(SESSION&&CART.some(l=>l.type==='item'));
+  if(!show){if(el)el.remove();return;}
+  if(!el){el=document.createElement('span');el.id='fbReq';el.style.cssText='margin-left:12px;font-size:12px;color:#555;white-space:nowrap';st.insertAdjacentElement('afterend',el);}
+  el.innerHTML=window.__FB_REQ
+    ?(window.__FB_REQ>0?'👍':'👎')+' feedback saved'
+    :'Was Marion’s read of this request right? <button onclick="fbRequest(1)" title="Yes" style="border:none;background:none;cursor:pointer;font-size:15px">👍</button><button onclick="fbRequest(-1)" title="No — tell us why" style="border:none;background:none;cursor:pointer;font-size:15px">👎</button>';
+}
+
 function renderCust(){
   document.getElementById('cAcct').textContent=CUST.acct||"—";
   document.getElementById('cContact').textContent=CUST.contact||"—";
@@ -620,7 +785,7 @@ function renderCust(){
 function renderCart(){
   const tb=document.getElementById('cartBody');
   if(!CART.length){tb.innerHTML='<tr><td colspan="15" class="empty-cart">No lines yet — analyze a request in step 1, or add a line manually.</td></tr>';
-    document.getElementById('cartFlags').textContent='';return;}
+    document.getElementById('cartFlags').textContent='';renderReqFeedback();return;}
   tb.innerHTML=CART.map((r,i)=>{
     const child=!!(r.kitGroup&&r.type!=='kit'), isKit=r.type==='kit';
     const bomBtn=(r.pn&&r._bomKit)
@@ -649,7 +814,7 @@ function renderCart(){
     <td style="white-space:nowrap">${dispChip(r._dispAuto)}<select onchange="dispManual(${i},this.value)" title="${r._dispManual?'Manual override — computed said '+(r._dispAuto||'?'):'Computed from stock across all warehouses (BR-02)'}" style="width:42px">${DISPOSITIONS.map(d=>`<option ${d===r.disp?'selected':''}>${d}</option>`).join('')}</select></td>
     <td>${fulfilCell(r,i)}</td>
     <td class="${r._marginRed?'margin-red':''}" title="${esc(r._marginTip||'')}"><input type="number" step="0.01" min="0" value="${r.price!=null&&r.price!==''?r.price:''}" onchange="upd(${i},'price',this.value)" placeholder="—" style="text-align:right">${r.discountType?`<span class="disc-tag" title="pricing rule applied">${esc(r.discountType)}</span>`:''}</td>
-    <td style="text-align:center">${revCell}</td>
+    <td style="text-align:center;white-space:nowrap">${revCell}${(SESSION&&!r._xref&&r.type!=='kit')?(r._fb?`<span title="feedback saved" style="font-size:11px;margin-left:4px">${r._fb>0?'👍':'👎'}✓</span>`:`<span style="margin-left:4px"><button onclick="fbLine(${i},1)" title="Marion got this line right" style="border:none;background:none;cursor:pointer;font-size:12px;padding:0 1px;opacity:.6">👍</button><button onclick="fbLine(${i},-1)" title="Marion got this line wrong — tell us why" style="border:none;background:none;cursor:pointer;font-size:12px;padding:0 1px;opacity:.6">👎</button></span>`):''}</td>
     <td><input value="${esc(r.notes)}" onchange="upd(${i},'notes',this.value)" placeholder=""></td>
   </tr>`+renderBomRows(r,i);}).join('');
   const flags=CART.filter(r=>r.notes||r.conf==='low');
@@ -658,5 +823,6 @@ function renderCart(){
     : '✓ All lines look clean. Generate the quote.';
   renderTotals();
   scheduleBomCheck(); // flag lines whose PN is a catalog kit (adds the + expander)
+  renderReqFeedback(); // board item 21
 }
 
