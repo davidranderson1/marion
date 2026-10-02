@@ -10,6 +10,23 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-10-02 · SSG Website — `marion-chat` v15 (service version 17): the website Marion gets the staff vocabulary (`public.part_synonyms`, 8 lines) behind a switch, scored before and after (board item 78, Q94) — no DDL; `public` read only (service role reads `part_synonyms`); one row added to `flabed.chat_settings`; `archive` / `xpress` / `hr` / `ap` / `svc` untouched; staff path unchanged
+- **Why**: David — Q94 "yes" (give the website Marion the vocabulary lines, measured before and after on a held-out set). Since v11 the website prompt read `part_synonyms` as anon, and its row-level security lets only signed-in users read it, so the website Marion had no vocabulary.
+- **Read back first**: service version 16 = v14 code (sha256 `ddbf1243…`), unchanged since 19:06 UTC; deployed v15 as service version 17 at about 23:37 UTC; read back byte-identical (sha256 `69643196…`).
+- **v15**: `buildWebsiteSystemPrompt` reads the vocabulary with a service-role client (read only, ordered by term) only when `flabed.chat_settings` key `website_vocabulary` is true; absent / false = exactly the v14 prompt. A session whose key starts `claudetest-` may send `_eval_vocab` true / false to override it for that request (harmless if anyone else sends it). The streamed `start` event carries `v: "v15"` and `vocab`. JSON payload, tools and the staff path unchanged. Local tests: `claude/generators/test_marion15.py` 25 / 25 (Deno, live v16 code as the reference: switch off = v16 prompt and payload byte for byte).
+- **Score** (rules fixed before any run: SSG project doc `claude/website-chat/q94-heldout.json`; 22 questions — 12 real website questions + 10 using the vocabulary words; each once off and once on, same deployment, temperature 0; graded by `claude/generators/grade_q94.py`):
+
+  | Grade | Off | On |
+  |---|---|---|
+  | exact | 19 | 20 |
+  | wrong | 3 | 2 |
+  | unparseable | 0 | 0 |
+  | cost / mean time | US$0.662 / 14.2 s | US$0.663 / 14.0 s |
+
+  Decision rule met (not worse) → `insert into flabed.chat_settings (key, value) values ('website_vocabulary', 'true')` at 23:54:39 UTC. Live check: an ordinary request streams `start {v: v15, vocab: true}`, then the answer and its links. To turn it off: set the value to false — no redeploy. Full results: SSG project doc `claude/website-chat/q94-results.md`.
+- **Seen in the runs**: with the vocabulary Marion adds the description prefixes to her searches (`or.2-222`, `rp. 3 inch rod seal polypak`, `ps. 100mm piston seal`, `rw. 50`); one answer named `2-222/TF` "a direct match" after such a search (the rule did not catch it). In both runs Marion passes a piston-seal **bore** as `id` to `match_parts` (the bore is the OD), so "piston seal for a 4 inch bore" lists seals for a 4.5" bore — SSG board item 87, Q111 (a website rule line, with its own score).
+- **Test sessions**: `claudetest-q94-*` (45 sessions, 90 messages) stay in `flabed.chat_messages`; their `ip_hash` was set to null so they do not count against David's IP limit.
+
 ## 2026-10-02 · HR - Agent — Departments and review-profile sync: new `hr` columns and tables, gated `public.hr_sync_*` functions, edge function `hr-review-sync`, pg_cron jobs 31 / 32 (no `public` table, `archive`, `xpress`, `svc` or `flabed` touched; the shared `dynamics-sync` NOT redeployed)
 - **Why**: David — "q5 - go" (Departments into the HR sync), "Q6 - All their departments" (peer group on the review card), "Q7 - Monthly and use Sync button (show last sync time stamp)".
 - **Migration `hr_departments_and_review_sync`**: `hr.employee` + `departments text[]`, `departments_synced_at`; `hr.review_profile` + `synced_at`; new `hr.sync_run` (run log) and `hr.sync_config` (`inbound_token` for pg_cron) — RLS on, no policies, no grants. `public.hr_sync_begin()` (an HR viewer starts a full sync; one at a time) and `public.hr_sync_status()` (viewer; last full sync, last run, running) — execute for authenticated. Service role only: `hr_sync_check_token`, `hr_sync_start`, `hr_sync_finish`, `hr_sync_profiles_internal`, `hr_sync_apply`. `public.hr_sync_run(kind, mode)` — pg_net POST to the function with the HR token, no grants. `hr_upsert_employees` (the `dynamics-sync` path) updates named columns only, so `hr.employee.departments` is written only by `hr-review-sync`.
