@@ -10,6 +10,12 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-10-02 · Dynamics 365 / Sharepoint — expenses funnel: Dropbox app with PKCE (no app secret), exp-intake v3, exp-build v4, email-receipt filing switch (schema `exp` only; nothing in `public` changed)
+- **Why**: David on Dynamics board items 417–422 — "you do everything approved". Record: Dynamics project doc claude/expenses-stack-review-2026-10-02.md section 16.
+- **Migrations**: `exp_intake_v1c_dropbox_pkce` (`exp.intake_aux` gains `dropbox_state_new`, `pkce_set`, `pkce_get` — patched through `pg_get_functiondef` + replace), `exp_dropbox_app_key` (`exp.setting` dropbox_app_key = the app's public client id), `exp_intake_v1d_filing_switch` (`exp.setting` dropbox_file_receipts = false; `file_queue` returns rows only when it is true) and two `file_done` calls marking the October receipts the old task already filed.
+- **Edge functions**: `exp-intake` v3 and `exp-build` v4 — Dropbox OAuth as a PKCE public client (code_verifier kept beside the one-time state in `exp.setting`, refresh with the client id only); the refresh token is in Vault `exp_dropbox_refresh` (created by the callback, 2026-10-03 01:16 UTC, account d.anderson@sealsonline.com). Health now reports dropbox_enabled.
+- **Proof**: the 01:20 UTC run refreshed the token and listed "0 - Receipts Inbox" with no error.
+
 ## 2026-10-02 · SSG Website — admin console at admin.fluidsealab.com; read-only all-apps view (schema `flabed` only; `xpress`, `hr`, `ap`, `svc`, `exp`, `public` read only; no change in `public` or `archive`)
 - **Why**: David on SSG board item 86 — Q109 "admin.fluidsealab.com - now", Q110 "yes, phased with (MFA later)".
 - **Migration `flabed_admin_all_apps_v1`**: `flabed.admin_login_apps(email, uid)` also reads `svc.access` and `exp.portal_access` (each in its own exception block, read only); new `flabed.admin_app_matrix()` (SECURITY DEFINER, `flabed.is_admin()` gate, execute for authenticated / service_role) — every person on any Fluidseal app's access list or sign-in list with the role per app. Tested as David (12 people), as a non-admin (42501 admin only) and as anon (permission denied).
