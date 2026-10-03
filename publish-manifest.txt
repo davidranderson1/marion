@@ -1,0 +1,49 @@
+# publish-manifest.txt - the ONLY files GitHub Pages publishes for marion.fluidsealab.com.
+# .github/workflows/pages.yml copies exactly these paths (plus CNAME) into the site and deploys it.
+# Everything else in the repository (prompts, CHANGELOG, handoffs, migration/, parts/,
+# knowledge/catalogs/_inbox/, source PDFs and brochures, backups) stays private to the repo.
+#
+# Built by crawling every live page: <script src>, <link href>, <img>/<a> paths, fetch() targets,
+# and the JSON that knowledge/manifest.json tells index.html and knowledge.html to load.
+# Adding a new page or data file? Add its path here or it will 404 on the live site.
+# One repository-relative path per line. Lines starting with # are ignored.
+
+account.html
+cutaway/cylinder-positions.json
+cutaway/cylinder-seal-selector_7.html
+find.html
+fluidseal-logo.svg
+index.html
+knowledge.html
+knowledge/anyseals.json
+knowledge/company.json
+knowledge/crossref.json
+knowledge/manifest.json
+knowledge/manufacturers/clipper.json
+knowledge/manufacturers/fluidseal.json
+knowledge/manufacturers/freudenberg.json
+knowledge/manufacturers/hallite.json
+knowledge/manufacturers/parker-rotary.json
+knowledge/manufacturers/parker.json
+knowledge/markets/markets.json
+knowledge/markets/materials-context.json
+knowledge/oem-parts/john-deere-models.json
+knowledge/oem-parts/john-deere-parts.json
+knowledge/oem-parts/john-deere.json
+knowledge/parent-profiles.json
+knowledge/product-groups.json
+knowledge/products.json
+knowledge/profiles.json
+knowledge/training.json
+quote-app-1.js
+quote-app-2.js
+quote-app-3.js
+quote.html
+quotes.html
+sourcing-panel.js
+training/fluidseal_training.html
+training/fluidseal_training_video.html
+training/index.html
+training/product-profiles-training.html
+training/training-calipers.html
+training/training-certificate.html

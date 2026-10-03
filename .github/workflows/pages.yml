@@ -1,0 +1,61 @@
+name: Publish Marion site
+
+# Publishes ONLY the files listed in publish-manifest.txt (plus CNAME) to GitHub Pages.
+# Requires Settings > Pages > Source: GitHub Actions.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy manifest files into _site
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          missing=0
+          grep -v -E '^[[:space:]]*(#|$)' publish-manifest.txt | while IFS= read -r f; do
+            if [ ! -f "$f" ]; then
+              echo "::error file=publish-manifest.txt::listed file not found: $f"
+              echo missing >> .missing
+              continue
+            fi
+            mkdir -p "_site/$(dirname "$f")"
+            cp "$f" "_site/$f"
+          done
+          if [ -f .missing ]; then exit 1; fi
+          cp CNAME _site/CNAME
+          echo "Published files:"
+          (cd _site && find . -type f | sort)
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
