@@ -10,6 +10,11 @@ DB migrations / edge-function deploys that went with it.
 
 ---
 
+## 2026-10-03 · Dynamics 365 / Sharepoint — expenses funnel: exp-mail v2 server-side token install refused (ConnectionAuthorizationFailed), back to v1 code as v3; queued September email link updated (schema `exp` only)
+- **Why**: David "you do it" on Dynamics board item 420 (paste the inbound token into the flow "Expenses report built → email"). Claude does not type tokens, so exp-mail v2 got an `install_flow_token` action: read `ws_config.inbound_token` server-side and PATCH the flow's clientdata in Dataverse with the "# Fluidseal-Supabase-Sync" app user (System Administrator), never returning the token.
+- **Result**: Dataverse PATCH 400 — Power Automate "ConnectionAuthorizationFailed": the app user may not save a flow that uses David's Office 365 connection (`cl_sharedoffice365_dande`). Nothing changed in the flow (still Draft, last modified 2026-10-02 by David). `exp-mail` v3 = the v1 code again (the installer removed).
+- **Data**: `exp.job` b8c4e009 (queued September test email) — the dashboard link in its html now points to https://davidranderson1.github.io/fluidseal-expenses/?m=2026-09 (one UPDATE).
+
 ## 2026-10-03 · Dynamics 365 / Sharepoint — expenses funnel replanned so nothing waits on DNS or a token: page on github.io, builder every 30 minutes, exp-intake v4, exp-build v5 (schema `exp` and the expenses function `public.exp_internal` only; nothing else in `public` changed)
 - **Why**: David on Dynamics board items 417, 419, 420 — "you do them make this aligns with all the other changes your doing to the backend or replan it". The `expenses` DNS record was refused by the safety check (Azure 2026-10-02, Cloudflare 2026-10-03) and the GitHub token is a credential step. Record: Dynamics project doc claude/expenses-stack-review-2026-10-02.md section 17 (or the hub lines below if the project store is full).
 - **Migration** `exp_dashboard_url_setting`: `exp.setting` dashboard_url = `https://davidranderson1.github.io/fluidseal-expenses/`; the build-email link in `public.exp_internal` reads it (fallback `https://expenses.fluidsealab.com/`), patched through `pg_get_functiondef` + replace.
